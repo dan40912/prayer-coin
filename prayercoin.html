@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PRAY COIN | 祈禱清單平台</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
+  <style>
+    body {
+      background-color: #f8f9fa;
+      font-family: 'Noto Sans TC', sans-serif;
+    }
+    .navbar-brand img {
+      height: 40px;
+      margin-right: 10px;
+    }
+    .pray-card img {
+      width: 100%;
+      height: 240px;
+      object-fit: cover;
+      border-top-left-radius: 0.75rem;
+      border-top-right-radius: 0.75rem;
+    }
+    footer {
+      background-color: #343a40;
+      color: white;
+      padding: 2rem 0;
+    }
+    footer a {
+      color: #adb5bd;
+      text-decoration: none;
+    }
+    footer a:hover {
+      color: white;
+    }
+    .section-title {
+      font-weight: bold;
+      font-size: 1.8rem;
+      margin-bottom: 1rem;
+    }
+    .disabled-btn {
+      cursor: not-allowed;
+      pointer-events: none;
+      opacity: 0.6;
+    }
+  </style>
+</head>
+<body>
+
+<!-- Header -->
+<nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm">
+  <div class="container">
+    <a class="navbar-brand d-flex align-items-center" href="#">
+      <img src="/logo.png" alt="PRAY Logo">
+      <strong>PRAY COIN</strong>
+    </a>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navbarNav">
+      <ul class="navbar-nav ms-auto">
+        <li class="nav-item">
+          <a class="nav-link" href="#about">關於我們</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="#howto">使用說明</a>
+        </li>
+        <li class="nav-item">
+          <a class="btn btn-primary ms-lg-3" href="#">登入 / 註冊</a>
+        </li>
+      </ul>
+    </div>
+  </div>
+</nav>
+
+<section class="text-white text-center py-5 position-relative" style="background: linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.6)), url('https://source.unsplash.com/1600x700/?prayer,hope') center/cover no-repeat;">
+  <div class="container py-5">
+    <h1 class="display-3 fw-bold mb-3" style="text-shadow: 2px 2px 8px rgba(0,0,0,0.8)">🌍 世界正在等待你的禱告</h1>
+    <br><span class="fst-italic d-block mt-4">「你們要為萬人祈求，代求，並感謝；這是好的，在我們救主神面前是蒙悅納的。」<br>— 提摩太前書二章1～3節（恢復本）</span>
+    <a href="#prayers" class="btn btn-lg btn-warning px-5 py-3 fs-5 fw-semibold shadow">🙏 我願意代禱</a>
+  </div>
+</section>
+
+<!-- Main Prayer Cards -->
+<div id="prayers" class="container py-5">
+  <h2 class="text-center mb-4">🙏 最新祈禱事項</h2>
+  <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+
+    <!-- 卡片 1 -->
+    <div class="col">
+      <div class="card pray-card shadow-sm h-100">
+        <img src="https://s7d2.scene7.com/is/image/TWCNews/charlie_kirk_AP_25253709556517_NAT_0910" alt="Pray for Charlie Kirk">
+        <div class="card-body">
+          <h5 class="card-title">Pray for Charlie Kirk’s Family</h5>
+          <p class="card-text">Charlie Kirk 在猶他州遇襲身亡，留下年幼家庭。願神安慰遺屬。</p>
+          <p class="text-muted small">1 天前</p>
+          <div class="d-flex justify-content-between">
+            <button class="btn btn-outline-primary btn-sm disabled-btn" title="請登入後才能祈禱">🙏 我要代禱</button>
+            <button class="btn btn-outline-secondary btn-sm disabled-btn" title="請登入後留言">💬 留言</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 卡片 2 -->
+    <div class="col">
+      <div class="card pray-card shadow-sm h-100">
+        <img src="https://media.ct.org.tw/upload/news_article/2023/11/24/65602c62be987.jpg?wm=LB" alt="Gaza Crisis">
+        <div class="card-body">
+          <h5 class="card-title">為加薩孩童禱告</h5>
+          <p class="card-text">糧食短缺、空襲不斷，許多孩童處於危難。願有平安臨到。</p>
+          <p class="text-muted small">2 天前</p>
+          <div class="d-flex justify-content-between">
+            <button class="btn btn-outline-primary btn-sm disabled-btn">🙏 我要代禱</button>
+            <button class="btn btn-outline-secondary btn-sm disabled-btn">💬 留言</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 卡片 3 -->
+    <div class="col">
+      <div class="card pray-card shadow-sm h-100">
+        <img src="https://cc.tvbs.com.tw/img/upload/2025/09/12/20250912173519-f3687fa7.jpg" alt="尼泊爾GenZ推翻政權">
+        <div class="card-body">
+          <h5 class="card-title">尼泊爾GenZ推翻政權</h5>
+          <p class="card-text">數百萬人被迫離家。為婦孺、醫療與庇護禱告。</p>
+          <p class="text-muted small">3 天前</p>
+          <div class="d-flex justify-content-between">
+            <button class="btn btn-outline-primary btn-sm disabled-btn">🙏 我要代禱</button>
+            <button class="btn btn-outline-secondary btn-sm disabled-btn">💬 留言</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- About Section -->
+<section id="about" class="py-5 bg-white border-top">
+  <div class="container">
+    <h2 class="section-title text-center">關於 PRAY COIN</h2>
+    <p class="lead text-center">這是一個結合信仰與區塊鏈的公益祈禱平台。我們相信每一個禱告都值得被紀錄與尊重。透過代禱行動，你可以獲得 PRAY 幣並累積你的愛心貢獻。</p>
+  </div>
+</section>
+
+<!-- How To Section -->
+<section id="howto" class="bg-light py-5 border-top">
+  <div class="container">
+    <h2 class="text-center mb-4">如何參與</h2>
+    <div class="row text-center">
+      <div class="col-md-4">
+        <h5>1️⃣ 登入平台</h5>
+        <p>使用 Google 或 Facebook 一鍵登入，安全又快速</p>
+      </div>
+      <div class="col-md-4">
+        <h5>2️⃣ 找到代禱對象</h5>
+        <p>瀏覽卡片並選擇你想為誰禱告</p>
+      </div>
+      <div class="col-md-4">
+        <h5>3️⃣ 錄音禱告並獲得代幣</h5>
+        <p>你的代禱會被紀錄，並獲得 PRAY 幣回饋</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Footer -->
+<footer class="mt-5">
+  <div class="container text-center">
+    <p class="mb-1">© 2025 PRAY COIN 平台 - 與愛同行</p>
+    <p class="small">
+      <a href="#about">關於我們</a> · 
+      <a href="#howto">使用說明</a> · 
+      <a href="#">隱私政策</a>
+    </p>
+  </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
