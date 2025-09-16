@@ -16,20 +16,31 @@
     }
     .hero-image {
       height: 400px;
-      background: url('https://source.unsplash.com/1200x600/?prayer,hope') center/cover no-repeat;
+      /* 這裡使用 Unsplash 的圖片，你可以替換成實際的圖片 URL */
+      background: url('https://source.unsplash.com/1200x600/?prayer,hope,family') center/cover no-repeat;
       position: relative;
-    }
-    .hero-overlay {
-      background-color: rgba(0, 0, 0, 0.6);
-      position: absolute;
-      width: 100%;
-      height: 100%;
-      display: flex;
+      display: flex; /* 使用 flexbox 讓內容垂直置中 */
       align-items: center;
       justify-content: center;
-      color: white;
       text-align: center;
+      color: white;
       padding: 2rem;
+      box-shadow: inset 0 0 0 1000px rgba(0, 0, 0, 0.6); /* 疊加暗色背景 */
+    }
+    .hero-overlay-content {
+      z-index: 1; /* 確保文字在背景之上 */
+    }
+    .section-title {
+      font-weight: bold;
+      font-size: 1.8rem;
+      margin-bottom: 1rem;
+    }
+    .prayer-card img {
+      width: 100%;
+      height: 240px;
+      object-fit: cover;
+      border-top-left-radius: 0.75rem;
+      border-top-right-radius: 0.75rem;
     }
     .footer {
       background-color: #343a40;
@@ -43,77 +54,194 @@
     .footer a:hover {
       color: white;
     }
+    .feature-section {
+        background-size: cover;
+        background-position: center;
+        position: relative;
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        padding: 5rem 2rem; /* 增加上下 padding */
+        min-height: 500px; /* 設定最小高度 */
+    }
+    .feature-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.7); /* 深色遮罩 */
+        z-index: 1;
+    }
+    .feature-content {
+        position: relative;
+        z-index: 2;
+    }
+    .feature-content h2 {
+        font-size: 2.5rem;
+        margin-bottom: 1rem;
+        font-weight: bold;
+    }
+    .feature-content p {
+        font-size: 1.2rem;
+        max-width: 800px; /* 限制文字寬度 */
+        margin: 0 auto; /* 居中 */
+    }
+    .feature-list {
+        margin-top: 2rem;
+        list-style: none;
+        padding: 0;
+    }
+    .feature-list li {
+        margin-bottom: 1rem;
+        font-size: 1.1rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    .feature-list li::before {
+        content: '✓ '; /* 可以換成你喜歡的圖標 */
+        color: #28a745; /* 綠色 */
+        margin-right: 10px;
+        font-weight: bold;
+    }
+    .disabled-btn {
+        cursor: not-allowed;
+        pointer-events: none;
+        opacity: 0.6;
+    }
   </style>
 </head>
 <body>
-  <!-- Header -->
-  <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm">
-    <div class="container">
-      <a class="navbar-brand d-flex align-items-center" href="/">
-        <img src="/logo.png" alt="PRAY Logo">
-        <strong>PRAY COIN</strong>
-      </a>
-      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-        <span class="navbar-toggler-icon"></span>
-      </button>
-      <div class="collapse navbar-collapse" id="navbarNav">
-        <ul class="navbar-nav ms-auto">
-          <li class="nav-item">
-            <a class="nav-link" href="/">回首頁</a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link" href="#">關於我們</a>
-          </li>
-          <li class="nav-item">
-            <a class="btn btn-outline-primary ms-lg-3" href="#">登入 / 註冊</a>
-          </li>
-        </ul>
-      </div>
-    </div>
-  </nav>
-
-  <!-- Hero Image -->
-  <div class="hero-image">
-    <div class="hero-overlay">
-      <div>
-        <h1 class="display-5 fw-bold">為 Charlie Kirk 的家人禱告</h1>
-        <p class="lead">願神親自安慰他留下的妻子與孩子，賜下出人意外的平安。</p>
-      </div>
-    </div>
-  </div>
-
-  <!-- Main Content -->
-  <div class="container py-5">
-    <div class="row">
-      <div class="col-lg-8">
-        <h3 class="fw-bold mb-3">🙏 禱告事項內容</h3>
-        <p>
-          2025年9月10日，知名信仰領袖 Charlie Kirk 在猶他谷大學演講時不幸遭遇槍擊，現場送醫後不治。他留下年輕的妻子 Erika，以及兩名年幼的孩子。這場悲劇震驚了整個信仰社群。
-        </p>
-        <p>
-          我們誠摯邀請您一同為他的家人禱告：願主親自安慰 Erika，賜她剛強與信心；保守孩子們在父親缺席的成長旅程中，依然充滿愛、平安與希望。
-        </p>
-
-        <div class="my-4">
-          <h5 class="fw-bold">📌 代禱方向：</h5>
-          <ul>
-            <li>為遺屬 Erika 賜下屬天的安慰與剛強。</li>
-            <li>為兩位年幼孩子的成長、教育、情緒得保守。</li>
-            <li>為教會群體在震驚後重新振作，繼續傳福音的使命。</li>
+  <header>
+    <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm">
+      <div class="container">
+        <a class="navbar-brand d-flex align-items-center" href="../index.html">
+          <img src="../img/logo.png" alt="PRAY Logo">
+          <strong>PRAY COIN</strong>
+        </a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+          <ul class="navbar-nav ms-auto">
+            <li class="nav-item">
+              <a class="nav-link" href="../index.html">回首頁</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="../about.html">關於我們</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="../index.html#howto">使用說明</a>
+            </li>
+            <li class="nav-item">
+              <a class="btn btn-primary ms-lg-3" href="#">登入 / 註冊</a>
+            </li>
           </ul>
         </div>
+      </div>
+    </nav>
+  </header>
 
-        <blockquote class="blockquote my-4 p-3 bg-light border-start border-4 border-warning">
-          「你們要為萬人祈求，代求，並感謝；這是好的，在我們救主神面前是蒙悅納的。」<br>
-          <footer class="blockquote-footer">提摩太前書 2:1～3（恢復本）</footer>
-        </blockquote>
+  <section class="hero-image">
+    <div class="hero-overlay-content">
+      <h1 class="display-4 fw-bold mb-3">為 Charlie Kirk 的家人禱告</h1>
+      <p class="lead">願神親自安慰他留下的妻子與孩子，賜下出人意外的平安。</p>
+    </div>
+  </section>
 
-        <a href="#" class="btn btn-warning btn-lg">🎙️ 我要錄音禱告</a>
+  <main class="container py-5">
+    <div class="row">
+      <div class="col-lg-8">
+        <article class="bg-white p-4 shadow-sm rounded mb-4">
+          <h3 class="fw-bold mb-3">🙏 禱告事項內容</h3>
+          <p>
+            2025年9月10日，知名信仰領袖 Charlie Kirk 在猶他谷大學演講時不幸遭遇槍擊，現場送醫後不治。他留下年輕的妻子 Erika，以及兩名年幼的孩子。這場悲劇震驚了整個信仰社群。
+          </p>
+          <p>
+            我們誠摯邀請您一同為他的家人禱告：願主親自安慰 Erika，賜她剛強與信心；保守孩子們在父親缺席的成長旅程中，依然充滿愛、平安與希望。
+          </p>
+
+          <div class="mt-4 mb-3">
+            <h5 class="fw-bold">📌 代禱方向：</h5>
+            <ul class="list-unstyled">
+              <li>願主親自安慰 Erika，賜她剛強與信心，以及出人意外的平安。</li>
+              <li>保守兩位年幼孩子的成長、教育、情緒，讓他們在愛中茁壯。</li>
+              <li>為教會群體在失去領袖的時刻，能重新振作，並繼續傳揚福音的使命。</li>
+              <li>求神賜下智慧與力量給所有關心他們的人。</li>
+            </ul>
+          </div>
+
+          <blockquote class="blockquote my-4 p-3 bg-light border-start border-4 border-warning">
+            <p class="mb-0">「你們要為萬人祈求，代求，並感謝；這是好的，在我們救主神面前是蒙悅納的。」</p>
+            <footer class="blockquote-footer">提摩太前書 2:1～3（恢復本）</footer>
+          </blockquote>
+
+          <a href="#" class="btn btn-warning btn-lg me-2">🎙️ 我要錄音代禱</a>
+          <button class="btn btn-outline-secondary btn-lg disabled-btn" title="請先登入">💬 留言</button>
+        </article>
+
+        <section class="bg-white p-4 shadow-sm rounded mt-4">
+          <h4 class="fw-bold mb-4">🎧 他們已經代禱：</h4>
+          <div class="list-group">
+            <div class="list-group-item d-flex align-items-center justify-content-between flex-wrap">
+              <div class="d-flex align-items-center mb-2">
+                <img src="https://i.pravatar.cc/48?u=alice" class="rounded-circle me-3" alt="Alice Lin">
+                <div>
+                  <strong>Alice Lin</strong><br>
+                  <small class="text-muted">25 分鐘前</small>
+                </div>
+              </div>
+              <div class="d-flex align-items-center mb-2">
+                <audio controls preload="none" style="width: 300px;">
+                  <source src="/audio/pray_alice_kirk.mp3" type="audio/mpeg">
+                  您的瀏覽器不支援音訊播放。
+                </audio>
+                <div class="d-flex align-items-center ms-3">
+                  <button class="btn btn-light btn-sm me-2">🙏 <span class="ms-1">42</span></button>
+                  <div class="dropdown">
+                    <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">⋯</button>
+                    <ul class="dropdown-menu">
+                      <li><a class="dropdown-item text-danger" href="#">🚩 檢舉此錄音</a></li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="list-group-item d-flex align-items-center justify-content-between flex-wrap">
+              <div class="d-flex align-items-center mb-2">
+                <img src="https://i.pravatar.cc/48?u=ben" class="rounded-circle me-3" alt="Ben Hsu">
+                <div>
+                  <strong>Ben Hsu</strong><br>
+                  <small class="text-muted">1 小時前</small>
+                </div>
+              </div>
+              <div class="d-flex align-items-center mb-2">
+                <audio controls preload="none" style="width: 300px;">
+                  <source src="/audio/pray_ben_kirk.mp3" type="audio/mpeg">
+                  您的瀏覽器不支援音訊播放。
+                </audio>
+                <div class="d-flex align-items-center ms-3">
+                  <button class="btn btn-light btn-sm me-2">🙏 <span class="ms-1">30</span></button>
+                  <div class="dropdown">
+                    <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">⋯</button>
+                    <ul class="dropdown-menu">
+                      <li><a class="dropdown-item text-danger" href="#">🚩 檢舉此錄音</a></li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+            </div>
+            </div>
+        </section>
       </div>
 
       <div class="col-lg-4">
-        <div class="bg-white p-4 shadow-sm rounded mb-4">
-          <h5 class="mb-3">📊 禱告參與統計</h5>
+        <aside class="bg-white p-4 shadow-sm rounded mb-4 sticky-lg-top">
+          <h5 class="mb-3 fw-bold">📊 禱告參與統計</h5>
           <ul class="list-unstyled">
             <li>🕊️ 已代禱人數：<strong>4,120</strong></li>
             <li>❤️ 按讚支持數：<strong>2,987</strong></li>
@@ -121,86 +249,47 @@
             <li>⏱️ 總觀看時間：<strong>147 小時</strong></li>
             <li>🕓 最後更新：2 小時前</li>
           </ul>
-        </div>
+        </aside>
 
-        <div class="bg-white p-4 shadow-sm rounded">
+        <aside class="bg-white p-4 shadow-sm rounded sticky-lg-top" style="top: 100px;">
           <h6 class="fw-bold">📬 分享禱告事項</h6>
           <p class="text-muted">將此禱告事項分享至您的社群平台，讓更多人一同代禱。</p>
-          <div class="d-flex gap-2">
+          <div class="d-flex flex-wrap gap-2">
             <a href="#" class="btn btn-outline-primary btn-sm">Facebook</a>
             <a href="#" class="btn btn-outline-info btn-sm">LINE</a>
             <a href="#" class="btn btn-outline-dark btn-sm">複製連結</a>
           </div>
-        </div>
+        </aside>
       </div>
     </div>
-  </div>
+  </main>
 
-  <!-- Other Prayer Recordings -->
-  <div class="container py-4">
-    <h4 class="fw-bold mb-4">🎧 他們已經代禱：</h4>
-    <div class="list-group">
-
-      <!-- 錄音項目 1 -->
-      <div class="list-group-item d-flex align-items-start justify-content-between">
-        <div class="d-flex align-items-center">
-          <img src="https://i.pravatar.cc/48?u=alice" class="rounded-circle me-3" alt="Alice">
-          <div>
-            <strong>Alice Lin</strong><br>
-            <audio controls preload="none" style="width: 250px;">
-              <source src="/audio/pray_alice_kirk.mp3" type="audio/mpeg">
-              您的瀏覽器不支援音訊播放。
-            </audio>
-          </div>
-        </div>
-        <div class="d-flex align-items-center gap-3">
-          <button class="btn btn-light">🙏 <span class="ms-1">42</span></button>
-          <div class="dropdown">
-            <button class="btn btn-sm btn-outline-secondary" data-bs-toggle="dropdown" aria-expanded="false">⋯</button>
-            <ul class="dropdown-menu">
-              <li><a class="dropdown-item text-danger" href="#">🚩 檢舉此錄音</a></li>
-            </ul>
-          </div>
-        </div>
-      </div>
-
-      <!-- 錄音項目 2 -->
-      <div class="list-group-item d-flex align-items-start justify-content-between">
-        <div class="d-flex align-items-center">
-          <img src="https://i.pravatar.cc/48?u=ben" class="rounded-circle me-3" alt="Ben">
-          <div>
-            <strong>Ben Hsu</strong><br>
-            <audio controls preload="none" style="width: 250px;">
-              <source src="/audio/pray_ben_kirk.mp3" type="audio/mpeg">
-              您的瀏覽器不支援音訊播放。
-            </audio>
-          </div>
-        </div>
-        <div class="d-flex align-items-center gap-3">
-          <button class="btn btn-light">🙏 <span class="ms-1">30</span></button>
-          <div class="dropdown">
-            <button class="btn btn-sm btn-outline-secondary" data-bs-toggle="dropdown" aria-expanded="false">⋯</button>
-            <ul class="dropdown-menu">
-              <li><a class="dropdown-item text-danger" href="#">🚩 檢舉此錄音</a></li>
-            </ul>
-          </div>
-        </div>
-      </div>
-
+  <section class="feature-section" style="background-image: url('https://source.unsplash.com/1920x1080/?faith,support');">
+    <div class="feature-overlay"></div>
+    <div class="feature-content">
+      <h2>🙏 對需要代禱的人</h2>
+      <p>在 PRAY COIN 平台，您可以免費分享您的禱告事項，讓溫暖的禱告聲音環繞著您。若想讓更多人關注，您也可以使用少量 PRAY COIN 讓您的心聲被聽見。</p>
+      <ul class="feature-list">
+        <li>免費發布您的禱告需求</li>
+        <li>使用 PRAY COIN 讓您的禱告事項獲得更多曝光</li>
+        <li>聆聽並回放別人為您錄製的代禱聲音</li>
+      </ul>
     </div>
-  </div>
+  </section>
 
-  <!-- Footer -->
-  <footer class="footer text-center">
-    <div class="container">
+  <footer class="footer">
+    <div class="container text-center">
       <p class="mb-1">© 2025 PRAY COIN 平台 - 與愛同行</p>
       <p class="small">
-        <a href="/">首頁</a> · 
-        <a href="#">關於我們</a> · 
-        <a href="#">使用條款</a>
+        <a href="/">首頁</a> ·
+        <a href="#about">關於我們</a> ·
+        <a href="#howto">使用說明</a> ·
+        <a href="/privacy">隱私政策</a> ·
+        <a href="/terms">使用條款</a>
       </p>
     </div>
   </footer>
+
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
