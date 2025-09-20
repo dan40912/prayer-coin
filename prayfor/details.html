@@ -1,295 +1,179 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="zh-Hant">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>為 Charlie Kirk 家人禱告 | PRAY COIN</title>
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-  <style>
-    body {
-      background-color: #f8f9fa;
-      font-family: 'Noto Sans TC', sans-serif;
-    }
-    .navbar-brand img {
-      height: 40px;
-      margin-right: 10px;
-    }
-    .hero-image {
-      height: 400px;
-      /* 這裡使用 Unsplash 的圖片，你可以替換成實際的圖片 URL */
-      background: url('https://source.unsplash.com/1200x600/?prayer,hope,family') center/cover no-repeat;
-      position: relative;
-      display: flex; /* 使用 flexbox 讓內容垂直置中 */
-      align-items: center;
-      justify-content: center;
-      text-align: center;
-      color: white;
-      padding: 2rem;
-      box-shadow: inset 0 0 0 1000px rgba(0, 0, 0, 0.6); /* 疊加暗色背景 */
-    }
-    .hero-overlay-content {
-      z-index: 1; /* 確保文字在背景之上 */
-    }
-    .section-title {
-      font-weight: bold;
-      font-size: 1.8rem;
-      margin-bottom: 1rem;
-    }
-    .prayer-card img {
-      width: 100%;
-      height: 240px;
-      object-fit: cover;
-      border-top-left-radius: 0.75rem;
-      border-top-right-radius: 0.75rem;
-    }
-    .footer {
-      background-color: #343a40;
-      color: white;
-      padding: 2rem 0;
-    }
-    .footer a {
-      color: #adb5bd;
-      text-decoration: none;
-    }
-    .footer a:hover {
-      color: white;
-    }
-    .feature-section {
-        background-size: cover;
-        background-position: center;
-        position: relative;
-        color: white;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        text-align: center;
-        padding: 5rem 2rem; /* 增加上下 padding */
-        min-height: 500px; /* 設定最小高度 */
-    }
-    .feature-overlay {
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background-color: rgba(0, 0, 0, 0.7); /* 深色遮罩 */
-        z-index: 1;
-    }
-    .feature-content {
-        position: relative;
-        z-index: 2;
-    }
-    .feature-content h2 {
-        font-size: 2.5rem;
-        margin-bottom: 1rem;
-        font-weight: bold;
-    }
-    .feature-content p {
-        font-size: 1.2rem;
-        max-width: 800px; /* 限制文字寬度 */
-        margin: 0 auto; /* 居中 */
-    }
-    .feature-list {
-        margin-top: 2rem;
-        list-style: none;
-        padding: 0;
-    }
-    .feature-list li {
-        margin-bottom: 1rem;
-        font-size: 1.1rem;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-    }
-    .feature-list li::before {
-        content: '✓ '; /* 可以換成你喜歡的圖標 */
-        color: #28a745; /* 綠色 */
-        margin-right: 10px;
-        font-weight: bold;
-    }
-    .disabled-btn {
-        cursor: not-allowed;
-        pointer-events: none;
-        opacity: 0.6;
-    }
-  </style>
+  <title>Prayer Coin | 禱告詳情索引</title>
+  <link rel="stylesheet" href="../css/wireframe.css">
 </head>
 <body>
   <header>
-    <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm">
-      <div class="container">
-        <a class="navbar-brand d-flex align-items-center" href="../index.html">
-          <img src="../img/logo.png" alt="PRAY Logo">
-          <strong>PRAY COIN</strong>
-        </a>
-        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-          <span class="navbar-toggler-icon"></span>
-        </button>
-        <div class="collapse navbar-collapse" id="navbarNav">
-          <ul class="navbar-nav ms-auto">
-            <li class="nav-item">
-              <a class="nav-link" href="../index.html">回首頁</a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link" href="../about.html">關於我們</a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link" href="../index.html#howto">使用說明</a>
-            </li>
-            <li class="nav-item">
-              <a class="btn btn-primary ms-lg-3" href="#">登入 / 註冊</a>
-            </li>
-          </ul>
-        </div>
-      </div>
-    </nav>
+    <div class="navbar">
+      <a class="brand" href="../index.html">
+        <img class="brand-logo" src="../img/logo.png" alt="Prayer Coin logo">
+        <span>Prayer Coin</span>
+      </a>
+      <nav class="nav-links">
+        <a href="../index.html">首頁</a>
+        <a href="../about.html">關於我們</a>
+        <a href="../howto.html">使用說明</a>
+        <a href="../dashboard.html">用戶面板</a>
+        <a href="../login.html">登入</a>
+      </nav>
+    </div>
   </header>
+  <main>
+    <section class="section detail-hero">
+      <h1>禱告詳情索引</h1>
+      <p>個別禱告頁面已切分為 6 個獨立檔案，日後內容將由資料庫提供。請選擇想關心的主題以瀏覽完整資訊與語音牆。</p>
+      <div class="stat-chips">
+        <span class="stat-chip"><strong>PC-101</strong> 家庭重建</span>
+        <span class="stat-chip"><strong>PC-214</strong> 化療醫治</span>
+        <span class="stat-chip"><strong>PC-332</strong> 青年抉擇</span>
+        <span class="stat-chip"><strong>PC-418</strong> 跨文化宣教</span>
+        <span class="stat-chip"><strong>PC-509</strong> 社企募資</span>
+        <span class="stat-chip"><strong>PC-623</strong> 情緒支持</span>
+      </div>
+      <div class="guide-panel">
+        <strong>使用說明</strong>
+        <span>・ 首頁卡片已連結至各自的 `/prayfor/pc-xxx.html` 頁面。</span>
+        <span>・ 未登入者仍可瀏覽內容；登入後可留言或錄製語音禱告。</span>
+        <span>・ 後端串接完成後，這些頁面將改由資料庫動態填入資訊。</span>
+      </div>
+    </section>
 
-  <section class="hero-image">
-    <div class="hero-overlay-content">
-      <h1 class="display-4 fw-bold mb-3">為 Charlie Kirk 的家人禱告</h1>
-      <p class="lead">願神親自安慰他留下的妻子與孩子，賜下出人意外的平安。</p>
-    </div>
-  </section>
-
-  <main class="container py-5">
-    <div class="row">
-      <div class="col-lg-8">
-        <article class="bg-white p-4 shadow-sm rounded mb-4">
-          <h3 class="fw-bold mb-3">🙏 禱告事項內容</h3>
-          <p>
-            2025年9月10日，知名信仰領袖 Charlie Kirk 在猶他谷大學演講時不幸遭遇槍擊，現場送醫後不治。他留下年輕的妻子 Erika，以及兩名年幼的孩子。這場悲劇震驚了整個信仰社群。
-          </p>
-          <p>
-            我們誠摯邀請您一同為他的家人禱告：願主親自安慰 Erika，賜她剛強與信心；保守孩子們在父親缺席的成長旅程中，依然充滿愛、平安與希望。
-          </p>
-
-          <div class="mt-4 mb-3">
-            <h5 class="fw-bold">📌 代禱方向：</h5>
-            <ul class="list-unstyled">
-              <li>願主親自安慰 Erika，賜她剛強與信心，以及出人意外的平安。</li>
-              <li>保守兩位年幼孩子的成長、教育、情緒，讓他們在愛中茁壯。</li>
-              <li>為教會群體在失去領袖的時刻，能重新振作，並繼續傳揚福音的使命。</li>
-              <li>求神賜下智慧與力量給所有關心他們的人。</li>
-            </ul>
+    <section class="section recommend-section">
+      <h3>選擇禱告主題</h3>
+      <p>點擊下方卡片前往對應的詳情頁面，參與禱告與關懷。</p>
+      <div class="card-grid">
+        <article class="prayer-card">
+          <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2NDAgNDAwIj4KICA8ZGVmcz4KICAgIDxsaW5lYXJHcmFkaWVudCBpZD0iZyIgeDE9IjAiIHkxPSIwIiB4Mj0iMSIgeTI9IjEiPgogICAgICA8c3RvcCBvZmZzZXQ9IjAlIiBzdG9wLWNvbG9yPSIjNjBhNWZhIi AvPgogICAgICA8c3Rvc CBvZmZzZXQ9IjEwMCUi IHN0b3AtY29sb3I9IiMxZDRlZDgi IC8+CiAgICA8L2x pbmVhckdyYWRpZW50Pgog IDwvZGVmcz4KICA8cmVjd CB3aWR0aD0iNjQwIi BoZWlnaHQ9IjQwMCI gZmlsbD0idXJsKCNnKSIg cng9IjMyIi AvPgog IDx0ZXh0IHg9IjUwJSIgeT0iNTQlIi B0ZXh0LWFuY2hvcj0ibWlkZGxlIi Bmb250LXNpemU9IjYyIi BmaWxsPSJyZ2JhKDI1NSwy NTUsMjU1LDAuOSki Bmb250LWZhbWlseT0iJ1NlZ29l IFVJJyxzYW5zLXNlcmlmIi Bmb250LXdlaWdodD0iNz AwIj5GYW1pbHk8L3RleHQ+Cjwvc3ZnPg==" alt="Family placeholder">
+          <div class="card-body">
+            <div class="tag-list">
+              <span class="tag">家庭</span>
+              <span class="tag">關係修復</span>
+            </div>
+            <h3>PC-101 家庭重建信任</h3>
+            <p>家族會談與禱告並行，重建信任與和解。</p>
+            <div class="prayer-meta">
+              <span>回應 12</span>
+              <span>語音 4</span>
+            </div>
           </div>
-
-          <blockquote class="blockquote my-4 p-3 bg-light border-start border-4 border-warning">
-            <p class="mb-0">「你們要為萬人祈求，代求，並感謝；這是好的，在我們救主神面前是蒙悅納的。」</p>
-            <footer class="blockquote-footer">提摩太前書 2:1～3（恢復本）</footer>
-          </blockquote>
-
-          <a href="#" class="btn btn-warning btn-lg me-2">🎙️ 我要錄音代禱</a>
-          <button class="btn btn-outline-secondary btn-lg disabled-btn" title="請先登入">💬 留言</button>
+          <div class="card-footer">
+            <a class="cta-link" href="pc-101.html">開啟詳情頁 &rarr;</a>
+            <a class="voice-link" href="pc-101.html#voice">直接前往語音</a>
+          </div>
         </article>
-
-        <section class="bg-white p-4 shadow-sm rounded mt-4">
-          <h4 class="fw-bold mb-4">🎧 他們已經代禱：</h4>
-          <div class="list-group">
-            <div class="list-group-item d-flex align-items-center justify-content-between flex-wrap">
-              <div class="d-flex align-items-center mb-2">
-                <img src="https://i.pravatar.cc/48?u=alice" class="rounded-circle me-3" alt="Alice Lin">
-                <div>
-                  <strong>Alice Lin</strong><br>
-                  <small class="text-muted">25 分鐘前</small>
-                </div>
-              </div>
-              <div class="d-flex align-items-center mb-2">
-                <audio controls preload="none" style="width: 300px;">
-                  <source src="/audio/pray_alice_kirk.mp3" type="audio/mpeg">
-                  您的瀏覽器不支援音訊播放。
-                </audio>
-                <div class="d-flex align-items-center ms-3">
-                  <button class="btn btn-light btn-sm me-2">🙏 <span class="ms-1">42</span></button>
-                  <div class="dropdown">
-                    <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">⋯</button>
-                    <ul class="dropdown-menu">
-                      <li><a class="dropdown-item text-danger" href="#">🚩 檢舉此錄音</a></li>
-                    </ul>
-                  </div>
-                </div>
-              </div>
+        <article class="prayer-card">
+          <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2NDAgNDAwIj4KICA8ZGVmcz4KICAgIDxsaW5lYXJHcmFkaWVudCBpZD0iZyIgeDE9IjAiIHkxPSIwIiB4Mj0iMSIgeTI9IjEiPgogICAgICA8c3RvcCBvZmZzZXQ9IjAlIiBzdG9wLWNvbG9yPSIjZjQ3MmI2Ii AvPgogICAgICA8c3Rvc CBvZmZzZXQ9IjEwMCUi IHN0b3AtY29sb3I9IiNkYjI3Nzci IC8+CiAgICA8L2x pbmVhckdyYWRpZW50Pgog IDwvZGVmcz4KICA8cmVjd CB3aWR0aD0iNjQwIi BoZWlnaHQ9IjQwMCI gZmlsbD0idXJsKCNnKSIg cng9IjMyIi AvPgog IDx0ZXh0IHg9IjUwJSIgeT0iNTQlIi B0ZXh0LWFuY2hvcj0ibWlkZGxlIi Bmb250LXNpemU9IjYyIi BmaWxsPSJyZ2JhKDI1NSwy NTUsMjU1LDAuOTIpIi Bmb250LWZhbWlseT0iJ1NlZ29l IFVJJyxzYW5zLXNlcmlmIi Bmb250LXdlaWdodD0iNz AwIj5IZWFsaW5nPC90ZXh0Pgo8L3N2Zz4=" alt="Healing placeholder">
+          <div class="card-body">
+            <div class="tag-list">
+              <span class="tag">醫治</span>
+              <span class="tag">癌症療程</span>
             </div>
-
-            <div class="list-group-item d-flex align-items-center justify-content-between flex-wrap">
-              <div class="d-flex align-items-center mb-2">
-                <img src="https://i.pravatar.cc/48?u=ben" class="rounded-circle me-3" alt="Ben Hsu">
-                <div>
-                  <strong>Ben Hsu</strong><br>
-                  <small class="text-muted">1 小時前</small>
-                </div>
-              </div>
-              <div class="d-flex align-items-center mb-2">
-                <audio controls preload="none" style="width: 300px;">
-                  <source src="/audio/pray_ben_kirk.mp3" type="audio/mpeg">
-                  您的瀏覽器不支援音訊播放。
-                </audio>
-                <div class="d-flex align-items-center ms-3">
-                  <button class="btn btn-light btn-sm me-2">🙏 <span class="ms-1">30</span></button>
-                  <div class="dropdown">
-                    <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">⋯</button>
-                    <ul class="dropdown-menu">
-                      <li><a class="dropdown-item text-danger" href="#">🚩 檢舉此錄音</a></li>
-                    </ul>
-                  </div>
-                </div>
-              </div>
+            <h3>PC-214 化療副作用守望</h3>
+            <p>輪班探訪與禱告支持，陪伴病程的每一步。</p>
+            <div class="prayer-meta">
+              <span>回應 27</span>
+              <span>語音 7</span>
             </div>
-            </div>
-        </section>
-      </div>
-
-      <div class="col-lg-4">
-        <aside class="bg-white p-4 shadow-sm rounded mb-4 sticky-lg-top">
-          <h5 class="mb-3 fw-bold">📊 禱告參與統計</h5>
-          <ul class="list-unstyled">
-            <li>🕊️ 已代禱人數：<strong>4,120</strong></li>
-            <li>❤️ 按讚支持數：<strong>2,987</strong></li>
-            <li>👀 點擊次數：<strong>8,943</strong></li>
-            <li>⏱️ 總觀看時間：<strong>147 小時</strong></li>
-            <li>🕓 最後更新：2 小時前</li>
-          </ul>
-        </aside>
-
-        <aside class="bg-white p-4 shadow-sm rounded sticky-lg-top" style="top: 100px;">
-          <h6 class="fw-bold">📬 分享禱告事項</h6>
-          <p class="text-muted">將此禱告事項分享至您的社群平台，讓更多人一同代禱。</p>
-          <div class="d-flex flex-wrap gap-2">
-            <a href="#" class="btn btn-outline-primary btn-sm">Facebook</a>
-            <a href="#" class="btn btn-outline-info btn-sm">LINE</a>
-            <a href="#" class="btn btn-outline-dark btn-sm">複製連結</a>
           </div>
-        </aside>
+          <div class="card-footer">
+            <a class="cta-link" href="pc-214.html">開啟詳情頁 &rarr;</a>
+            <a class="voice-link" href="pc-214.html#voice">直接前往語音</a>
+          </div>
+        </article>
+        <article class="prayer-card">
+          <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2NDAgNDAwIj4KICA8ZGVmcz4KICAgIDxsaW5lYXJHcmFkaWVudCBpZD0iZyIgeDE9IjAiIHkxPSIwIiB4Mj0iMSIgeTI9IjEiPgogICAgICA8c3RvcCBvZmZzZXQ9IjAlIiBzdG9wLWNvbG9yPSIjMzRkMzk5Ii AvPgogICAgICA8c3Rvc CBvZmZzZXQ9IjEwMCUi IHN0b3AtY29sb3I9IiMwNTk2Njki IC8+CiAgICA8L2x pbmVhckdyYWRpZW50Pgog IDwvZGVmcz4KICA8cmVjd CB3aWR0aD0iNjQwIi BoZWlnaHQ9IjQwMCI gZmlsbD0idXJsKCNnKSIg cng9IjMyIi AvPgog IDx0ZXh0IHg9IjUwJSIgeT0iNTQlIi B0ZXh0LWFuY2hvcj0ibWlkZGxlIi Bmb250LXNpemU9IjYyIi BmaWxsPSJyZ2JhKDI1NSwy NTUsMjU1LDAuOTIpIi Bmb250LWZhbWlseT0iJ1NlZ29l IFVJJyxzYW5zLXNlcmlmIi Bmb250LXdlaWdodD0iNz AwIj5Zb3V0aDwvdGV4dD4KPC9zdmc+" alt="Youth placeholder">
+          <div class="card-body">
+            <div class="tag-list">
+              <span class="tag">下一代</span>
+              <span class="tag">畢業抉擇</span>
+            </div>
+            <h3>PC-332 青年職涯尋求</h3>
+            <p>透過陪談與諮詢活動，陪伴青年尋找呼召方向。</p>
+            <div class="prayer-meta">
+              <span>回應 9</span>
+              <span>語音 3</span>
+            </div>
+          </div>
+          <div class="card-footer">
+            <a class="cta-link" href="pc-332.html">開啟詳情頁 &rarr;</a>
+            <a class="voice-link" href="pc-332.html#voice">直接前往語音</a>
+          </div>
+        </article>
+        <article class="prayer-card">
+          <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2NDAgNDAwIj4KICA8ZGVmcz4KICAgIDxsaW5lYXJHcmFkaWVudCBpZD0iZyIgeDE9IjAiIHkxPSIwIiB4Mj0iMSIgeTI9IjEiPgogICAgICA8c3RvcCBvZmZzZXQ9IjAlIiBzdG9wLWNvbG9yPSIjZmJiZjI0Ii AvPgogICAgICA8c3Rvc CBvZmZzZXQ9IjEwMCUi IHN0b3AtY29sb3I9IiNkOTc3MDYi IC8+CiAgICA8L2x pbmVhckdyYWRpZW50Pgog IDwvZGVmcz4KICA8cmVjd CB3aWR0aD0iNjQwIi BoZWlnaHQ9IjQwMCI gZmlsbD0idXJsKCNnKSIg cng9IjMyIi AvPgog IDx0ZXh0IHg9IjUwJSIgeT0iNTQlIi B0ZXh0LWFuY2hvcj0ibWlkZGxlIi Bmb250LXNpemU9IjYyIi BmaWxsPSJyZ2JhKDI1NSwy NTUsMjU1LDAuOTIpIi Bmb250LWZhbWlseT0iJ1NlZ29l IFVJJyxzYW5zLXNlcmlmIi Bmb250LXdlaWdodD0iNz AwIj5NaXNzaW9uPC90ZXh0Pgo8L3N2Zz4=" alt="Mission placeholder">
+          <div class="card-body">
+            <div class="tag-list">
+              <span class="tag">宣教</span>
+              <span class="tag">跨文化</span>
+            </div>
+            <h3>PC-418 泰北短宣隊</h3>
+            <p>行前裝備、語言適應與交通安全都需要禱告遮蓋。</p>
+            <div class="prayer-meta">
+              <span>回應 15</span>
+              <span>語音 5</span>
+            </div>
+          </div>
+          <div class="card-footer">
+            <a class="cta-link" href="pc-418.html">開啟詳情頁 &rarr;</a>
+            <a class="voice-link" href="pc-418.html#voice">直接前往語音</a>
+          </div>
+        </article>
+        <article class="prayer-card">
+          <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2NDAgNDAwIj4KICA8ZGVmcz4KICAgIDxsaW5lYXJHcmFkaWVudCBpZD0iZyIgeDE9IjAiIHkxPSIwIiB4Mj0iMSIgeTI9IjEiPgogICAgICA8c3RvcCBvZmZzZXQ9IjAlIiBzdG9wLWNvbG9yPSIjYzA4NGZjIi AvPgogICAgICA8c3Rvc CBvZmZzZXQ9IjEwMCUi IHN0b3AtY29sb3I9IiM3YzNhZWQi IC8+CiAgICA8L2x pbmVhckdyYWRpZW50Pgog IDwvZGVmcz4KICA8cmVjd CB3aWR0aD0iNjQwIi BoZWlnaHQ9IjQwMCI gZmlsbD0idXJsKCNnKSIg cng9IjMyIi AvPgog IDx0ZXh0IHg9IjUwJSIgeT0iNTQlIi B0ZXh0LWFuY2hvcj0ibWlkZGxlIi Bmb250LXNpemU9IjYyIi BmaWxsPSJyZ2JhKDI1NSwy NTUsMjU1LDAuOTIpIi Bmb250LWZhbWlseT0iJ1NlZ29l IFVJJyxzYW5zLXNlcmlmIi Bmb250LXdlaWdodD0iNz AwIj5Qcm92aXNpb248L3RleHQ+Cjwvc3ZnPg==" alt="Provision placeholder">
+          <div class="card-body">
+            <div class="tag-list">
+              <span class="tag">供應</span>
+              <span class="tag">創業募資</span>
+            </div>
+            <h3>PC-509 社企募資祈禱</h3>
+            <p>尋找對齊異象的投資人，維持財務透明與良好見證。</p>
+            <div class="prayer-meta">
+              <span>回應 6</span>
+              <span>語音 2</span>
+            </div>
+          </div>
+          <div class="card-footer">
+            <a class="cta-link" href="pc-509.html">開啟詳情頁 &rarr;</a>
+            <a class="voice-link" href="pc-509.html#voice">直接前往語音</a>
+          </div>
+        </article>
+        <article class="prayer-card">
+          <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2NDAgNDAwIj4KICA8ZGVmcz4KICAgIDxsaW5lYXJHcmFkaWVudCBpZD0iZyIgeDE9IjAiIHkxPSIwIiB4Mj0iMSIgeTI9IjEiPgogICAgICA8c3RvcCBvZmZzZXQ9IjAlIiBzdG9wLWNvbG9yPSIjMmRkNGJmIi AvPgogICAgICA8c3Rvc CBvZmZzZXQ9IjEwMCUi IHN0b3AtY29sb3I9IiMwZjc2NmUi IC8+CiAgICA8L2x pbmVhckdyYWRpZW50Pgog IDwvZGVmcz4KICA8cmVjd CB3aWR0aD0iNjQwIi BoZWlnaHQ9IjQwMCI gZmlsbD0idXJsKCNnKSIg cng9IjMyIi AvPgog IDx0ZXh0IHg9IjUwJSIgeT0iNTQlIi B0ZXh0LWFuY2hvcj0ibWlkZGxlIi Bmb250LXNpemU9IjYyIi BmaWxsPSJyZ2JhKDI1NSwy NTUsMjU1LDAuOTIpIi Bmb250LWZhbWlseT0iJ1NlZ29l IFVJJyxzYW5zLXNlcmlmIi Bmb250LXdlaWdodD0iNz AwIj5Ib3BlPC90ZXh0Pgo8L3N2Zz4=" alt="Hope placeholder">
+          <div class="card-body">
+            <div class="tag-list">
+              <span class="tag">盼望</span>
+              <span class="tag">情緒支持</span>
+            </div>
+            <h3>PC-623 情緒支持與盼望</h3>
+            <p>透過禱告與專業協助，陪伴同工走出憂鬱陰影。</p>
+            <div class="prayer-meta">
+              <span>回應 21</span>
+              <span>語音 11</span>
+            </div>
+          </div>
+          <div class="card-footer">
+            <a class="cta-link" href="pc-623.html">開啟詳情頁 &rarr;</a>
+            <a class="voice-link" href="pc-623.html#voice">直接前往語音</a>
+          </div>
+        </article>
       </div>
-    </div>
+    </section>
   </main>
-
-  <section class="feature-section" style="background-image: url('https://source.unsplash.com/1920x1080/?faith,support');">
-    <div class="feature-overlay"></div>
-    <div class="feature-content">
-      <h2>🙏 對需要代禱的人</h2>
-      <p>在 PRAY COIN 平台，您可以免費分享您的禱告事項，讓溫暖的禱告聲音環繞著您。若想讓更多人關注，您也可以使用少量 PRAY COIN 讓您的心聲被聽見。</p>
-      <ul class="feature-list">
-        <li>免費發布您的禱告需求</li>
-        <li>使用 PRAY COIN 讓您的禱告事項獲得更多曝光</li>
-        <li>聆聽並回放別人為您錄製的代禱聲音</li>
-      </ul>
-    </div>
-  </section>
-
-  <footer class="footer">
-    <div class="container text-center">
-      <p class="mb-1">© 2025 PRAY COIN 平台 - 與愛同行</p>
-      <p class="small">
-        <a href="/">首頁</a> ·
-        <a href="#about">關於我們</a> ·
-        <a href="#howto">使用說明</a> ·
-        <a href="/privacy">隱私政策</a> ·
-        <a href="/terms">使用條款</a>
-      </p>
+  <footer>
+    <div class="footer-inner">
+      <span>&copy; 2025 Prayer Coin. All rights reserved.</span>
+      <div class="social-links">
+        <span class="tag-chip">Facebook</span>
+        <span class="tag-chip">Instagram</span>
+        <span class="tag-chip">YouTube</span>
+      </div>
     </div>
   </footer>
-
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
+
+

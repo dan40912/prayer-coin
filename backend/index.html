@@ -1,106 +1,76 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="zh-Hant">
 <head>
   <meta charset="UTF-8">
-  <title>Pray Coin 後台管理</title>
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Prayer Coin Admin Entry</title>
+  <link rel="stylesheet" href="css/admin.css">
+  <style>
+    body { background: #030712 linear-gradient(160deg, #0b1220 0%, #0f172a 45%, #111c2f 100%); }
+    main {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem;
+    }
+    .entry-card {
+      max-width: 520px;
+      width: 100%;
+      padding: 2.4rem;
+      background: rgba(9, 13, 25, 0.85);
+      border-radius: 1.5rem;
+      border: 1px solid rgba(148, 163, 184, 0.25);
+      color: #f8fafc;
+      display: grid;
+      gap: 1.6rem;
+      text-align: center;
+      box-shadow: 0 20px 42px rgba(8, 15, 30, 0.6);
+    }
+    .entry-card h1 {
+      margin: 0;
+      font-size: 1.8rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: #38bdf8;
+    }
+    .entry-card a {
+      display: inline-block;
+      padding: 0.85rem 1.4rem;
+      border-radius: 0.85rem;
+      background: linear-gradient(120deg, #0ea5e9, #38bdf8);
+      color: #02121f;
+      font-weight: 600;
+    }
+    .entry-card .links {
+      display: grid;
+      gap: 0.75rem;
+      font-size: 0.9rem;
+    }
+    .entry-card .links a {
+      background: rgba(56, 189, 248, 0.1);
+      color: #38bdf8;
+      padding: 0.65rem;
+    }
+    .entry-card p {
+      margin: 0;
+      color: #94a3b8;
+      font-size: 0.95rem;
+    }
+  </style>
 </head>
 <body>
-  <!-- Header -->
-  <nav class="navbar navbar-dark bg-dark px-3">
-    <a class="navbar-brand" href="#">🙏 Pray Coin 後台</a>
-    <span class="text-white">管理者帳號</span>
-  </nav>
-
-  <div class="container-fluid mt-4">
-    <div class="row">
-      <!-- Sidebar -->
-      <div class="col-2">
-        <div class="list-group">
-          <a href="#prayers" class="list-group-item list-group-item-action active">Prayer 管理</a>
-          <a href="#recordings" class="list-group-item list-group-item-action">錄音審核</a>
-          <a href="#scriptures" class="list-group-item list-group-item-action">經文管理</a>
-        </div>
+  <main>
+    <div class="entry-card">
+      <h1>Admin Console</h1>
+      <p>後端管理僅限授權管理員。請透過安全登入進入 Dashboard。</p>
+      <a href="login.html">前往安全登入</a>
+      <div class="links">
+        <a href="dashboard.html">直接檢視 Dashboard (wireframe 範例資料)</a>
+        <a href="../index.html">返回前台首頁</a>
       </div>
-
-      <!-- Main content -->
-      <div class="col-10">
-        <!-- Prayer 管理 -->
-        <section id="prayers" class="mb-5">
-          <h3>📌 Prayer 項目管理</h3>
-          <table class="table table-bordered">
-            <thead>
-              <tr>
-                <th>ID</th>
-                <th>內容</th>
-                <th>發布者</th>
-                <th>狀態</th>
-                <th>操作</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td>101</td>
-                <td>為家人健康禱告</td>
-                <td>User123</td>
-                <td><span class="badge bg-success">已公開</span></td>
-                <td>
-                  <button class="btn btn-sm btn-warning">釘選</button>
-                  <button class="btn btn-sm btn-danger">刪除</button>
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </section>
-
-        <!-- 錄音審核 -->
-        <section id="recordings" class="mb-5">
-          <h3>🎙 錄音檔案審核</h3>
-          <table class="table table-bordered">
-            <thead>
-              <tr>
-                <th>ID</th>
-                <th>祈禱內容</th>
-                <th>上傳者</th>
-                <th>播放</th>
-                <th>操作</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td>501</td>
-                <td>為考試禱告</td>
-                <td>User456</td>
-                <td>
-                  <button class="btn btn-sm btn-outline-primary">▶ 播放</button>
-                </td>
-                <td>
-                  <button class="btn btn-sm btn-success">通過</button>
-                  <button class="btn btn-sm btn-danger">刪除</button>
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </section>
-
-        <!-- 經文管理 -->
-        <section id="scriptures" class="mb-5">
-          <h3>📖 經文管理</h3>
-          <form class="mb-3">
-            <label for="newVerse" class="form-label">新增經文</label>
-            <textarea class="form-control" id="newVerse" rows="2" placeholder="輸入經文內容..."></textarea>
-            <button type="submit" class="btn btn-primary mt-2">上架</button>
-          </form>
-
-          <ul class="list-group">
-            <li class="list-group-item d-flex justify-content-between align-items-center">
-              雅各書 5:16
-              <button class="btn btn-sm btn-danger">刪除</button>
-            </li>
-          </ul>
-        </section>
-      </div>
+      <p>建議路徑：/backend/login.html → OAuth / MFA → /backend/dashboard.html。</p>
     </div>
-  </div>
+  </main>
 </body>
 </html>

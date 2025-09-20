@@ -1,0 +1,447 @@
+﻿<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Prayer Coin Admin Dashboard</title>
+  <link rel="stylesheet" href="css/admin.css">
+</head>
+<body>
+  <header>
+    <div class="brand">
+      <span>Prayer Coin</span>
+      <strong>Admin Console</strong>
+    </div>
+    <div class="user-meta">
+      <span>目前身份：Super Admin</span>
+      <span>上次登入：2025-09-18 22:42 UTC</span>
+      <a href="login.html">安全登出</a>
+    </div>
+  </header>
+  <div class="layout">
+    <aside class="sidebar">
+      <div class="nav-group">
+        <span class="nav-title">總覽</span>
+        <a class="nav-link active" href="#overview">Dashboard</a>
+        <a class="nav-link" href="#live">即時動態</a>
+        <a class="nav-link" href="#trends">趨勢分析</a>
+      </div>
+      <div class="nav-group">
+        <span class="nav-title">內容與用戶</span>
+        <a class="nav-link" href="#prayers">禱告管理</a>
+        <a class="nav-link" href="#users">用戶管理</a>
+        <a class="nav-link" href="#tokens">代幣管理</a>
+      </div>
+      <div class="nav-group">
+        <span class="nav-title">系統安全</span>
+        <a class="nav-link" href="#system">系統監控</a>
+        <a class="nav-link" href="#settings">設定管理</a>
+      </div>
+      <div class="nav-group">
+        <span class="nav-title">API</span>
+        <a class="nav-link" href="#">/api/v1/admin/metrics</a>
+        <a class="nav-link" href="#">/api/v1/admin/prayers</a>
+      </div>
+    </aside>
+    <main class="main">
+      <section id="overview" class="section-card">
+        <div class="flex-between">
+          <div>
+            <h2>數據總覽</h2>
+            <p class="meta">同步自報表 API：2025-09-20 06:30 UTC</p>
+          </div>
+          <div class="tab-bar">
+            <a href="#" class="active">今日</a>
+            <a href="#">本週</a>
+            <a href="#">本月</a>
+          </div>
+        </div>
+        <div class="grid-3">
+          <div class="stat-card">
+            <span class="stat-label">日活躍用戶數 (DAU)</span>
+            <span class="stat-value">1,284</span>
+            <span class="stat-delta">↑ 12% vs 昨日</span>
+          </div>
+          <div class="stat-card">
+            <span class="stat-label">今日新增禱告</span>
+            <span class="stat-value">86</span>
+            <span class="stat-delta">↑ 5% vs 7 日平均</span>
+          </div>
+          <div class="stat-card">
+            <span class="stat-label">今日發放代幣總量</span>
+            <span class="stat-value">4,920</span>
+            <span class="stat-delta">↑ 18% (語音禱告活動)</span>
+          </div>
+          <div class="stat-card">
+            <span class="stat-label">週活躍用戶 (WAU)</span>
+            <span class="stat-value">8,312</span>
+            <span class="stat-delta">↑ 9% vs 上週</span>
+          </div>
+          <div class="stat-card">
+            <span class="stat-label">月活躍用戶 (MAU)</span>
+            <span class="stat-value">32,875</span>
+            <span class="stat-delta">↑ 21% vs 上月</span>
+          </div>
+          <div class="stat-card">
+            <span class="stat-label">當月代幣發放量</span>
+            <span class="stat-value">148,300</span>
+            <span class="stat-delta">↑ 16% vs 上月</span>
+          </div>
+        </div>
+      </section>
+
+      <section id="live" class="section-card">
+        <div class="flex-between">
+          <h2>即時動態</h2>
+          <span class="badge badge-live">Live Feed</span>
+        </div>
+        <div class="grid-3">
+          <div class="stat-card">
+            <span class="stat-label">最新禱告</span>
+            <span class="stat-value">PC-722</span>
+            <span class="stat-delta">13 秒前 · 疫情中的醫療團隊</span>
+          </div>
+          <div class="stat-card">
+            <span class="stat-label">最新註冊用戶</span>
+            <span class="stat-value">joyce.w</span>
+            <span class="stat-delta">2 分鐘前 · OAuth (Google)</span>
+          </div>
+          <div class="stat-card">
+            <span class="stat-label">最新代幣發放</span>
+            <span class="stat-value">+30 </span>
+            <span class="stat-delta">5 分鐘前 · 語音禱告認證</span>
+          </div>
+        </div>
+        <div class="table-wrapper">
+          <table>
+            <thead>
+              <tr>
+                <th>時間</th>
+                <th>事件</th>
+                <th>關聯對象</th>
+                <th>狀態</th>
+                <th>操作</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>06:29:12</td>
+                <td>新禱告 #PC-721 建立</td>
+                <td>@care.family · 以色列和平</td>
+                <td><span class="badge badge-live">公開</span></td>
+                <td class="inline-actions">
+                  <button>審核</button>
+                  <button class="danger">隱藏</button>
+                </td>
+              </tr>
+              <tr>
+                <td>06:25:56</td>
+                <td>代幣自動發放 #TX-98212</td>
+                <td>Wallet 0xF3...92A1</td>
+                <td><span class="badge badge-live">成功</span></td>
+                <td class="inline-actions">
+                  <button>檢視鏈上紀錄</button>
+                </td>
+              </tr>
+              <tr>
+                <td>06:22:04</td>
+                <td>用戶 @samuel 加入禱告 PC-685</td>
+                <td>語音禱告 (28 秒)</td>
+                <td><span class="badge badge-live">已驗證</span></td>
+                <td class="inline-actions">
+                  <button>播放音檔</button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section id="trends" class="section-card">
+        <div class="flex-between">
+          <h2>趨勢圖表</h2>
+          <span class="meta">資料源：metrics.daily_usage、metrics.token_issuance</span>
+        </div>
+        <div class="chart-grid">
+          <div class="chart-placeholder">禱告數量 30 日趨勢 (折線圖)</div>
+          <div class="chart-placeholder">每日活躍用戶 DAU/WAU/MAU (區域圖)</div>
+          <div class="chart-placeholder">代幣發放量 & 消耗量 (雙軸直方圖)</div>
+        </div>
+      </section>
+
+      <section id="prayers" class="section-card">
+        <div class="flex-between">
+          <div>
+            <h2>禱告內容管理</h2>
+            <p class="meta">支援關鍵字、用戶 ID、日期區間查詢。以下為最新 10 筆。</p>
+          </div>
+          <div class="inline-actions">
+            <button>進階搜尋</button>
+            <button class="danger">批次隱藏</button>
+          </div>
+        </div>
+        <div class="table-wrapper">
+          <table>
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>禱告主題</th>
+                <th>上傳者</th>
+                <th>建立時間</th>
+                <th>語音</th>
+                <th>狀態</th>
+                <th>操作</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>PC-723</td>
+                <td>為前線醫護禱告</td>
+                <td>@hope.clinic</td>
+                <td>2025-09-20 06:15</td>
+                <td>語音 3 段</td>
+                <td><span class="badge badge-live">公開</span></td>
+                <td class="inline-actions">
+                  <button>檢視</button>
+                  <button>審核</button>
+                  <button class="danger">刪除</button>
+                </td>
+              </tr>
+              <tr>
+                <td>PC-719</td>
+                <td>青年營會決志跟進</td>
+                <td>@youth.bridge</td>
+                <td>2025-09-20 04:02</td>
+                <td>語音 1 段</td>
+                <td><span class="badge badge-warn">待審</span></td>
+                <td class="inline-actions">
+                  <button>播放語音</button>
+                  <button class="danger">隱藏</button>
+                </td>
+              </tr>
+              <tr>
+                <td>PC-701</td>
+                <td>城市弱勢家庭支援</td>
+                <td>@citycare</td>
+                <td>2025-09-19 18:20</td>
+                <td>語音 0 段</td>
+                <td><span class="badge badge-live">公開</span></td>
+                <td class="inline-actions">
+                  <button>檢視</button>
+                  <button>封存</button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section id="users" class="section-card">
+        <div class="flex-between">
+          <div>
+            <h2>用戶管理</h2>
+            <p class="meta">OAuth / Email 註冊資訊，自帶風險分數。</p>
+          </div>
+          <div class="inline-actions">
+            <button>新增管理員</button>
+            <button class="danger">封鎖選取用戶</button>
+          </div>
+        </div>
+        <div class="table-wrapper">
+          <table>
+            <thead>
+              <tr>
+                <th>用戶</th>
+                <th>身份</th>
+                <th>註冊時間</th>
+                <th>最後登入</th>
+                <th>錢包地址</th>
+                <th>代幣餘額</th>
+                <th>風險</th>
+                <th>操作</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>@emily.lin</td>
+                <td>Uploader</td>
+                <td>2025-05-12</td>
+                <td>2025-09-20 05:51</td>
+                <td>0x8C40...ee17</td>
+                <td>1,240</td>
+                <td><span class="badge badge-live">低</span></td>
+                <td class="inline-actions">
+                  <button>檢視</button>
+                  <button class="danger">限制</button>
+                </td>
+              </tr>
+              <tr>
+                <td>@peter.vo</td>
+                <td>Client</td>
+                <td>2025-07-01</td>
+                <td>2025-09-18 11:20</td>
+                <td>0x11D3...92af</td>
+                <td>320</td>
+                <td><span class="badge badge-warn">中</span></td>
+                <td class="inline-actions">
+                  <button>檢視</button>
+                  <button class="danger">封鎖</button>
+                </td>
+              </tr>
+              <tr>
+                <td>@admin.luke</td>
+                <td>Admin</td>
+                <td>2025-03-03</td>
+                <td>2025-09-20 02:09</td>
+                <td>0xBA10...cc43</td>
+                <td>5,480</td>
+                <td><span class="badge badge-live">低</span></td>
+                <td class="inline-actions">
+                  <button>檢視</button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section id="tokens" class="section-card">
+        <div class="flex-between">
+          <div>
+            <h2>代幣發放管理</h2>
+            <p class="meta">支援自動 / 手動發放策略，串接區塊鏈節點狀態。</p>
+          </div>
+          <div class="inline-actions">
+            <button>手動發放</button>
+            <button>匯出紀錄</button>
+          </div>
+        </div>
+        <div class="table-wrapper">
+          <table>
+            <thead>
+              <tr>
+                <th>發放時間</th>
+                <th>交易哈希</th>
+                <th>對象</th>
+                <th>類型</th>
+                <th>數量</th>
+                <th>狀態</th>
+                <th>備註</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>2025-09-20 06:12</td>
+                <td>0x9a...de41</td>
+                <td>Wallet 0xF3...92A1</td>
+                <td>語音禱告獎勵</td>
+                <td>+30</td>
+                <td><span class="badge badge-live">已上鏈</span></td>
+                <td>自動發放流程</td>
+              </tr>
+              <tr>
+                <td>2025-09-20 05:48</td>
+                <td>0x6c...a210</td>
+                <td>Wallet 0x4B...9d02</td>
+                <td>客服補發</td>
+                <td>+50</td>
+                <td><span class="badge badge-warn">待確認</span></td>
+                <td>手動發放單 #SUP-1481</td>
+              </tr>
+              <tr>
+                <td>2025-09-20 05:12</td>
+                <td>0xbf...11cd</td>
+                <td>Wallet 0xC7...ab8e</td>
+                <td>代幣消耗</td>
+                <td>-10</td>
+                <td><span class="badge badge-live">已上鏈</span></td>
+                <td>曝光加值</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section id="system" class="section-card">
+        <div class="flex-between">
+          <h2>系統與安全監控</h2>
+          <span class="badge badge-live">正常運作</span>
+        </div>
+        <div class="system-grid">
+          <div class="system-card">
+            <strong>API Gateway</strong>
+            <span>平均回應：182ms</span>
+            <span>成功率：99.92%</span>
+            <span>慢查詢：3 (過去 1 小時)</span>
+          </div>
+          <div class="system-card">
+            <strong>PostgreSQL</strong>
+            <span>連線數：48 / 120</span>
+            <span>Replica 延遲：1.2s</span>
+            <span>備份狀態：最新 02:00 UTC</span>
+          </div>
+          <div class="system-card">
+            <strong>Redis Cache</strong>
+            <span>命中率：96%</span>
+            <span>記憶體使用：3.1GB / 8GB</span>
+            <span>Key 到期隊列：穩定</span>
+          </div>
+          <div class="system-card">
+            <strong>區塊鏈節點 (Polygon)</strong>
+            <span>最新區塊：<code>#521,993,420</code></span>
+            <span>同步延遲：0.8s</span>
+            <span>代幣合約健康：OK</span>
+          </div>
+          <div class="system-card">
+            <strong>警示</strong>
+            <span>Webhook 重試：2</span>
+            <span>登入異常：0 (近 24 小時)</span>
+            <span>審計事件：14</span>
+          </div>
+        </div>
+      </section>
+
+      <section id="settings" class="section-card">
+        <div class="flex-between">
+          <h2>設定管理</h2>
+          <span class="meta">僅限 Super Admin 可修改。更新後將觸發審計紀錄。</span>
+        </div>
+        <div class="settings-grid">
+          <div class="settings-card">
+            <label>語音禱告獎勵代幣</label>
+            <div class="fake-input">每段 30 枚</div>
+            <div class="actions">
+              <button class="primary">修改</button>
+              <button class="secondary">查看策略</button>
+            </div>
+          </div>
+          <div class="settings-card">
+            <label>曝光加值消耗</label>
+            <div class="fake-input">每次 12 枚 (持續 48 小時)</div>
+            <div class="actions">
+              <button class="primary">調整</button>
+              <button class="secondary">模擬成本</button>
+            </div>
+          </div>
+          <div class="settings-card">
+            <label>管理員帳號</label>
+            <div class="fake-input">6 位啟用 · 最後更新 2025-09-13</div>
+            <div class="actions">
+              <button class="primary">管理權限</button>
+              <button class="secondary">檢視審計</button>
+            </div>
+          </div>
+          <div class="settings-card">
+            <label>登入防護政策</label>
+            <div class="fake-input">5 次失敗鎖定 15 分鐘 · 強制 MFA</div>
+            <div class="actions">
+              <button class="primary">調整政策</button>
+              <button class="secondary">檢視日誌</button>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+</body>
+</html>
