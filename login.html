@@ -23,34 +23,110 @@
     </div>
   </header>
   <main>
-    <section class="section" style="max-width: 520px; margin-left: auto; margin-right: auto;">
-      <h1>登入或註冊</h1>
-      <p>此區顯示登入表單、社群登入選項與安全提醒。</p>
-      <div class="form-wireframe" style="margin-top: 1.5rem;">
-        <div class="form-row">電子郵件輸入欄位</div>
-        <div class="form-row">密碼輸入欄位</div>
-        <div class="form-row">登入按鈕 / 送出</div>
+    <div class="auth-wrapper">
+      <div class="auth-grid">
+        <section class="auth-card">
+          <div>
+            <h1>歡迎回來</h1>
+            <p>登入後即可管理禱告內容、追蹤互動數據並查看代幣餘額。</p>
+          </div>
+          <div class="social-buttons">
+            <button class="social-button google">使用 Google 登入</button>
+            <button class="social-button facebook">使用 Facebook 登入</button>
+          </div>
+          <div class="auth-divider">或使用電子信箱登入</div>
+          <form class="auth-form">
+            <div class="form-group">
+              <label class="form-label" for="login-email">電子信箱 <span class="required-badge">必填</span></label>
+              <input class="form-control" type="email" id="login-email" placeholder="you@example.com" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="login-password">密碼 <span class="required-badge">必填</span></label>
+              <input class="form-control" type="password" id="login-password" placeholder="至少 8 碼含英數" required>
+              <span class="form-helper">若忘記密碼，請使用下方連結重設。</span>
+            </div>
+            <div class="form-group" style="display: flex; justify-content: space-between; align-items: center;">
+              <label style="display:flex; align-items:center; gap:0.5rem; font-size:0.9rem; color:var(--text-secondary);">
+                <input type="checkbox" style="width:16px; height:16px;"> 記住我 (30 天)
+              </label>
+              <a href="#" style="font-size:0.9rem;">忘記密碼？</a>
+            </div>
+            <button type="submit" class="btn btn-primary" style="width: 100%; justify-content: center;">登入帳戶</button>
+          </form>
+          <div class="auth-footer">
+            <span>還沒有帳號？前往 <a href="signup.html">註冊 Prayer Coin</a>。</span>
+            <span>已登入？<a href="customer-portal.html">前往禱告管理中心</a>。</span>
+          </div>
+        </section>
+        <aside class="auth-card">
+          <div class="auth-note">
+            <strong>登入安全提醒</strong>
+            <ul class="auth-meta-list">
+              <li>建議啟用 MFA 或 WebAuthn，保護個人資料與代幣資產。</li>
+              <li>陌生裝置登入時，系統將寄送通知至您的電子信箱。</li>
+              <li>客服不會主動索取密碼或助記詞，如遇可疑請立即回報。</li>
+            </ul>
+          </div>
+          <div class="auth-note">
+            <strong>禱告管理快速導覽</strong>
+            <ul class="auth-meta-list">
+              <li>建立或編輯禱告：支援純文字 200–1000 字範圍。</li>
+              <li>圖片上傳：封面 + 故事至少兩張，提升社群分享成效。</li>
+              <li>代幣動態：查看語音禱告獎勵、曝光加值與消耗記錄。</li>
+            </ul>
+          </div>
+        </aside>
       </div>
-      <div class="action-bar" style="margin-top: 1.5rem;">
-        <span class="action-pill">Facebook 登入</span>
-        <span class="action-pill">Google 登入</span>
-      </div>
-      <p style="margin-top: 1.5rem;">還沒有帳號？前往 <a href="signup.html">註冊頁面</a>。</p>
-      <p style="margin-top: 0.5rem; color: var(--text-secondary);">兩步驟驗證、重設密碼與錢包綁定相關提示保留於此。</p>
-    </section>
+    </div>
   </main>
   <footer>
     <div class="footer-inner">
-      <span>&copy; 2025 Prayer Coin. All rights reserved.</span>
-      <div class="social-links">
-        <span class="tag-chip">Facebook</span>
-        <span class="tag-chip">Instagram</span>
-        <span class="tag-chip">YouTube</span>
+      <div class="footer-top">
+        <div class="footer-brand">
+          <img class="footer-logo" src="img/logo.png" alt="Prayer Coin logo">
+          <div>
+            <strong>Prayer Coin</strong>
+            <p>祈禱代幣平台，連結禱告、陪伴與行動。</p>
+          </div>
+        </div>
+        <div class="footer-grid">
+          <div class="footer-column">
+            <span class="footer-title">導覽</span>
+            <a href="index.html">首頁</a>
+            <a href="about.html">關於我們</a>
+            <a href="howto.html">使用說明</a>
+            <a href="dashboard.html">用戶面板</a>
+          </div>
+          <div class="footer-column">
+            <span class="footer-title">資源</span>
+            <a href="whitepaper.html">白皮書</a>
+            <a href="disclaimer.html">免責聲明</a>
+            <a href="prayfor/details.html">禱告牆</a>
+          </div>
+          <div class="footer-column">
+            <span class="footer-title">支援</span>
+            <a href="login.html">登入</a>
+            <a href="signup.html">註冊</a>
+            <a href="mailto:support@prayercoin.app">聯絡支援</a>
+          </div>
+        </div>
+        <div class="footer-social">
+          <span class="footer-title">社群</span>
+          <div class="footer-social-links">
+            <a href="#">Facebook</a>
+            <a href="#">Instagram</a>
+            <a href="#">YouTube</a>
+          </div>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <span>&copy; 2025 Prayer Coin. All rights reserved.</span>
+        <div class="footer-legal">
+          <a href="whitepaper.html">白皮書</a>
+          <a href="disclaimer.html">免責聲明</a>
+        </div>
       </div>
     </div>
   </footer>
 </body>
 </html>
-
-
-

@@ -1,0 +1,215 @@
+﻿<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Prayer Coin | 禱告搜尋與分類</title>
+  <link rel="stylesheet" href="css/wireframe.css">
+</head>
+<body>
+  <header>
+    <div class="navbar">
+      <a class="brand" href="index.html">
+        <img class="brand-logo" src="img/logo.png" alt="Prayer Coin logo">
+        <span>Prayer Coin</span>
+      </a>
+      <nav class="nav-links">
+        <a href="index.html">首頁</a>
+        <a href="about.html">關於我們</a>
+        <a href="howto.html">使用說明</a>
+        <a href="dashboard.html">用戶面板</a>
+        <a href="login.html">登入</a>
+      </nav>
+    </div>
+  </header>
+  <main>
+    <section class="section search-hero">
+      <div>
+        <h1>探索全球禱告與守望故事</h1>
+        <p>透過關鍵字搜尋或依分類篩選，快速找到你想代禱的議題。可依照點閱數、禱告次數或發布時間排序，並於下方分頁查看更多結果。</p>
+      </div>
+      <div class="search-controls">
+        <div class="search-bar">
+          <input type="text" placeholder="輸入關鍵字，例如：家庭、醫治、青年...">
+          <button type="button">搜尋禱告</button>
+        </div>
+        <div class="filter-row">
+          <div class="filter-group">
+            <span class="filter-title">分類</span>
+            <span class="filter-pill active">全部</span>
+            <span class="filter-pill">家庭</span>
+            <span class="filter-pill">醫治</span>
+            <span class="filter-pill">青年</span>
+            <span class="filter-pill">宣教</span>
+            <span class="filter-pill">供應</span>
+          </div>
+          <div class="filter-group">
+            <span class="filter-title">排序</span>
+            <select class="sort-select">
+              <option>依點閱數（高 → 低）</option>
+              <option>依禱告次數（高 → 低）</option>
+              <option>依發布時間（新 → 舊）</option>
+              <option>依發布時間（舊 → 新）</option>
+            </select>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section">
+      <h2>搜尋結果（示意資料）</h2>
+      <div class="results-grid" style="margin-top: 1.5rem;">
+        <article class="result-card">
+        <div class="result-layout">
+          <a class="result-thumb" href="prayfor/details.html?prayer=pc-722">
+            <img src="https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?auto=format&fit=crop&w=600&q=80" alt="醫護人員禱告示意">
+          </a>
+          <div class="result-body">
+            <div class="result-header">
+              <h3>PC-722 · 為前線醫護禱告</h3>
+              <span class="filter-title" style="color: var(--accent);">醫治 · 3 小時前</span>
+            </div>
+            <p>疫情升溫，前線醫護人員身心俱疲。請為他們禱告，求神賜下平安、保護與充足的資源。</p>
+            <div class="result-meta">
+              <span>點閱數：1,284</span>
+              <span>禱告回應：72</span>
+              <span>語音禱告：18 段</span>
+            </div>
+            <div class="result-tags">
+              <span>#醫療</span>
+              <span>#疫情</span>
+              <span>#守望</span>
+            </div>
+            <div class="action-bar">
+              <a class="action-pill" href="prayfor/details.html?prayer=pc-722">查看禱告詳情</a>
+              <a class="action-pill" href="customer-portal.html">加入我的禱告清單</a>
+            </div>
+          </div>
+        </div>
+      </article>
+
+      <article class="result-card">
+        <div class="result-layout">
+          <a class="result-thumb" href="prayfor/details.html?prayer=pc-685">
+            <img src="https://images.unsplash.com/photo-1523580846011-d3a5bc25702b?auto=format&fit=crop&w=600&q=80" alt="青年在戶外討論">
+          </a>
+          <div class="result-body">
+            <div class="result-header">
+              <h3>PC-685 · 青年畢業抉擇守望</h3>
+              <span class="filter-title" style="color: var(--accent);">青年 · 1 天前</span>
+            </div>
+            <p>教會青年面臨升學與職涯選擇，盼望在禱告中聆聽神的帶領，也求神預備合適的導師與資源。</p>
+            <div class="result-meta">
+              <span>點閱數：872</span>
+              <span>禱告回應：39</span>
+              <span>語音禱告：11 段</span>
+            </div>
+            <div class="result-tags">
+              <span>#青年</span>
+              <span>#呼召</span>
+              <span>#陪伴</span>
+            </div>
+            <div class="action-bar">
+              <a class="action-pill" href="prayfor/details.html?prayer=pc-685">查看禱告詳情</a>
+              <a class="action-pill" href="customer-portal.html">分享給小組</a>
+            </div>
+          </div>
+        </div>
+      </article>
+
+      <article class="result-card">
+        <div class="result-layout">
+          <a class="result-thumb" href="prayfor/details.html?prayer=pc-603">
+            <img src="https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&w=600&q=80" alt="孩童領取物資">
+          </a>
+          <div class="result-body">
+            <div class="result-header">
+              <h3>PC-603 · 孤兒院物資補給</h3>
+              <span class="filter-title" style="color: var(--accent);">供應 · 2 天前</span>
+            </div>
+            <p>東南亞孤兒院面臨物資短缺，需要禱告與支援，求神預備穩定的供應管道與守望夥伴。</p>
+            <div class="result-meta">
+              <span>點閱數：1,005</span>
+              <span>禱告回應：46</span>
+              <span>語音禱告：14 段</span>
+            </div>
+            <div class="result-tags">
+              <span>#供應</span>
+              <span>#宣教</span>
+              <span>#孩童</span>
+            </div>
+            <div class="action-bar">
+              <a class="action-pill" href="prayfor/details.html?prayer=pc-603">查看禱告詳情</a>
+              <a class="action-pill" href="customer-portal.html">發送鼓勵語音</a>
+            </div>
+          </div>
+        </div>
+      </article>
+
+      <div class="pagination">
+        <span class="active">1</span>
+        <a href="#">2</a>
+        <a href="#">3</a>
+        <span>...</span>
+        <a href="#">下一頁</a>
+      </div>
+        <span class="active">1</span>
+        <a href="#">2</a>
+        <a href="#">3</a>
+        <span>...</span>
+        <a href="#">下一頁</a>
+      </div>
+    </section>
+  </main>
+  <footer>
+    <div class="footer-inner">
+      <div class="footer-top">
+        <div class="footer-brand">
+          <img class="footer-logo" src="img/logo.png" alt="Prayer Coin logo">
+          <div>
+            <strong>Prayer Coin</strong>
+            <p>祈禱代幣平台，連結禱告、陪伴與行動。</p>
+          </div>
+        </div>
+        <div class="footer-grid">
+          <div class="footer-column">
+            <span class="footer-title">導覽</span>
+            <a href="index.html">首頁</a>
+            <a href="about.html">關於我們</a>
+            <a href="howto.html">使用說明</a>
+            <a href="dashboard.html">用戶面板</a>
+          </div>
+          <div class="footer-column">
+            <span class="footer-title">資源</span>
+            <a href="whitepaper.html">白皮書</a>
+            <a href="disclaimer.html">免責聲明</a>
+            <a href="prayfor/details.html">禱告牆</a>
+          </div>
+          <div class="footer-column">
+            <span class="footer-title">支援</span>
+            <a href="login.html">登入</a>
+            <a href="signup.html">註冊</a>
+            <a href="mailto:support@prayercoin.app">聯絡支援</a>
+          </div>
+        </div>
+        <div class="footer-social">
+          <span class="footer-title">社群</span>
+          <div class="footer-social-links">
+            <a href="#">Facebook</a>
+            <a href="#">Instagram</a>
+            <a href="#">YouTube</a>
+          </div>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <span>&copy; 2025 Prayer Coin. All rights reserved.</span>
+        <div class="footer-legal">
+          <a href="whitepaper.html">白皮書</a>
+          <a href="disclaimer.html">免責聲明</a>
+        </div>
+      </div>
+    </div>
+  </footer>
+</body>
+</html>
+

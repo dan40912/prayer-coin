@@ -1,0 +1,233 @@
+﻿<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Prayer Coin | 平台白皮書</title>
+  <link rel="stylesheet" href="css/wireframe.css">
+</head>
+<body>
+  <header>
+    <div class="navbar">
+      <a class="brand" href="index.html">
+        <img class="brand-logo" src="img/logo.png" alt="Prayer Coin logo">
+        <span>Prayer Coin</span>
+      </a>
+      <nav class="nav-links">
+        <a href="index.html">首頁</a>
+        <a href="about.html">關於我們</a>
+        <a href="howto.html">使用說明</a>
+        <a href="dashboard.html">用戶面板</a>
+        <a href="login.html">登入</a>
+      </nav>
+    </div>
+  </header>
+  <main>
+    <section class="section hero">
+      <div class="hero-content">
+        <h1>Prayer Coin 白皮書摘要</h1>
+        <p>本白皮書概述 Prayer Coin 的使命、代幣經濟模型與技術架構，說明如何以禱告互助為核心，建立透明、安全且可持續的信仰社群生態。</p>
+        <div class="hero-actions">
+          <a class="btn btn-primary" href="#token-design">了解代幣設計</a>
+          <a class="btn btn-outline" href="#roadmap">查看 Roadmap</a>
+        </div>
+      </div>
+      <div class="hero-visual">
+        <div class="stat-pill">
+          <span>Beta 運行</span>
+          <strong>2025 Q2</strong>
+        </div>
+        <div class="stat-pill">
+          <span>代禱任務完成</span>
+          <strong>38,420+</strong>
+        </div>
+        <div class="stat-pill">
+          <span>代幣流通</span>
+          <strong>420K </strong>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="mission">
+      <h2>平台定位與使命</h2>
+      <p>Prayer Coin 旨在連結禱告、行動與資源，讓代禱者與發起者皆能在信仰社群中獲得真實陪伴。透過代幣激勵設計，我們希望鼓勵更多人投入禱告與關懷，同時確保過程透明且可追溯。</p>
+      <div class="layout-grid columns-2" style="margin-top: 1.5rem;">
+        <div class="card-wireframe">禱告者：分享需要、設定曝光、追蹤回應與代幣流向。</div>
+        <div class="card-wireframe">守望者：文字或語音回應，完成任務即可獲得  激勵。</div>
+        <div class="card-wireframe">教會/組織：建立專屬空間，洞察代禱動態與影響力。</div>
+        <div class="card-wireframe">開發者：透過 API 與 SDK 串接自有系統或行動 App。</div>
+      </div>
+    </section>
+
+    <section class="section" id="token-design">
+      <h2>代幣經濟模型 ()</h2>
+      <p> 為平台原生功能型代幣，採多鏈部署策略（Polygon / TRON），以確保交易成本低廉且具擴展性。以下列出核心設計：</p>
+      <div class="layout-grid columns-2" style="margin-top: 1.5rem;">
+        <div class="card-wireframe">
+          <strong>發放邏輯</strong>
+          <ul>
+            <li>語音禱告 &gt; 10 秒：自動發放獎勵</li>
+            <li>完成代禱任務：依任務權重發放</li>
+            <li>特別活動：由後台管理員手動發放</li>
+          </ul>
+        </div>
+        <div class="card-wireframe">
+          <strong>消耗用途</strong>
+          <ul>
+            <li>提升禱告曝光排序（48 小時）</li>
+            <li>解鎖進階統計或社群小組功能</li>
+            <li>捐贈至特定公益祈禱池</li>
+          </ul>
+        </div>
+        <div class="card-wireframe">
+          <strong>合規策略</strong>
+          <ul>
+            <li>KYT：偵測高風險錢包與交易</li>
+            <li>AML：與第三方供應商合作進行黑名單比對</li>
+            <li>區域合規：遵循台灣、日本、美國相關規範</li>
+          </ul>
+        </div>
+        <div class="card-wireframe">
+          <strong>儲備金與治理</strong>
+          <ul>
+            <li>20% 生態激勵儲備金</li>
+            <li>10% 技術維運基金</li>
+            <li>未來將引入代幣治理提案 (DAO)</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="architecture">
+      <h2>技術與安全架構</h2>
+      <p>平台採微服務與事件流設計，確保擴充性與穩定性，同時重視資料保護。</p>
+      <div class="layout-grid columns-3" style="margin-top: 1.5rem;">
+        <div class="card-wireframe">
+          <strong>前端</strong>
+          <p>Web：Vue / React（可擴展）；行動裝置：Flutter；共用設計系統確保一致體驗。</p>
+        </div>
+        <div class="card-wireframe">
+          <strong>後端</strong>
+          <p>Node.js + GraphQL / REST；事件隊列 (Kafka) 處理語音轉寫、代幣發放。</p>
+        </div>
+        <div class="card-wireframe">
+          <strong>資料層</strong>
+          <p>PostgreSQL 儲存主資料；MongoDB 存放語音中繼資料；S3 儲存音訊檔案。</p>
+        </div>
+        <div class="card-wireframe">
+          <strong>安全</strong>
+          <p>JWT + OAuth2.1；WebAuthn MFA；全站 HTTPS；SOC 2 Type II 合規進行中。</p>
+        </div>
+        <div class="card-wireframe">
+          <strong>智慧合約</strong>
+          <p>ERC-20 標準，加入可控發行與暫停機制；多簽管理核心金鑰。</p>
+        </div>
+        <div class="card-wireframe">
+          <strong>監控</strong>
+          <p>Grafana + Prometheus 追蹤 API、節點與代幣交易；日誌集中於 ELK Stack。</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="roadmap">
+      <h2>Roadmap</h2>
+      <p>Prayer Coin 將分階段推出功能，並持續與教會、非營利組織及社群開發者合作。</p>
+      <div class="layout-grid columns-2" style="margin-top: 1.5rem;">
+        <div class="card-wireframe">
+          <strong>2025 Q2 · Beta</strong>
+          <ul>
+            <li>開放禱告牆與語音禱告</li>
+            <li>啟用  基礎發放與曝光消耗</li>
+            <li>Dashboard 提供活躍與代幣統計</li>
+          </ul>
+        </div>
+        <div class="card-wireframe">
+          <strong>2025 Q3 · Growth</strong>
+          <ul>
+            <li>推出行動 App 與推播任務</li>
+            <li>整合多語語音轉寫服務</li>
+            <li>啟動代幣治理測試提案</li>
+          </ul>
+        </div>
+        <div class="card-wireframe">
+          <strong>2025 Q4 · Network</strong>
+          <ul>
+            <li>串接跨教會資料交換 API</li>
+            <li>支持社群募資型禱告專案</li>
+            <li>導入審計報表與 ESG 指標</li>
+          </ul>
+        </div>
+        <div class="card-wireframe">
+          <strong>2026 · DAO & 開放</strong>
+          <ul>
+            <li>推出祈禱 DAO，開放治理投票</li>
+            <li>開源部分 SDK 與設計系統</li>
+            <li>推動跨境慈善合作與合規擴張</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="download">
+      <h2>完整白皮書</h2>
+      <p>完整版本包含更多代幣分配數據、風險揭露與技術細節，建議投資人與合作夥伴詳閱。</p>
+      <div class="guide-panel">
+        <strong>取得方式</strong>
+        <span>・ 即將提供 PDF / ePub 下載，敬請期待。</span>
+        <span>・ 合作洽談請聯絡：partnership@prayercoin.app。</span>
+        <span>・ 任何法律或合規相關詢問，請參考免責聲明頁面。</span>
+      </div>
+    </section>
+  </main>
+    <footer>
+    <div class="footer-inner">
+      <div class="footer-top">
+        <div class="footer-brand">
+          <img class="footer-logo" src="img/logo.png" alt="Prayer Coin logo">
+          <div>
+            <strong>Prayer Coin</strong>
+            <p>祈禱代幣平台，連結禱告、陪伴與行動。</p>
+          </div>
+        </div>
+        <div class="footer-grid">
+          <div class="footer-column">
+            <span class="footer-title">導覽</span>
+            <a href="index.html">首頁</a>
+            <a href="about.html">關於我們</a>
+            <a href="howto.html">使用說明</a>
+            <a href="dashboard.html">用戶面板</a>
+          </div>
+          <div class="footer-column">
+            <span class="footer-title">資源</span>
+            <a href="whitepaper.html">白皮書</a>
+            <a href="disclaimer.html">免責聲明</a>
+            <a href="prayfor/details.html">禱告牆</a>
+          </div>
+          <div class="footer-column">
+            <span class="footer-title">支援</span>
+            <a href="login.html">登入</a>
+            <a href="signup.html">註冊</a>
+            <a href="mailto:support@prayercoin.app">聯絡支援</a>
+          </div>
+        </div>
+        <div class="footer-social">
+          <span class="footer-title">社群</span>
+          <div class="footer-social-links">
+            <a href="#">Facebook</a>
+            <a href="#">Instagram</a>
+            <a href="#">YouTube</a>
+          </div>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <span>&copy; 2025 Prayer Coin. All rights reserved.</span>
+        <div class="footer-legal">
+          <a href="whitepaper.html">白皮書</a>
+          <a href="disclaimer.html">免責聲明</a>
+        </div>
+      </div>
+    </div>
+  </footer>
+</body>
+</html>
+

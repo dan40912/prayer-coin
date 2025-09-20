@@ -1,0 +1,163 @@
+﻿<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Prayer Coin | 伺服器忙碌中 (500)</title>
+  <link rel="stylesheet" href="css/wireframe.css">
+  <style>
+    body {
+      min-height: 100vh;
+      background: linear-gradient(160deg, rgba(15, 23, 42, 0.92), rgba(37, 99, 235, 0.65));
+      display: flex;
+      flex-direction: column;
+    }
+    .error-wrapper {
+      flex: 1 1 auto;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 4rem 1.5rem;
+    }
+    .error-card {
+      max-width: 640px;
+      width: 100%;
+      background: rgba(8, 13, 25, 0.85);
+      border-radius: 1.6rem;
+      padding: 3rem;
+      border: 1px solid rgba(148, 163, 184, 0.2);
+      box-shadow: 0 24px 48px rgba(8, 15, 30, 0.35);
+      display: grid;
+      gap: 1.75rem;
+      text-align: center;
+      color: #f8fafc;
+    }
+    .error-card p {
+      color: rgba(226, 232, 240, 0.9);
+    }
+    .error-code {
+      font-size: 5rem;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      color: #38bdf8;
+    }
+    .error-actions {
+      display: flex;
+      justify-content: center;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+    .btn-glow {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0.8rem 1.4rem;
+      border-radius: 0.9rem;
+      border: none;
+      background: linear-gradient(120deg, #0ea5e9, #38bdf8);
+      color: #02121f;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .btn-outline-light {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0.8rem 1.4rem;
+      border-radius: 0.9rem;
+      border: 1px solid rgba(148, 163, 184, 0.5);
+      color: #f8fafc;
+      font-weight: 600;
+      background: transparent;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="navbar">
+      <a class="brand" href="index.html">
+        <img class="brand-logo" src="img/logo.png" alt="Prayer Coin logo">
+        <span>Prayer Coin</span>
+      </a>
+      <nav class="nav-links">
+        <a href="index.html">首頁</a>
+        <a href="about.html">關於我們</a>
+        <a href="howto.html">使用說明</a>
+        <a href="dashboard.html">用戶面板</a>
+      </nav>
+    </div>
+  </header>
+  <div class="error-wrapper">
+    <div class="error-card">
+      <div>
+        <div class="error-code">500</div>
+        <h1>伺服器暫時無法回應</h1>
+        <p>我們的禱告節點目前正忙著處理大量請求或進行維護。請稍候片刻再嘗試，或透過以下方式取得協助。</p>
+      </div>
+      <div class="error-actions">
+        <a class="btn-glow" href="index.html">返回首頁</a>
+        <button class="btn-outline-light" type="button" onclick="location.reload()">重新整理</button>
+        <a class="btn-outline-light" href="mailto:support@prayercoin.app">聯絡支援</a>
+      </div>
+      <div class="auth-note" style="background: rgba(15, 23, 42, 0.45); border-color: rgba(148, 163, 184, 0.35);">
+        <strong>我們正在努力恢復服務</strong>
+        <ul class="auth-meta-list" style="color: rgba(226, 232, 240, 0.85);">
+          <li>自動警示已通知維運團隊。</li>
+          <li>代幣鏈上交易不受此事件影響。</li>
+          <li>如有急迫需求，請提供您的禱告 ID 與錯誤時間。</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <footer>
+    <div class="footer-inner">
+      <div class="footer-top">
+        <div class="footer-brand">
+          <img class="footer-logo" src="img/logo.png" alt="Prayer Coin logo">
+          <div>
+            <strong>Prayer Coin</strong>
+            <p>祈禱代幣平台，連結禱告、陪伴與行動。</p>
+          </div>
+        </div>
+        <div class="footer-grid">
+          <div class="footer-column">
+            <span class="footer-title">導覽</span>
+            <a href="index.html">首頁</a>
+            <a href="about.html">關於我們</a>
+            <a href="howto.html">使用說明</a>
+            <a href="dashboard.html">用戶面板</a>
+          </div>
+          <div class="footer-column">
+            <span class="footer-title">資源</span>
+            <a href="whitepaper.html">白皮書</a>
+            <a href="disclaimer.html">免責聲明</a>
+            <a href="prayfor/details.html">禱告牆</a>
+          </div>
+          <div class="footer-column">
+            <span class="footer-title">支援</span>
+            <a href="login.html">登入</a>
+            <a href="signup.html">註冊</a>
+            <a href="mailto:support@prayercoin.app">聯絡支援</a>
+          </div>
+        </div>
+        <div class="footer-social">
+          <span class="footer-title">社群</span>
+          <div class="footer-social-links">
+            <a href="#">Facebook</a>
+            <a href="#">Instagram</a>
+            <a href="#">YouTube</a>
+          </div>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <span>&copy; 2025 Prayer Coin. All rights reserved.</span>
+        <div class="footer-legal">
+          <a href="whitepaper.html">白皮書</a>
+          <a href="disclaimer.html">免責聲明</a>
+        </div>
+      </div>
+    </div>
+  </footer>
+</body>
+</html>

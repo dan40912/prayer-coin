@@ -3,8 +3,47 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Prayer Coin | 用戶面板</title>
+  <title>Prayer Coin | 找不到頁面 (404)</title>
   <link rel="stylesheet" href="css/wireframe.css">
+  <style>
+    body {
+      min-height: 100vh;
+      background: linear-gradient(135deg, rgba(37, 99, 235, 0.12), rgba(14, 165, 233, 0.12));
+      display: flex;
+      flex-direction: column;
+    }
+    .error-wrapper {
+      flex: 1 1 auto;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 4rem 1.5rem;
+    }
+    .error-card {
+      max-width: 620px;
+      width: 100%;
+      background: var(--surface);
+      border-radius: 1.5rem;
+      padding: 3rem;
+      box-shadow: var(--shadow);
+      border: 1px solid var(--border-soft);
+      display: grid;
+      gap: 1.75rem;
+      text-align: center;
+    }
+    .error-code {
+      font-size: 5rem;
+      font-weight: 700;
+      color: var(--accent);
+      letter-spacing: 0.1em;
+    }
+    .error-actions {
+      display: flex;
+      justify-content: center;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+  </style>
 </head>
 <body>
   <header>
@@ -17,66 +56,25 @@
         <a href="index.html">首頁</a>
         <a href="about.html">關於我們</a>
         <a href="howto.html">使用說明</a>
-        <a href="dashboard.html" class="active">用戶面板</a>
-        <a href="login.html">登入</a>
+        <a href="dashboard.html">用戶面板</a>
       </nav>
     </div>
   </header>
-  <main>
-    <section class="section">
-      <h1>個人儀表板</h1>
-      <p>此頁面匯總用戶的代幣、禱告與互動資訊。各區塊為後續功能元件預留位置。</p>
-      <div class="stats-wireframe" style="margin-top: 1.5rem;">
-        <div class="stat-card">可用代幣</div>
-        <div class="stat-card">本週禱告</div>
-        <div class="stat-card">回應次數</div>
-        <div class="stat-card">任務進度</div>
+  <div class="error-wrapper">
+    <div class="error-card">
+      <div>
+        <div class="error-code">404</div>
+        <h1>啊！禱告頁面迷路了</h1>
+        <p>您造訪的連結可能已下架、重新命名或暫時無法使用。請確認 URL 是否正確，或透過以下連結回到熟悉的地方。</p>
       </div>
-    </section>
-
-    <section class="section">
-      <h2>禱告清單總覽</h2>
-      <p>顯示用戶目前的禱告項目，包含曝光狀態與互動摘要。</p>
-      <div class="layout-grid columns-2" style="margin-top: 1.5rem;">
-        <div class="card-wireframe">禱告卡片：標題、建立時間、代禱人數</div>
-        <div class="card-wireframe">禱告卡片：曝光提升中，倒數計時</div>
-        <div class="card-wireframe">禱告卡片：待回應的留言或語音</div>
-        <div class="card-wireframe">禱告卡片：歷史紀錄與統計</div>
+      <div class="error-actions">
+        <a class="btn btn-primary" href="index.html">返回首頁</a>
+        <a class="btn btn-outline" href="prayfor/details.html">前往禱告牆</a>
+        <a class="btn btn-outline" href="mailto:support@prayercoin.app">聯絡支援</a>
       </div>
-    </section>
-
-    <section class="section">
-      <h2>互動與回饋</h2>
-      <p>留言、語音禱告與社群回應的統計圖表區。</p>
-      <div class="placeholder" aria-hidden="true" style="min-height: 200px;"></div>
-    </section>
-
-    <section class="section">
-      <h2>代幣交易紀錄</h2>
-      <p>條列代幣的獲得、消耗與相關動作。標題列與資料列預留空間。</p>
-      <div class="table-wireframe" style="margin-top: 1.5rem;">
-        <div class="table-row" style="font-weight: 600; color: var(--text-primary);">
-          <span>日期</span>
-          <span>操作</span>
-          <span>代幣變動</span>
-          <span>備註</span>
-        </div>
-        <div class="table-row">
-          <span>2025-09-16</span>
-          <span>語音禱告獎勵</span>
-          <span>+5</span>
-          <span>完成 >10 秒語音</span>
-        </div>
-        <div class="table-row">
-          <span>2025-09-14</span>
-          <span>提升禱告曝光</span>
-          <span>-3</span>
-          <span>專案：家庭禱告</span>
-        </div>
-      </div>
-    </section>
-  </main>
-    <footer>
+    </div>
+  </div>
+  <footer>
     <div class="footer-inner">
       <div class="footer-top">
         <div class="footer-brand">
@@ -127,7 +125,3 @@
   </footer>
 </body>
 </html>
-
-
-
-
