@@ -1,0 +1,19 @@
+﻿# Node.js
+node_modules/
+
+# Next.js
+.next/
+out/
+
+# macOS
+.DS_Store
+
+# 環境變數檔
+.env
+.env.local
+.env.development.local
+.env.production.local
+.env.test.local
+
+# Prisma 產生檔
+/src/generated/prisma

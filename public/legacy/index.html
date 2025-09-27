@@ -1,0 +1,253 @@
+﻿<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Prayer Coin | 禱告 x 代幣的聚合平台</title>
+  <link rel="stylesheet" href="css/wireframe.css">
+</head>
+<body>
+  <header>
+    <div class="navbar">
+      <a class="brand" href="index">
+        <img class="brand-logo" src="img/logo.png" alt="Prayer Coin logo">
+        <span>Prayer Coin</span>
+      </a>
+      <nav class="nav-links">
+        <a href="index" class="active">首頁</a>
+        <a href="about">關於我們</a>
+        <a href="howto">使用說明</a>
+        <a href="search">禱告搜尋</a>
+        <a href="login">登入</a>
+      </nav>
+    </div>
+  </header>
+  <main>
+    <section class="section hero hero-split">
+      <div>
+        <span class="badge-soft">PRAYER + TOKEN</span>
+        <h1>讓禱告看見彼此，也讓代幣驅動陪伴的力量</h1>
+        <p>Prayer Coin 集結願意彼此守望的夥伴，透過代幣激勵禱告回應、語音祝福與行動關懷。登入後即可建立禱告牆、追蹤曝光成效並邀請朋友代禱。</p>
+        <div class="hero-actions">
+          <a class="btn btn-primary" href="login">登入帳戶</a>
+          <a class="btn btn-outline" href="howto">了解代禱流程</a>
+        </div>
+        <div class="checklist" style="margin-top: 1.5rem;">
+          <li>發佈禱告、設定曝光選項與邀請守望者</li>
+          <li>語音禱告自動判定並發放 $PCN 代幣</li>
+          <li>Dashboard 即時洞察祈禱影響力與代幣流向</li>
+        </div>
+      </div>
+      <div class="hero-media">
+        <img src="https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&w=1200&q=80" alt="禱告與互相守望的示意圖">
+      </div>
+    </section>
+
+    <section class="section" id="global-search">
+      <div class="search-controls">
+        <div>
+          <h2>搜尋禱告 · 找到守望的夥伴</h2>
+          <p>輸入關鍵字或選擇分類，探索最新禱告與祈禱回應。點選進入搜尋頁面查看完整結果。</p>
+        </div>
+        <div class="search-bar">
+          <input type="text" placeholder="搜尋禱告關鍵字，例如：醫治、家庭、宣教...">
+          <button type="button" onclick="window.location.href='search'">前往搜尋</button>
+        </div>
+        <div class="filter-row">
+          <div class="filter-group">
+            <span class="filter-title">熱門分類</span>
+            <span class="filter-pill active" onclick="window.location.href='search'">全部</span>
+            <span class="filter-pill" onclick="window.location.href='search'">家庭</span>
+            <span class="filter-pill" onclick="window.location.href='search'">醫治</span>
+            <span class="filter-pill" onclick="window.location.href='search'">青年</span>
+            <span class="filter-pill" onclick="window.location.href='search'">宣教</span>
+          </div>
+          <div class="filter-group">
+            <span class="filter-title">排序</span>
+            <select class="sort-select" onchange="window.location.href='search'">
+              <option>依點閱數</option>
+              <option>依禱告次數</option>
+              <option>依發布時間</option>
+            </select>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section">
+      <h2>最新禱告牆</h2>
+      <p>以下六則禱告卡片示範如何整合圖像、文字與代禱資訊。點擊即可前往詳情頁面進行守望與語音禱告。</p>
+      <div class="card-grid">
+        <article class="prayer-card">
+          <img src="https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=900&q=80" alt="家庭祈禱">
+          <div class="card-body">
+            <div class="tag-list">
+              <span class="tag">家庭</span>
+              <span class="tag">關係修復</span>
+            </div>
+            <h3>為家庭重建信任與合一禱告</h3>
+            <p>近期家人間因財務問題產生誤會，盼望透過禱告重新建立信任，也求神醫治彼此的心。</p>
+            <div class="prayer-meta">
+              <span>祈禱 ID：PC-101</span>
+              <span>回應 12 · 代幣 3</span>
+            </div>
+          </div>
+          <div class="card-footer">
+            <a class="cta-link" href="prayfor/details?prayer=pc-101">前往禱告頁面 &rarr;</a>
+            <a class="voice-link" href="prayfor/details?prayer=pc-101#voice">留下語音禱告</a>
+          </div>
+        </article>
+
+        <article class="prayer-card">
+          <img src="https://images.unsplash.com/photo-1527613426441-4da17471b66d?auto=format&fit=crop&w=900&q=80" alt="醫護人員互相支持">
+          <div class="card-body">
+            <div class="tag-list">
+              <span class="tag">醫治</span>
+              <span class="tag">癌症療程</span>
+            </div>
+            <h3>陪伴淑華姊度過化療副作用</h3>
+            <p>化療進入第三階段，身體常感到疲倦與噁心。求神賜下平安與醫治，也保護免疫力。</p>
+            <div class="prayer-meta">
+              <span>祈禱 ID：PC-214</span>
+              <span>回應 27 · 代幣 8</span>
+            </div>
+          </div>
+          <div class="card-footer">
+            <a class="cta-link" href="prayfor/details?prayer=pc-214">前往禱告頁面 &rarr;</a>
+            <a class="voice-link" href="prayfor/details?prayer=pc-214#voice">留下語音禱告</a>
+          </div>
+        </article>
+
+        <article class="prayer-card">
+          <img src="https://images.unsplash.com/photo-1523580846011-d3a5bc25702b?auto=format&fit=crop&w=900&q=80" alt="青年討論未來">
+          <div class="card-body">
+            <div class="tag-list">
+              <span class="tag">下一代</span>
+              <span class="tag">畢業抉擇</span>
+            </div>
+            <h3>陪伴青年面對升學與職涯方向</h3>
+            <p>教會青少年即將畢業，盼望他們在選擇學校與職涯時清楚聽見神的引導。</p>
+            <div class="prayer-meta">
+              <span>祈禱 ID：PC-332</span>
+              <span>回應 9 · 代幣 2</span>
+            </div>
+          </div>
+          <div class="card-footer">
+            <a class="cta-link" href="prayfor/details?prayer=pc-332">前往禱告頁面 &rarr;</a>
+            <a class="voice-link" href="prayfor/details?prayer=pc-332#voice">留下語音禱告</a>
+          </div>
+        </article>
+
+        <article class="prayer-card">
+          <img src="https://images.unsplash.com/photo-1488521787991-ed7bbaae773c?auto=format&fit=crop&w=900&q=80" alt="短宣隊聚集禱告">
+          <div class="card-body">
+            <div class="tag-list">
+              <span class="tag">宣教</span>
+              <span class="tag">跨文化</span>
+            </div>
+            <h3>支持泰北短宣隊的裝備與安全</h3>
+            <p>短宣隊即將出發前往泰北山區，懇求神保守交通安全，也賜下語言溝通的恩典。</p>
+            <div class="prayer-meta">
+              <span>祈禱 ID：PC-418</span>
+              <span>回應 15 · 代幣 5</span>
+            </div>
+          </div>
+          <div class="card-footer">
+            <a class="cta-link" href="prayfor/details?prayer=pc-418">前往禱告頁面 &rarr;</a>
+            <a class="voice-link" href="prayfor/details?prayer=pc-418#voice">留下語音禱告</a>
+          </div>
+        </article>
+
+        <article class="prayer-card">
+          <img src="https://images.unsplash.com/photo-1454165205744-3b78555e5572?auto=format&fit=crop&w=900&q=80" alt="社會企業團隊討論">
+          <div class="card-body">
+            <div class="tag-list">
+              <span class="tag">供應</span>
+              <span class="tag">創業募資</span>
+            </div>
+            <h3>社企夥伴尋找合適投資人</h3>
+            <p>為青年社企團隊尋求種子輪資金禱告，願神預備對齊異象的投資夥伴。</p>
+            <div class="prayer-meta">
+              <span>祈禱 ID：PC-509</span>
+              <span>回應 6 · 代幣 1</span>
+            </div>
+          </div>
+          <div class="card-footer">
+            <a class="cta-link" href="prayfor/details?prayer=pc-509">前往禱告頁面 &rarr;</a>
+            <a class="voice-link" href="prayfor/details?prayer=pc-509#voice">留下語音禱告</a>
+          </div>
+        </article>
+
+        <article class="prayer-card">
+          <img src="https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=900&q=80" alt="同工互相支持">
+          <div class="card-body">
+            <div class="tag-list">
+              <span class="tag">盼望</span>
+              <span class="tag">情緒支持</span>
+            </div>
+            <h3>陪伴陷入憂鬱的同工重拾盼望</h3>
+            <p>小組同工因長期照顧家人而情緒低落，盼望社群禱告與陪伴帶來力量。</p>
+            <div class="prayer-meta">
+              <span>祈禱 ID：PC-623</span>
+              <span>回應 21 · 代幣 4</span>
+            </div>
+          </div>
+          <div class="card-footer">
+            <a class="cta-link" href="prayfor/details?prayer=pc-623">前往禱告頁面 &rarr;</a>
+            <a class="voice-link" href="prayfor/details?prayer=pc-623#voice">留下語音禱告</a>
+          </div>
+        </article>
+      </div>
+    </section>
+  </main>
+  <footer>
+    <div class="footer-inner">
+      <div class="footer-top">
+        <div class="footer-brand">
+          <img class="footer-logo" src="img/logo.png" alt="Prayer Coin logo">
+          <div>
+            <strong>Prayer Coin</strong>
+            <p>祈禱代幣平台，連結禱告、陪伴與行動。</p>
+          </div>
+        </div>
+        <div class="footer-grid">
+          <div class="footer-column">
+            <span class="footer-title">導覽</span>
+            <a href="index">首頁</a>
+            <a href="about">關於我們</a>
+            <a href="howto">使用說明</a>
+            <a href="dashboard">用戶面板</a>
+          </div>
+          <div class="footer-column">
+            <span class="footer-title">資源</span>
+            <a href="whitepaper">白皮書</a>
+            <a href="disclaimer">免責聲明</a>
+            <a href="search">禱告搜尋</a>
+          </div>
+          <div class="footer-column">
+            <span class="footer-title">支援</span>
+            <a href="login">登入</a>
+            <a href="signup">註冊</a>
+            <a href="mailto:support@prayercoin.app">聯絡支援</a>
+          </div>
+        </div>
+        <div class="footer-social">
+          <span class="footer-title">社群</span>
+          <div class="footer-social-links">
+            <a href="#">Facebook</a>
+            <a href="#">Instagram</a>
+            <a href="#">YouTube</a>
+          </div>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <span>&copy; 2025 Prayer Coin. All rights reserved.</span>
+        <div class="footer-legal">
+          <a href="whitepaper">白皮書</a>
+          <a href="disclaimer">免責聲明</a>
+        </div>
+      </div>
+    </div>
+  </footer>
+</body>
+</html>

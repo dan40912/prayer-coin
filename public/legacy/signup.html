@@ -1,0 +1,318 @@
+﻿<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Prayer Coin | 註冊帳戶</title>
+  <link rel="stylesheet" href="css/wireframe.css">
+</head>
+<body>
+  <header>
+    <div class="navbar">
+      <a class="brand" href="index">
+        <img class="brand-logo" src="img/logo.png" alt="Prayer Coin logo">
+        <span>Prayer Coin</span>
+      </a>
+      <nav class="nav-links">
+        <a href="index">首頁</a>
+        <a href="about">關於我們</a>
+        <a href="howto">使用說明</a>
+        <a href="dashboard">用戶面板</a>
+        <a href="signup" class="active">註冊</a>
+      </nav>
+    </div>
+  </header>
+  <main>
+    <div class="auth-wrapper">
+            <div class="auth-grid">
+        <section class="auth-card auth-hero">
+          <div>
+            <span class="badge-mini">STEP 1 · KYC Onboarding</span>
+            <h1>加入禱告與陪伴的生態</h1>
+            <p>幾分鐘完成註冊，立即發布禱告、接受語音回應，並透過  代幣獲得激勵。</p>
+          </div>
+          <div class="stepper">
+            <div class="step-item">
+              <div class="step-index">1</div>
+              <div class="step-body">
+                <h3>填寫基本資訊</h3>
+                <p>提供姓名、信仰與國家，幫助我們維護社群安全。</p>
+              </div>
+            </div>
+            <div class="step-item">
+              <div class="step-index">2</div>
+              <div class="step-body">
+                <h3>綁定 Solana 收款錢包</h3>
+                <p>禱告互動獎勵將自動發放至你的地址。</p>
+              </div>
+            </div>
+            <div class="step-item">
+              <div class="step-index">3</div>
+              <div class="step-body">
+                <h3>啟動祈禱任務</h3>
+                <p>建立禱告、邀請守望者，用語音與文字陪伴彼此。</p>
+              </div>
+            </div>
+          </div>
+          <div class="hero-stats">
+            <div class="hero-stat">
+              <span>已提交禱告</span>
+              <strong>38,420+</strong>
+            </div>
+            <div class="hero-stat">
+              <span>社群語音禱告</span>
+              <strong>126,800 秒</strong>
+            </div>
+            <div class="hero-stat">
+              <span>代幣發放成功率</span>
+              <strong>99.8%</strong>
+            </div>
+          </div>
+        </section>        <section class="auth-card">
+          <div>
+            <h1>建立 Prayer Coin 帳戶</h1>
+            <p>完成基本資料與 KYC 項目，進一步體驗禱告分享、語音回應與代幣激勵。</p>
+          </div>
+          <div class="social-buttons">
+            <button class="social-button google">使用 Google 註冊</button>
+            <button class="social-button facebook">使用 Facebook 註冊</button>
+          </div>
+          <div class="auth-divider">或使用電子信箱註冊</div>
+          <form class="auth-form">
+            <span class="form-section-title">基本資料</span>
+            <div class="form-grid columns-2">
+              <div class="form-group">
+                <label class="form-label" for="full-name">姓名 <span class="required-badge">必填</span></label>
+                <input class="form-control" type="text" id="full-name" placeholder="中文或英文姓名" required>
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="username">Username <span class="required-badge">必填</span></label>
+                <input class="form-control" type="text" id="username" placeholder="英數組合，至少 4 碼" required>
+                <span class="form-helper">將顯示於禱告牆與分享連結。</span>
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="faith">信仰傳統 <span class="required-badge">必填</span></label>
+                <select class="form-select" id="faith" required>
+                  <option value="" disabled selected>請選擇</option>
+                  <option>基督教</option>
+                  <option>天主教</option>
+                  <option>東正教</option>
+                  <option>其他（請於禱告內容補充）</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="country">居住國家 <span class="required-badge">必填</span></label>
+                <select class="form-select" id="country" required>
+                  <option value="" disabled selected>請選擇</option>
+                  <option>台灣</option>
+                  <option>香港</option>
+                  <option>新加坡</option>
+                  <option>馬來西亞</option>
+                  <option>美國</option>
+                  <option>其他</option>
+                </select>
+              </div>
+            </div>
+            <span class="form-section-title">帳戶與錢包</span>
+            <div class="form-grid columns-2">
+              <div class="form-group">
+                <label class="form-label" for="signup-email">電子信箱 <span class="required-badge">必填</span></label>
+                <input class="form-control" type="email" id="signup-email" placeholder="you@example.com" required>
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="sol-address">Solana 收款地址 <span class="required-badge">必填</span></label>
+                <input class="form-control" type="text" id="sol-address" placeholder="例：6hF...pQ1" required>
+                <span class="form-helper">請確認地址正確，代幣獎勵將直接發送至此地址。</span>
+              </div>
+            </div>
+            <div class="form-grid columns-2">
+              <div class="form-group">
+                <label class="form-label" for="signup-password">設定密碼 <span class="required-badge">必填</span></label>
+                <input class="form-control" type="password" id="signup-password" placeholder="至少 8 碼，建議含符號" required>
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="signup-confirm">確認密碼 <span class="required-badge">必填</span></label>
+                <input class="form-control" type="password" id="signup-confirm" placeholder="再次輸入密碼" required>
+              </div>
+            </div>
+            <div class="form-group" style="display:flex; gap:0.6rem; align-items:flex-start;">
+              <input type="checkbox" id="terms" required style="margin-top:0.35rem; width:18px; height:18px;">
+              <label for="terms" class="form-label" style="font-weight:400; font-size:0.88rem; color:var(--text-secondary);">
+                我已詳閱並同意 <a href="disclaimer" target="_blank">免責聲明</a>、<a href="#" target="_blank">使用條款</a> 與 <a href="#" target="_blank">隱私政策</a>。
+              </label>
+            </div>
+            <button type="submit" class="btn btn-primary" style="width:100%; justify-content:center;">建立帳戶</button>
+          </form>
+          <div class="auth-footer">
+            <span>已經有禱告帳戶？<a href="login">前往登入</a>。</span>
+          </div>
+        </section>        <aside class="auth-card">
+          <div class="auth-note">
+            <strong>為何需要 KYC？</strong>
+            <ul class="auth-meta-list">
+              <li>確保語音禱告與代幣獎勵的真實性與可追溯性。</li>
+              <li>協助我們遵循區塊鏈與慈善相關的在地合規。</li>
+              <li>保護社群安全，防止惡意註冊或資金詐騙。</li>
+            </ul>
+          </div>
+          <div class="auth-note">
+            <strong>註冊完成後可以做什麼？</strong>
+            <ul class="auth-meta-list">
+              <li>建立禱告、邀請他人以文字或語音回應。</li>
+              <li>透過客製化圖片與標題，優化社群分享。</li>
+              <li>在 Dashboard 追蹤代幣流向、曝光成效與互動。</li>
+            </ul>
+          </div>
+          <div class="auth-note">
+            <strong>安全提醒</strong>
+            <ul class="auth-meta-list">
+              <li>代幣只會發放到你設定的 Solana 地址，請妥善保管。</li>
+              <li>建議登入後立即啟用 MFA 與裝置指紋。</li>
+              <li>如需協助，請來信 support@prayercoin.app。</li>
+            </ul>
+          </div>
+        </aside>      </div>
+          <div class="social-buttons">
+            <button class="social-button google">使用 Google 註冊</button>
+            <button class="social-button facebook">使用 Facebook 註冊</button>
+          </div>
+          <div class="auth-divider">或使用電子信箱註冊</div>
+          <form class="auth-form">
+            <div class="form-grid columns-2">
+              <div class="form-group">
+                <label class="form-label" for="full-name">姓名 <span class="required-badge">必填</span></label>
+                <input class="form-control" type="text" id="full-name" placeholder="中文或英文姓名" required>
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="username">Username <span class="required-badge">必填</span></label>
+                <input class="form-control" type="text" id="username" placeholder="英數組合，至少 4 碼" required>
+                <span class="form-helper">將顯示於禱告牆與分享連結。</span>
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="faith">信仰傳統 <span class="required-badge">必填</span></label>
+                <select class="form-select" id="faith" required>
+                  <option value="" disabled selected>請選擇</option>
+                  <option>基督教</option>
+                  <option>天主教</option>
+                  <option>東正教</option>
+                  <option>其他（請於禱告內容補充）</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="country">居住國家 <span class="required-badge">必填</span></label>
+                <select class="form-select" id="country" required>
+                  <option value="" disabled selected>請選擇</option>
+                  <option>台灣</option>
+                  <option>香港</option>
+                  <option>新加坡</option>
+                  <option>馬來西亞</option>
+                  <option>美國</option>
+                  <option>其他</option>
+                </select>
+              </div>
+            </div>
+            <div class="form-grid columns-2">
+              <div class="form-group">
+                <label class="form-label" for="signup-email">電子信箱 <span class="required-badge">必填</span></label>
+                <input class="form-control" type="email" id="signup-email" placeholder="you@example.com" required>
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="sol-address">Solana 收款地址 <span class="required-badge">必填</span></label>
+                <input class="form-control" type="text" id="sol-address" placeholder="例：6hF...pQ1" required>
+                <span class="form-helper">請確認地址正確，代幣獎勵將直接發送至此地址。</span>
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="signup-password">設定密碼 <span class="required-badge">必填</span></label>
+                <input class="form-control" type="password" id="signup-password" placeholder="至少 8 碼，建議含符號" required>
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="signup-confirm">確認密碼 <span class="required-badge">必填</span></label>
+                <input class="form-control" type="password" id="signup-confirm" placeholder="再次輸入密碼" required>
+              </div>
+            </div>
+            <div class="form-group" style="display:flex; gap:0.6rem; align-items:flex-start;">
+              <input type="checkbox" id="terms" required style="margin-top:0.35rem; width:18px; height:18px;">
+              <label for="terms" class="form-label" style="font-weight:400; font-size:0.88rem; color:var(--text-secondary);">
+                我已詳閱並同意 <a href="disclaimer" target="_blank">免責聲明</a>、<a href="#" target="_blank">使用條款</a> 與 <a href="#" target="_blank">隱私政策</a>。
+              </label>
+            </div>
+            <button type="submit" class="btn btn-primary" style="width:100%; justify-content:center;">建立帳戶</button>
+          </form>
+          <div class="auth-footer">
+            <span>已經有禱告帳戶？<a href="login">前往登入</a>。</span>
+          </div>
+        </section>
+        <aside class="auth-card">
+          <div class="auth-note">
+            <strong>為何需要 KYC？</strong>
+            <ul class="auth-meta-list">
+              <li>確保語音禱告與代幣獎勵的真實性與可追溯性。</li>
+              <li>協助我們遵循區塊鏈與慈善相關的在地合規。</li>
+              <li>保護社群安全，防止惡意註冊或資金詐騙。</li>
+            </ul>
+          </div>
+          <div class="auth-note">
+            <strong>註冊完成後可以做什麼？</strong>
+            <ul class="auth-meta-list">
+              <li>建立禱告、邀請他人以文字或語音回應。</li>
+              <li>透過客製化圖片與標題，優化社群分享。</li>
+              <li>在 Dashboard 追蹤代幣流向、曝光成效與互動。</li>
+            </ul>
+          </div>
+        </aside>
+      </div>
+    </div>
+  </main>
+  <footer>
+    <div class="footer-inner">
+      <div class="footer-top">
+        <div class="footer-brand">
+          <img class="footer-logo" src="img/logo.png" alt="Prayer Coin logo">
+          <div>
+            <strong>Prayer Coin</strong>
+            <p>祈禱代幣平台，連結禱告、陪伴與行動。</p>
+          </div>
+        </div>
+        <div class="footer-grid">
+          <div class="footer-column">
+            <span class="footer-title">導覽</span>
+            <a href="index">首頁</a>
+            <a href="about">關於我們</a>
+            <a href="howto">使用說明</a>
+            <a href="dashboard">用戶面板</a>
+          </div>
+          <div class="footer-column">
+            <span class="footer-title">資源</span>
+            <a href="whitepaper">白皮書</a>
+            <a href="disclaimer">免責聲明</a>
+            <a href="prayfor/details">禱告牆</a>
+          </div>
+          <div class="footer-column">
+            <span class="footer-title">支援</span>
+            <a href="login">登入</a>
+            <a href="signup">註冊</a>
+            <a href="mailto:support@prayercoin.app">聯絡支援</a>
+          </div>
+        </div>
+        <div class="footer-social">
+          <span class="footer-title">社群</span>
+          <div class="footer-social-links">
+            <a href="#">Facebook</a>
+            <a href="#">Instagram</a>
+            <a href="#">YouTube</a>
+          </div>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <span>&copy; 2025 Prayer Coin. All rights reserved.</span>
+        <div class="footer-legal">
+          <a href="whitepaper">白皮書</a>
+          <a href="disclaimer">免責聲明</a>
+        </div>
+      </div>
+    </div>
+  </footer>
+</body>
+</html>
+
+

@@ -1,0 +1,187 @@
+﻿<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Prayer Coin | 禱告內容管理中心</title>
+  <link rel="stylesheet" href="css/wireframe.css">
+</head>
+<body>
+  <header>
+    <div class="navbar">
+      <a class="brand" href="index">
+        <img class="brand-logo" src="img/logo.png" alt="Prayer Coin logo">
+        <span>Prayer Coin</span>
+      </a>
+      <nav class="nav-links">
+        <a href="index">首頁</a>
+        <a href="about">關於我們</a>
+        <a href="howto">使用說明</a>
+        <a href="dashboard">用戶面板</a>
+        <a href="customer-portal" class="active">我的禱告</a>
+      </nav>
+    </div>
+  </header>
+  <main>
+    <section class="section hero">
+      <div class="hero-content">
+        <h1>我的禱告管理中心</h1>
+        <p>登入會員可在此編輯禱告內容、上傳圖片與管理 SEO 設定，打造專屬的禱告分享頁面。</p>
+        <div class="hero-actions">
+          <a class="btn btn-primary" href="#editor">建立新禱告</a>
+          <a class="btn btn-outline" href="#gallery">管理圖片</a>
+        </div>
+      </div>
+      <div class="hero-visual">
+        <div class="stat-pill">
+          <span>已發布禱告</span>
+          <strong>6</strong>
+        </div>
+        <div class="stat-pill">
+          <span>待審核</span>
+          <strong>1</strong>
+        </div>
+        <div class="stat-pill">
+          <span>總互動</span>
+          <strong>128</strong>
+        </div>
+      </div>
+    </section>
+
+        <section class="section" id="editor">
+      <h2>編輯禱告內容</h2>
+      <p>請填寫純文字內容，建議字數 200 至 1000 字，並完成必填欄位後送出查核。</p>
+      <div class="form-section" style="margin-top: 1.5rem;">
+        <div class="input-card">
+          <div class="input-label">禱告標題 <span class="required-badge">必填</span></div>
+          <p class="input-helper">顯示於禱告牆與分享卡片。建議 30 字以內，清楚說明代禱焦點。</p>
+          <div class="fake-text-input">輸入範例：陪伴淑華姊度過化療副作用</div>
+        </div>
+        <div class="input-card">
+          <div class="input-label">禱告內容 <span class="required-badge">必填</span></div>
+          <p class="input-helper">純文字 200–1000 字，介紹背景、最新進度與具體代禱事項。提交時請確認內容無個資。</p>
+          <div class="fake-editor">此處將整合 CKEditor（輸出純文字）。可於工具列啟用字數統計與常用格式。</div>
+          <span class="char-helper">已輸入 0 / 1000 字（示意）</span>
+        </div>
+        <div class="input-card">
+          <div class="input-label">標籤 / 關鍵字</div>
+          <p class="input-helper">以逗號分隔，例如：家庭、醫治、青年。用於搜尋與個人檔案曝光。</p>
+          <div class="fake-text-input">家庭, 醫治, 青年</div>
+        </div>
+      </div>
+    </section>
+
+
+        <section class="section" id="gallery">
+      <h2>圖片資產管理</h2>
+      <p>請至少上傳 2 張圖片，封面與故事照片將顯示於分享卡片與禱告頁面。所有圖片僅支援 jpg / png，單張不超過 3 MB。</p>
+      <div class="upload-grid" style="margin-top: 1.5rem;">
+        <div class="upload-card">
+          <strong>封面圖片 <span class="required-badge">必填</span></strong>
+          <p class="input-helper">建議尺寸 1280 × 720，提供社群分享與列表預覽使用。</p>
+          <div class="upload-placeholder">點擊或拖曳上傳</div>
+        </div>
+        <div class="upload-card">
+          <strong>故事圖片 1 <span class="required-badge">必填</span></strong>
+          <p class="input-helper">可呈現禱告背景、家庭成員或團隊照片。</p>
+          <div class="upload-placeholder">點擊或拖曳上傳</div>
+        </div>
+        <div class="upload-card">
+          <strong>故事圖片 2</strong>
+          <p class="input-helper">可補充最新進度或見證畫面（選填）。</p>
+          <div class="upload-placeholder">點擊或拖曳上傳</div>
+        </div>
+      </div>
+      <div class="guide-panel" style="margin-top: 1.5rem;">
+        <strong>上傳提醒</strong>
+        <span>・ 圖片上傳後將自動壓縮並建立審核任務。</span>
+        <span>・ 若未提供圖片，系統將套用預設插圖，分享成效可能受影響。</span>
+        <span>・ 後續將提供批次管理與封面裁切功能。</span>
+      </div>
+    </section>
+
+    <section class="section" id="history">
+      <h2>禱告歷程</h2>
+      <p>快速檢視近期的禱告更新與狀態，方便提交新資訊或關閉已完成的禱告。</p>
+      <div class="table-wireframe" style="margin-top: 1.5rem;">
+        <div class="table-row" style="font-weight: 600; color: var(--text-primary);">
+          <span>禱告 ID</span>
+          <span>標題</span>
+          <span>狀態</span>
+          <span>最後更新</span>
+        </div>
+        <div class="table-row">
+          <span>PC-101</span>
+          <span>為家庭重建信任禱告</span>
+          <span>公開中</span>
+          <span>2025-09-18</span>
+        </div>
+        <div class="table-row">
+          <span>PC-214</span>
+          <span>陪伴淑華姊度過化療</span>
+          <span>待審核</span>
+          <span>2025-09-19</span>
+        </div>
+        <div class="table-row">
+          <span>PC-509</span>
+          <span>社企夥伴募資禱告</span>
+          <span>已完成</span>
+          <span>2025-08-30</span>
+        </div>
+      </div>
+    </section>
+  </main>
+  <footer>
+    <div class="footer-inner">
+      <div class="footer-top">
+        <div class="footer-brand">
+          <img class="footer-logo" src="img/logo.png" alt="Prayer Coin logo">
+          <div>
+            <strong>Prayer Coin</strong>
+            <p>祈禱代幣平台，連結禱告、陪伴與行動。</p>
+          </div>
+        </div>
+        <div class="footer-grid">
+          <div class="footer-column">
+            <span class="footer-title">導覽</span>
+            <a href="index">首頁</a>
+            <a href="about">關於我們</a>
+            <a href="howto">使用說明</a>
+            <a href="dashboard">用戶面板</a>
+          </div>
+          <div class="footer-column">
+            <span class="footer-title">資源</span>
+            <a href="whitepaper">白皮書</a>
+            <a href="disclaimer">免責聲明</a>
+            <a href="prayfor/details">禱告牆</a>
+          </div>
+          <div class="footer-column">
+            <span class="footer-title">支援</span>
+            <a href="login">登入</a>
+            <a href="signup">註冊</a>
+            <a href="mailto:support@prayercoin.app">聯絡支援</a>
+          </div>
+        </div>
+        <div class="footer-social">
+          <span class="footer-title">社群</span>
+          <div class="footer-social-links">
+            <a href="#">Facebook</a>
+            <a href="#">Instagram</a>
+            <a href="#">YouTube</a>
+          </div>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <span>&copy; 2025 Prayer Coin. All rights reserved.</span>
+        <div class="footer-legal">
+          <a href="whitepaper">白皮書</a>
+          <a href="disclaimer">免責聲明</a>
+        </div>
+      </div>
+    </div>
+  </footer>
+</body>
+</html>
+
+
+

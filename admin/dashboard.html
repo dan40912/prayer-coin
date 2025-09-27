@@ -1,0 +1,698 @@
+﻿<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Prayer Coin Admin Dashboard</title>
+  <link rel="stylesheet" href="css/admin.css">
+</head>
+<body>
+  <header>
+    <div class="brand">
+      <span>Prayer Coin</span>
+      <strong>Admin Wireframe</strong>
+    </div>
+    <div class="user-meta">
+      <span>預設角色：Super Admin</span>
+      <span>今日：2025-09-23 08:53 UTC</span>
+      <a href="login.html">切換帳號</a>
+    </div>
+  </header>
+  <div class="layout">
+    <aside class="sidebar">
+      <div class="nav-group">
+        <span class="nav-title">總覽</span>
+        <a class="nav-link active" href="#dashboard">Dashboard</a>
+      </div>
+      <div class="nav-group">
+        <span class="nav-title">管理模組</span>
+        <a class="nav-link" href="#users">用戶管理</a>
+        <a class="nav-link" href="#content">內容管理</a>
+        <a class="nav-link" href="#voice">聲音管理</a>
+        <a class="nav-link" href="#banner">輪播管理</a>
+        <a class="nav-link" href="#reward">獎勵管理</a>
+        <a class="nav-link" href="#complaint">投訴管理</a>
+        <a class="nav-link" href="#permission">權限設定</a>
+      </div>
+      <div class="nav-group">
+        <span class="nav-title">範例連結</span>
+        <a class="nav-link" href="../index.html">返回主站</a>
+        <a class="nav-link" href="login.html">登入頁</a>
+      </div>
+    </aside>
+    <main class="main">
+      <section id="dashboard" class="section-card">
+        <div class="section-header">
+          <div>
+            <h2>總覽 Dashboard</h2>
+            <p class="meta">Wireframe 0.1 · 參考 Dasher UI 範本 · 最後更新 2025-09-23</p>
+          </div>
+          <div class="section-actions">
+            <a class="chip active" href="#">今日</a>
+            <a class="chip" href="#">本週</a>
+            <a class="chip" href="#">本月</a>
+          </div>
+        </div>
+        <div class="kpi-grid">
+          <div class="kpi-card">
+            <span class="kpi-label">今日新增用戶數</span>
+            <span class="kpi-value">--</span>
+            <span class="kpi-meta">串接 user_stats.daily_new 後顯示</span>
+          </div>
+          <div class="kpi-card">
+            <span class="kpi-label">今日新增禱告事項</span>
+            <span class="kpi-value">--</span>
+            <span class="kpi-meta">串接 prayer_stats.daily_created</span>
+          </div>
+          <div class="kpi-card">
+            <span class="kpi-label">今日新增代禱錄音</span>
+            <span class="kpi-value">--</span>
+            <span class="kpi-meta">串接 voice_stats.daily_created</span>
+          </div>
+          <div class="kpi-card">
+            <span class="kpi-label">今日發放 Pray Coin</span>
+            <span class="kpi-value">--</span>
+            <span class="kpi-meta">串接 token_ledger.daily_issued</span>
+          </div>
+          <div class="kpi-card">
+            <span class="kpi-label">平台代幣總流通量</span>
+            <span class="kpi-value">--</span>
+            <span class="kpi-meta">串接 token_ledger.total_supply</span>
+          </div>
+          <div class="kpi-card">
+            <span class="kpi-label">活躍禱告互動</span>
+            <span class="kpi-value">--</span>
+            <span class="kpi-meta">串接 engagement_stats.active_prayers</span>
+          </div>
+        </div>
+        <div class="wire-columns">
+          <div class="panel">
+            <h3>待辦事項</h3>
+            <p class="section-note">串接審核佇列與客服工單後顯示即時數量。</p>
+            <ul class="todo-list">
+              <li class="todo-item">
+                <span>待審核用戶</span>
+                <span class="todo-count">--</span>
+              </li>
+              <li class="todo-item">
+                <span>待審核禱告事項 / 錄音</span>
+                <span class="todo-count">--</span>
+              </li>
+              <li class="todo-item">
+                <span>待處理回報 / 投訴</span>
+                <span class="todo-count">--</span>
+              </li>
+              <li class="todo-item">
+                <span>待發布輪播與獎勵活動</span>
+                <span class="todo-count">--</span>
+              </li>
+            </ul>
+          </div>
+          <div class="panel activity-log">
+            <h3>平台活動日誌</h3>
+            <p class="section-note">預計顯示最近 20 筆管理員動作，支援篩選與匯出。</p>
+            <div class="table-wrapper">
+              <table>
+                <thead>
+                  <tr>
+                    <th>時間</th>
+                    <th>管理員</th>
+                    <th>動作</th>
+                    <th>模組</th>
+                    <th>備註</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>--</td>
+                    <td>--</td>
+                    <td>刪除不當錄音</td>
+                    <td>聲音管理</td>
+                    <td><span class="status-badge">待串接</span></td>
+                  </tr>
+                  <tr>
+                    <td>--</td>
+                    <td>--</td>
+                    <td>批准新管理員</td>
+                    <td>用戶管理</td>
+                    <td><span class="status-badge">待串接</span></td>
+                  </tr>
+                  <tr>
+                    <td>--</td>
+                    <td>--</td>
+                    <td>設置節慶獎勵活動</td>
+                    <td>獎勵管理</td>
+                    <td><span class="status-badge">待串接</span></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+        <div class="quick-modules">
+          <div class="quick-card">
+            <strong>用戶管理</strong>
+            <span>掌握成長、審核與封存工作。</span>
+            <a href="#users">前往模組 →</a>
+          </div>
+          <div class="quick-card">
+            <strong>內容管理</strong>
+            <span>集中處理禱告事項與留言。</span>
+            <a href="#content">前往模組 →</a>
+          </div>
+          <div class="quick-card">
+            <strong>聲音管理</strong>
+            <span>審查錄音與回報，引用 AI 分析。</span>
+            <a href="#voice">前往模組 →</a>
+          </div>
+          <div class="quick-card">
+            <strong>輪播管理</strong>
+            <span>維護首頁 Banner 與排程。</span>
+            <a href="#banner">前往模組 →</a>
+          </div>
+          <div class="quick-card">
+            <strong>獎勵管理</strong>
+            <span>設定代幣規則與特別活動。</span>
+            <a href="#reward">前往模組 →</a>
+          </div>
+          <div class="quick-card">
+            <strong>投訴管理</strong>
+            <span>整合回報事件並追蹤處理。</span>
+            <a href="#complaint">前往模組 →</a>
+          </div>
+          <div class="quick-card">
+            <strong>權限設定</strong>
+            <span>建立角色權限矩陣。</span>
+            <a href="#permission">前往模組 →</a>
+          </div>
+        </div>
+      </section>
+
+      <section id="users" class="section-card wire-section">
+        <div class="section-header">
+          <div>
+            <h2>用戶管理</h2>
+            <p class="meta">管理平台使用者、權限與審核工作流程。</p>
+          </div>
+          <div class="section-actions">
+            <a class="chip" href="#">即將導入：批次操作</a>
+            <a class="chip" href="#">支援匯出 CSV</a>
+          </div>
+        </div>
+        <div class="wire-columns">
+          <div class="wire-grid">
+            <div class="wire-card">
+              <h3>用戶列表</h3>
+              <ul>
+                <li>基本資料：頭像、名稱、註冊日期、登入方式。</li>
+                <li>關鍵指標：代幣持有量、禱告次數、發表數。</li>
+                <li>操作：搜尋、查看詳情、暫停、刪除。</li>
+              </ul>
+              <span class="section-note">可延伸：標籤、批次通知、黑名單。</span>
+            </div>
+            <div class="wire-card">
+              <h3>管理員審核</h3>
+              <ul>
+                <li>篩選條件：代幣持有量 ≥ 30,000。</li>
+                <li>審核動作：批准、拒絕、備註原因。</li>
+                <li>追蹤：審核歷史、推播提醒。</li>
+              </ul>
+              <span class="section-note">後續搭配權限設定模組。</span>
+            </div>
+          </div>
+          <div class="module-table">
+            <span class="section-note">表格佔位 · 待串接 user directory API。</span>
+            <table>
+              <thead>
+                <tr>
+                  <th>帳號</th>
+                  <th>狀態</th>
+                  <th>代幣</th>
+                  <th>互動</th>
+                  <th>操作</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>--</td>
+                  <td>--</td>
+                  <td>--</td>
+                  <td>禱告 0 · 發布 0</td>
+                  <td>查看 · 停權 · 刪除</td>
+                </tr>
+                <tr>
+                  <td>--</td>
+                  <td>候選管理員</td>
+                  <td>30,000+</td>
+                  <td>禱告 --</td>
+                  <td>批准 · 拒絕</td>
+                </tr>
+                <tr>
+                  <td>--</td>
+                  <td>停權中</td>
+                  <td>--</td>
+                  <td>--</td>
+                  <td>解除 · 刪除</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <section id="content" class="section-card wire-section">
+        <div class="section-header">
+          <div>
+            <h2>內容管理</h2>
+            <p class="meta">集中處理禱告事項、留言與經文 / 靈修內容。</p>
+          </div>
+          <div class="section-actions">
+            <a class="chip" href="#">支援快速篩選</a>
+            <a class="chip" href="#">AI 輔助標註規劃中</a>
+          </div>
+        </div>
+        <div class="wire-columns">
+          <div class="wire-grid">
+            <div class="wire-card">
+              <h3>禱告事項管理</h3>
+              <ul>
+                <li>篩選條件：時間、代禱數量、置頂狀態等。</li>
+                <li>操作：審核、刪除、釘選 / 置頂。</li>
+                <li>代幣機制：釘選需扣除 Pray Coin。</li>
+              </ul>
+            </div>
+            <div class="wire-card">
+              <h3>留言管理</h3>
+              <ul>
+                <li>集中顯示所有留言串。</li>
+                <li>快速搜尋關鍵字與作者。</li>
+                <li>操作：刪除不當留言、通知原作者。</li>
+              </ul>
+            </div>
+            <div class="wire-card">
+              <h3>經文 / 靈修內容</h3>
+              <ul>
+                <li>新增、編輯、下架內容。</li>
+                <li>支援排程發布與分類。</li>
+                <li>預覽：版型 / 推播文案。</li>
+              </ul>
+            </div>
+          </div>
+          <div class="module-table">
+            <span class="section-note">表格佔位 · 待串接 content service。</span>
+            <table>
+              <thead>
+                <tr>
+                  <th>內容類型</th>
+                  <th>主題</th>
+                  <th>狀態</th>
+                  <th>互動指標</th>
+                  <th>操作</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>禱告事項</td>
+                  <td>--</td>
+                  <td>待審核</td>
+                  <td>代禱 -- · 留言 --</td>
+                  <td>審核 · 刪除 · 置頂</td>
+                </tr>
+                <tr>
+                  <td>留言</td>
+                  <td>--</td>
+                  <td>被回報</td>
+                  <td>--</td>
+                  <td>刪除 · 標記已處理</td>
+                </tr>
+                <tr>
+                  <td>經文</td>
+                  <td>--</td>
+                  <td>草稿</td>
+                  <td>曝光 --</td>
+                  <td>編輯 · 發布</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <section id="voice" class="section-card wire-section">
+        <div class="section-header">
+          <div>
+            <h2>聲音管理</h2>
+            <p class="meta">專注於代禱錄音的審查與回報流程。</p>
+          </div>
+          <div class="section-actions">
+            <a class="chip" href="#">AI 分析預覽</a>
+            <a class="chip" href="#">播放器嵌入</a>
+          </div>
+        </div>
+        <div class="wire-columns">
+          <div class="wire-grid">
+            <div class="wire-card">
+              <h3>錄音列表</h3>
+              <ul>
+                <li>顯示錄音對應禱告事項與上傳者。</li>
+                <li>提供時長、播放次數、回報狀態。</li>
+                <li>操作：播放、下載、設為精選。</li>
+              </ul>
+            </div>
+            <div class="wire-card">
+              <h3>錄音審查</h3>
+              <ul>
+                <li>集中處理被回報的錄音。</li>
+                <li>顯示回報原因與連結原事項。</li>
+                <li>操作：確認刪除、駁回回報。</li>
+              </ul>
+            </div>
+            <div class="wire-card">
+              <h3>AI 內容分析</h3>
+              <ul>
+                <li>顯示 AI 的「認真度」或情緒評分。</li>
+                <li>標示風險：不當內容、可能是噪音。</li>
+                <li>支援人工覆核後的回寫。</li>
+              </ul>
+            </div>
+          </div>
+          <div class="module-table">
+            <span class="section-note">表格佔位 · 待串接 voice moderation API。</span>
+            <table>
+              <thead>
+                <tr>
+                  <th>錄音</th>
+                  <th>對應事項</th>
+                  <th>狀態</th>
+                  <th>AI 評分</th>
+                  <th>回報</th>
+                  <th>操作</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>--</td>
+                  <td>--</td>
+                  <td>待審核</td>
+                  <td>--</td>
+                  <td>0</td>
+                  <td>播放 · 審查</td>
+                </tr>
+                <tr>
+                  <td>--</td>
+                  <td>--</td>
+                  <td>被回報</td>
+                  <td>--</td>
+                  <td>2</td>
+                  <td>刪除 · 駁回</td>
+                </tr>
+                <tr>
+                  <td>--</td>
+                  <td>--</td>
+                  <td>已通過</td>
+                  <td>--</td>
+                  <td>0</td>
+                  <td>設為精選</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <section id="banner" class="section-card wire-section">
+        <div class="section-header">
+          <div>
+            <h2>輪播管理</h2>
+            <p class="meta">規劃首頁 Banner 與其他場景的輪播橫幅。</p>
+          </div>
+          <div class="section-actions">
+            <a class="chip" href="#">支援拖曳排序</a>
+            <a class="chip" href="#">排程上/下架</a>
+          </div>
+        </div>
+        <div class="wire-columns">
+          <div class="wire-card">
+            <h3>輪播列表</h3>
+            <ul>
+              <li>顯示標題、圖像預覽與目前狀態。</li>
+              <li>設定連結、UTM 追蹤與優先順序。</li>
+              <li>支援多語系與平台 (Web / App)。</li>
+            </ul>
+          </div>
+          <div class="wire-card">
+            <h3>排程設定</h3>
+            <ul>
+              <li>上架 / 下架時間。</li>
+              <li>活動期間提醒。</li>
+              <li>版本紀錄與審核流程。</li>
+            </ul>
+          </div>
+          <div class="module-table">
+            <span class="section-note">表格佔位 · 待串接 banner service。</span>
+            <table>
+              <thead>
+                <tr>
+                  <th>Banner</th>
+                  <th>期間</th>
+                  <th>狀態</th>
+                  <th>排序</th>
+                  <th>操作</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>--</td>
+                  <td>-- 至 --</td>
+                  <td>草稿</td>
+                  <td>#1</td>
+                  <td>編輯 · 發布</td>
+                </tr>
+                <tr>
+                  <td>--</td>
+                  <td>-- 至 --</td>
+                  <td>上架中</td>
+                  <td>#2</td>
+                  <td>調整排序</td>
+                </tr>
+                <tr>
+                  <td>--</td>
+                  <td>-- 至 --</td>
+                  <td>已下架</td>
+                  <td>#3</td>
+                  <td>複製 · 刪除</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <section id="reward" class="section-card wire-section">
+        <div class="section-header">
+          <div>
+            <h2>獎勵管理</h2>
+            <p class="meta">配置代幣發放規則與特殊活動獎勵。</p>
+          </div>
+          <div class="section-actions">
+            <a class="chip" href="#">多層條件</a>
+            <a class="chip" href="#">審計紀錄</a>
+          </div>
+        </div>
+        <div class="wire-columns">
+          <div class="wire-grid">
+            <div class="wire-card">
+              <h3>代幣發放規則</h3>
+              <ul>
+                <li>為他人禱告超過 10 秒：獲得代幣。</li>
+                <li>設定 AI 分析標準與權重。</li>
+                <li>模擬與試算工具。</li>
+              </ul>
+            </div>
+            <div class="wire-card">
+              <h3>特別活動管理</h3>
+              <ul>
+                <li>建立節慶活動、邀請任務。</li>
+                <li>標的：個別用戶或群組。</li>
+                <li>操作：手動發放、批次匯入。</li>
+              </ul>
+            </div>
+          </div>
+          <div class="module-table">
+            <span class="section-note">表格佔位 · 待串接 reward engine。</span>
+            <table>
+              <thead>
+                <tr>
+                  <th>規則 / 活動</th>
+                  <th>條件</th>
+                  <th>獎勵</th>
+                  <th>負責人</th>
+                  <th>狀態</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>--</td>
+                  <td>禱告 > 10 秒</td>
+                  <td>+30 Pray Coin</td>
+                  <td>--</td>
+                  <td>草稿</td>
+                </tr>
+                <tr>
+                  <td>節慶活動</td>
+                  <td>2025 春節</td>
+                  <td>+100 Pray Coin</td>
+                  <td>--</td>
+                  <td>審核中</td>
+                </tr>
+                <tr>
+                  <td>邀請任務</td>
+                  <td>邀請 5 位新用戶</td>
+                  <td>+50 Pray Coin</td>
+                  <td>--</td>
+                  <td>上線中</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <section id="complaint" class="section-card wire-section">
+        <div class="section-header">
+          <div>
+            <h2>投訴管理</h2>
+            <p class="meta">整合用戶的各類回報並追蹤處理進度。</p>
+          </div>
+          <div class="section-actions">
+            <a class="chip" href="#">優先順序</a>
+            <a class="chip" href="#">SLA 追蹤</a>
+          </div>
+        </div>
+        <div class="wire-columns">
+          <div class="wire-card">
+            <h3>回報列表</h3>
+            <ul>
+              <li>統一顯示禱告事項、錄音、留言、用戶的回報。</li>
+              <li>提供來源、回報原因、附件。</li>
+              <li>支援標記已處理、再次提醒。</li>
+            </ul>
+          </div>
+          <div class="module-table">
+            <span class="section-note">表格佔位 · 待串接 trust &amp; safety service。</span>
+            <table>
+              <thead>
+                <tr>
+                  <th>類型</th>
+                  <th>原因</th>
+                  <th>對象</th>
+                  <th>狀態</th>
+                  <th>最後更新</th>
+                  <th>操作</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>錄音</td>
+                  <td>不當內容</td>
+                  <td>--</td>
+                  <td>待處理</td>
+                  <td>--</td>
+                  <td>查看 · 處理</td>
+                </tr>
+                <tr>
+                  <td>禱告事項</td>
+                  <td>垃圾訊息</td>
+                  <td>--</td>
+                  <td>進行中</td>
+                  <td>--</td>
+                  <td>指派 · 記錄</td>
+                </tr>
+                <tr>
+                  <td>用戶</td>
+                  <td>騷擾</td>
+                  <td>--</td>
+                  <td>已結案</td>
+                  <td>--</td>
+                  <td>檢視紀錄</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <section id="permission" class="section-card wire-section">
+        <div class="section-header">
+          <div>
+            <h2>權限設定</h2>
+            <p class="meta">建立角色與權限矩陣，確保操作安全。</p>
+          </div>
+          <div class="section-actions">
+            <a class="chip" href="#">角色模板</a>
+            <a class="chip" href="#">審批流程</a>
+          </div>
+        </div>
+        <div class="wire-columns">
+          <div class="wire-grid">
+            <div class="wire-card">
+              <h3>角色管理</h3>
+              <ul>
+                <li>定義角色：內容審核員、聲音審核員、Super User 等。</li>
+                <li>設定可存取的模組與操作範圍。</li>
+                <li>支援權限快照與比較。</li>
+              </ul>
+            </div>
+            <div class="wire-card">
+              <h3>管理員帳號</h3>
+              <ul>
+                <li>指派角色、設定 MFA。</li>
+                <li>紀錄最後登入與操作活動。</li>
+                <li>提供暫時權限、申請流程。</li>
+              </ul>
+            </div>
+          </div>
+          <div class="module-table">
+            <span class="section-note">表格佔位 · 待串接 identity service。</span>
+            <table>
+              <thead>
+                <tr>
+                  <th>角色</th>
+                  <th>核心權限</th>
+                  <th>指派人數</th>
+                  <th>最後更新</th>
+                  <th>操作</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>Super User</td>
+                  <td>全模組</td>
+                  <td>--</td>
+                  <td>--</td>
+                  <td>編輯 · 審批</td>
+                </tr>
+                <tr>
+                  <td>內容審核員</td>
+                  <td>內容管理 · 聲音管理</td>
+                  <td>--</td>
+                  <td>--</td>
+                  <td>調整 · 撤銷</td>
+                </tr>
+                <tr>
+                  <td>客服</td>
+                  <td>投訴管理 · 用戶查詢</td>
+                  <td>--</td>
+                  <td>--</td>
+                  <td>調整 · 停用</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+</body>
+</html>
+

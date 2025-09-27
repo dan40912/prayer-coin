@@ -1,0 +1,115 @@
+/* Hero Section */
+.hero {
+  position: relative;
+  background-size: cover;
+  background-position: center;
+  color: #fff;
+  padding: 3rem 1rem;
+  text-align: center;
+}
+
+.hero__overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0,0,0,0.4);
+}
+
+.hero__content {
+  position: relative;
+  z-index: 1;
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+.hero h1 {
+  font-size: 2rem;
+  font-weight: 700;
+  margin-top: 0.5rem;
+}
+
+.tag-list {
+  margin: 0.5rem 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  justify-content: center;
+}
+
+.tag {
+  background: rgba(255,255,255,0.15);
+  padding: 0.3rem 0.6rem;
+  border-radius: 6px;
+  font-size: 0.85rem;
+}
+
+/* Detail Grid */
+.section {
+  padding: 2rem 1rem;
+}
+
+.detail-grid {
+  max-width: 100%;
+  margin: 0 auto;
+}
+
+.prayer-detail-card,
+.prayer-sidebar,
+.comments,
+.related-list {
+  background: #fff;
+  border-radius: 12px;
+  padding: 1.5rem;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+}
+
+/* Sidebar Cards */
+.prayer-sidebar .card {
+  margin-bottom: 1.5rem;
+}
+
+/* Related prayers */
+.related-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.related-item {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+  padding: 0.8rem 0;
+  border-bottom: 1px solid #eee;
+}
+
+.related-item img {
+  width: 60px;
+  height: 60px;
+  object-fit: cover;
+  border-radius: 8px;
+}
+
+/* Responsive */
+@media (max-width: 900px) {
+  .detail-grid {
+    grid-template-columns: 1fr;
+  }
+  .hero h1 {
+    font-size: 1.6rem;
+  }
+  .related-item {
+    flex-direction: row;
+  }
+}
+
+@media (max-width: 600px) {
+  .hero {
+    padding: 2rem 1rem;
+  }
+  .hero h1 {
+    font-size: 1.4rem;
+  }
+  .tag-list {
+    justify-content: flex-start;
+  }
+}

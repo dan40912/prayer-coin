@@ -1,0 +1,62 @@
+[
+  {
+    "id": 1,
+    "title": "家庭需要醫療代禱",
+    "description": "父親手術後仍在恢復，請為醫療與經濟需要代禱。",
+    "image": "/legacy/img/sample1.jpg",
+    "alt": "醫療示意",
+    "tags": [
+      "醫療",
+      "家庭"
+    ],
+    "meta": [
+      "台北",
+      "中度緊急"
+    ],
+    "voiceHref": ""
+  },
+  {
+    "id": 2,
+    "title": "投資失利不想活了",
+    "description": "遭逢重大財務打擊，情緒低落，需要陪伴與實際支持。",
+    "image": "/legacy/img/sample2.jpg",
+    "alt": "情緒支持",
+    "tags": [
+      "心理",
+      "財務"
+    ],
+    "meta": [
+      "匿名提交",
+      "需要陪伴"
+    ],
+    "voiceHref": ""
+  },
+  {
+    "id": 214,
+    "title": "PC 範例：社區支持案",
+    "description": "合作 NGO 提供的社區支持案範例描述。",
+    "image": "/legacy/img/sample3.jpg",
+    "alt": "社區",
+    "tags": [
+      "社福"
+    ],
+    "meta": [
+      "合作 NGO",
+      "可志工"
+    ],
+    "voiceHref": ""
+  },
+  {
+    "id": "215",
+    "title": "為花蓮光復災後重建",
+    "description": "為花蓮光復災後重建目前已經有14人死亡\\樺加沙颱風外流圍環流重創花蓮光復鄉，馬太鞍溪堰塞湖溢流滾滾泥水沖入光復鄉，死亡人數攀升，目前已知14人死亡、34人受傷、124人失聯。\n\n警車消防車救護車開來協助救災，馬太鞍溪堰塞湖在昨（23）日下午3點潰堤，泥流衝進市區，包含光復鄉、萬榮鄉、鳳林鎮等周遭區域無一倖免，光復鄉更是水淹到一層樓高，許多車輛都漂在水上，現場超過百位義消救援一整夜不停歇，不斷穿梭在家家戶戶救援送水、送物資，期間也救出4大人1小孩1嬰兒。台東縣消防局前往花蓮救災更是徒步連夜搜救，截至24日0時，發現一名民眾命危，共協助8名民眾撤離到收容所。",
+    "image": "https://s.yimg.com/ny/api/res/1.2/x0hVyNU9CYAYRuFw8sPJxQ--/YXBwaWQ9aGlnaGxhbmRlcjt3PTk2MDtoPTU0MA--/https://media.zenfs.com/ko/ebc.net.tw/cd9b9a6a535de146a9ad17c6a49c0d8e",
+    "alt": "為花蓮光復災後重建",
+    "tags": [
+      "花蓮"
+    ],
+    "meta": [],
+    "voiceHref": "",
+    "createdAt": "2025-09-24T16:05:21.069Z"
+  }
+]

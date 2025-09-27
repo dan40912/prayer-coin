@@ -1,0 +1,709 @@
+
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Prayer Coin | 禱告詳情總覽</title>
+  <link rel="stylesheet" href="../css/wireframe.css">
+</head>
+<body>
+  <header>
+    <div class="navbar">
+      <a class="brand" href="../index.html">
+        <img class="brand-logo" src="../img/logo.png" alt="Prayer Coin logo">
+        <span>Prayer Coin</span>
+      </a>
+      <nav class="nav-links">
+        <a href="../index.html">首頁</a>
+        <a href="../about.html">關於我們</a>
+        <a href="../howto.html">使用說明</a>
+        <a href="../dashboard.html">用戶面板</a>
+        <a href="../login.html">登入</a>
+      </nav>
+    </div>
+  </header>
+  <main id="top">
+    <section class="section detail-hero">
+      <h1>禱告詳情與語音牆</h1>
+      <p>從首頁挑選你關心的禱告事項，透過 /prayfor/ID 分享給夥伴，一起留言或錄製語音禱告。登入後即可記錄互動、追蹤代幣曝光成效與社群支持度。</p>
+      <div class="stat-chips">
+        <span class="stat-chip"><strong>6</strong>個禱告專案</span>
+        <span class="stat-chip"><strong>90+</strong>則社群回應</span>
+        <span class="stat-chip"><strong>32</strong>段語音禱告</span>
+        <span class="stat-chip"><strong>24</strong>枚代幣配置</span>
+      </div>
+      <div class="guide-panel">
+        <strong>快速操作</strong>
+        <span>・ 未登入訪客僅能瀏覽，登入後才能留言或錄音。</span>
+        <span>・ 每張卡片的分享網址為：https://prayercoin.app/prayfor/details.html?prayer=ID。</span>
+        <span>・ 上傳者可管理內容並循環播放全部語音；管理員可稽核所有紀錄。</span>
+      </div>
+    </section>
+
+    <section class="section" id="role-matrix">
+      <h2>角色權限總覽</h2>
+      <p>依據不同角色授予差異化操作權限，確保禱告資訊安全並維持健康互動。</p>
+      <div class="role-matrix">
+        <table class="role-table">
+          <thead>
+            <tr>
+              <th>角色</th>
+              <th>檢視內容</th>
+              <th>留言 / 文字回應</th>
+              <th>語音禱告</th>
+              <th>建立 / 編輯 / 刪除禱告</th>
+              <th>管理回應</th>
+              <th>循環播放語音</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>未登入訪客</td>
+              <td class="check">✓</td>
+              <td>—</td>
+              <td>—</td>
+              <td>—</td>
+              <td>—</td>
+              <td>—</td>
+            </tr>
+            <tr>
+              <td>一般用戶</td>
+              <td class="check">✓</td>
+              <td class="check">✓</td>
+              <td class="check">✓</td>
+              <td>—</td>
+              <td>—</td>
+              <td>—</td>
+            </tr>
+            <tr>
+              <td>上傳者 (Owner)</td>
+              <td class="check">✓</td>
+              <td class="check">✓</td>
+              <td class="check">✓</td>
+              <td class="check">✓</td>
+              <td class="check">✓</td>
+              <td class="check">✓</td>
+            </tr>
+            <tr>
+              <td>管理員</td>
+              <td class="check">✓</td>
+              <td class="check">✓</td>
+              <td class="check">✓</td>
+              <td class="check">✓</td>
+              <td class="check">✓</td>
+              <td class="check">✓</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="anchor-link">需要進階權限？請聯絡管理員或使用 Dashboard 提交申請。</p>
+    </section>
+
+    <nav class="detail-nav">
+      <span class="detail-nav-label">選擇禱告：</span>
+      <a href="#pc-101" class="active">PC-101 家庭重建信任</a>
+      <a href="#pc-214">PC-214 陪伴化療旅程</a>
+      <a href="#pc-332">PC-332 青年職涯尋求</a>
+      <a href="#pc-418">PC-418 泰北短宣隊</a>
+      <a href="#pc-509">PC-509 社企資金需求</a>
+      <a href="#pc-623">PC-623 情緒支持與盼望</a>
+    </nav>
+
+    <section class="section detail-wrapper" id="pc-101">
+      <div class="detail-layout">
+        <article class="detail-main">
+          <div class="tag-list">
+            <span class="tag">家庭</span>
+            <span class="tag">關係修復</span>
+          </div>
+          <h2>為家庭重建信任與合一禱告</h2>
+          <div class="detail-meta">
+            <span>祈禱 ID：PC-101</span>
+            <span>發佈者：陳家瑋</span>
+            <span>建立時間：2025-09-10</span>
+            <span>分享鏈結：<a class="share-link" href="details.html?prayer=pc-101">https://prayercoin.app/prayfor/details.html?prayer=pc-101</a></span>
+          </div>
+          <p>陳家瑋一家因財務誤會陷入僵局，兄弟姐妹間的信任受損，也影響父母的健康。家瑋盼望透過禱告與行動修復關係，並邀請小組一起守望這段旅程。</p>
+          <p>目前家庭已安排第一次家族會談，期待在專業協談與禱告支持下，重新建立坦誠的溝通與和解。</p>
+          <div class="prayer-points">
+            <strong>禱告重點</strong>
+            <ul>
+              <li>求神醫治家族中的傷痕，賜下願意道歉與饒恕的心。</li>
+              <li>為財務重新規劃禱告，讓每位成員在透明中建立信任。</li>
+              <li>求神兼顧父母身心健康，帶來和睦與合一。</li>
+            </ul>
+          </div>
+          <div class="stat-chips">
+            <span class="stat-chip"><strong>12</strong>回應紀錄</span>
+            <span class="stat-chip"><strong>4</strong>語音禱告</span>
+            <span class="stat-chip"><strong>3</strong>代幣曝光</span>
+          </div>
+          <section>
+            <h3 id="voice-pc-101">語音禱告牆</h3>
+            <div class="audio-list">
+              <div class="audio-item">
+                <figure>
+                  <img src="https://i.pravatar.cc/64?u=pc101-1" alt="Alice Wang">
+                  <figcaption>Alice Wang</figcaption>
+                </figure>
+                <div class="audio-body">
+                  <strong>語音禱告 #1 · 18 秒</strong>
+                  <span class="anchor-link">上架時間：2025-09-12 08:21</span>
+                  <audio controls preload="none">
+                    <source src="../audio/prayer_pc101_alice.mp3" type="audio/mpeg">
+                    您的瀏覽器不支援音訊播放。
+                  </audio>
+                </div>
+              </div>
+              <div class="audio-item">
+                <figure>
+                  <img src="https://i.pravatar.cc/64?u=pc101-2" alt="李牧恩">
+                  <figcaption>李牧恩</figcaption>
+                </figure>
+                <div class="audio-body">
+                  <strong>語音禱告 #2 · 32 秒</strong>
+                  <span class="anchor-link">上架時間：2025-09-12 12:05</span>
+                  <audio controls preload="none">
+                    <source src="../audio/prayer_pc101_muchen.mp3" type="audio/mpeg">
+                    您的瀏覽器不支援音訊播放。
+                  </audio>
+                </div>
+              </div>
+              <div class="audio-item">
+                <figure>
+                  <img src="https://i.pravatar.cc/64?u=pc101-3" alt="Grace Chen">
+                  <figcaption>Grace Chen</figcaption>
+                </figure>
+                <div class="audio-body">
+                  <strong>語音禱告 #3 · 27 秒</strong>
+                  <span class="anchor-link">上架時間：2025-09-13 20:14</span>
+                  <audio controls preload="none">
+                    <source src="../audio/prayer_pc101_grace.mp3" type="audio/mpeg">
+                    您的瀏覽器不支援音訊播放。
+                  </audio>
+                </div>
+              </div>
+            </div>
+          </section>
+        </article>
+        <aside class="detail-sidebar">
+          <div class="role-panel">
+            <h3>操作提醒</h3>
+            <p>此禱告由 <strong>陳家瑋</strong> 發佈。請依角色權限參與：</p>
+            <div class="role-badges">
+              <span class="role-pill role-viewer">未登入：僅檢視</span>
+              <span class="role-pill role-client">一般用戶：留言 · 錄音</span>
+              <span class="role-pill role-uploader">上傳者：完整管理</span>
+              <span class="role-pill role-admin">Admin：稽核一切</span>
+            </div>
+            <ul class="role-list">
+              <li>未登入訪客可先聆聽語音，登入後才可留言。</li>
+              <li>一般用戶可以文字回覆並錄製語音禱告。</li>
+              <li>上傳者可編輯內容、刪除不適切回應並啟動 Loop 播放。</li>
+              <li>管理員可封存此專案或調整代幣流向。</li>
+            </ul>
+            <div class="hero-actions">
+              <a class="btn btn-outline" href="../login.html">登入後留言</a>
+              <a class="btn btn-primary" href="#voice-pc-101">新增語音禱告</a>
+            </div>
+            <button class="btn btn-outline" type="button">播放全部語音 (Loop)</button>
+          </div>
+        </aside>
+      </div>
+    </section>
+
+    <section class="section detail-wrapper" id="pc-214">
+      <div class="detail-layout">
+        <article class="detail-main">
+          <div class="tag-list">
+            <span class="tag">醫治</span>
+            <span class="tag">癌症療程</span>
+          </div>
+          <h2>陪伴淑華姊度過化療副作用</h2>
+          <div class="detail-meta">
+            <span>祈禱 ID：PC-214</span>
+            <span>發佈者：王家裕</span>
+            <span>建立時間：2025-09-08</span>
+            <span>分享鏈結：<a class="share-link" href="details.html?prayer=pc-214">https://prayercoin.app/prayfor/details.html?prayer=pc-214</a></span>
+          </div>
+          <p>淑華姊進入第三階段化療，常感疲憊與噁心，也擔憂復健進度。小組盼望持續陪伴，並安排輪班探訪與餐食支持。</p>
+          <p>她正嘗試記錄感謝日誌，盼望藉著禱告與鼓勵，在每次療程前後經歷神的安慰與醫治。</p>
+          <div class="prayer-points">
+            <strong>禱告重點</strong>
+            <ul>
+              <li>求主醫治副作用，賜下體力與好胃口。</li>
+              <li>為家人安排照顧的時間表禱告，避免過度疲憊。</li>
+              <li>祈求醫療團隊有智慧調整療程與藥物。</li>
+            </ul>
+          </div>
+          <div class="stat-chips">
+            <span class="stat-chip"><strong>27</strong>回應紀錄</span>
+            <span class="stat-chip"><strong>7</strong>語音禱告</span>
+            <span class="stat-chip"><strong>8</strong>代幣曝光</span>
+          </div>
+          <section>
+            <h3 id="voice-pc-214">語音禱告牆</h3>
+            <div class="audio-list">
+              <div class="audio-item">
+                <figure>
+                  <img src="https://i.pravatar.cc/64?u=pc214-1" alt="林怡真">
+                  <figcaption>林怡真</figcaption>
+                </figure>
+                <div class="audio-body">
+                  <strong>語音禱告 #1 · 41 秒</strong>
+                  <span class="anchor-link">上架時間：2025-09-09 21:05</span>
+                  <audio controls preload="none">
+                    <source src="../audio/prayer_pc214_lin.mp3" type="audio/mpeg">
+                    您的瀏覽器不支援音訊播放。
+                  </audio>
+                </div>
+              </div>
+              <div class="audio-item">
+                <figure>
+                  <img src="https://i.pravatar.cc/64?u=pc214-2" alt="何嘉宏">
+                  <figcaption>何嘉宏</figcaption>
+                </figure>
+                <div class="audio-body">
+                  <strong>語音禱告 #2 · 22 秒</strong>
+                  <span class="anchor-link">上架時間：2025-09-10 07:48</span>
+                  <audio controls preload="none">
+                    <source src="../audio/prayer_pc214_ho.mp3" type="audio/mpeg">
+                    您的瀏覽器不支援音訊播放。
+                  </audio>
+                </div>
+              </div>
+              <div class="audio-item">
+                <figure>
+                  <img src="https://i.pravatar.cc/64?u=pc214-3" alt="曾淑芬">
+                  <figcaption>曾淑芬</figcaption>
+                </figure>
+                <div class="audio-body">
+                  <strong>語音禱告 #3 · 35 秒</strong>
+                  <span class="anchor-link">上架時間：2025-09-11 15:33</span>
+                  <audio controls preload="none">
+                    <source src="../audio/prayer_pc214_tseng.mp3" type="audio/mpeg">
+                    您的瀏覽器不支援音訊播放。
+                  </audio>
+                </div>
+              </div>
+            </div>
+          </section>
+        </article>
+        <aside class="detail-sidebar">
+          <div class="role-panel">
+            <h3>操作提醒</h3>
+            <p>此禱告由 <strong>王家裕</strong> 發佈，屬於小組醫治守望。</p>
+            <div class="role-badges">
+              <span class="role-pill role-viewer">未登入：觀看近況</span>
+              <span class="role-pill role-client">一般用戶：留言 · 錄音</span>
+              <span class="role-pill role-uploader">上傳者：調整內容</span>
+              <span class="role-pill role-admin">Admin：總覽</span>
+            </div>
+            <ul class="role-list">
+              <li>請先確認個資同意後再分享病況細節。</li>
+              <li>上傳者可更新療程日誌並刪除重複回應。</li>
+              <li>管理員可補發代幣或設定提醒任務。</li>
+            </ul>
+            <div class="hero-actions">
+              <a class="btn btn-outline" href="../login.html">登入後留言</a>
+              <a class="btn btn-primary" href="#voice-pc-214">送出語音禱告</a>
+            </div>
+            <button class="btn btn-outline" type="button">播放全部語音 (Loop)</button>
+          </div>
+        </aside>
+      </div>
+    </section>
+
+    <section class="section detail-wrapper" id="pc-332">
+      <div class="detail-layout">
+        <article class="detail-main">
+          <div class="tag-list">
+            <span class="tag">下一代</span>
+            <span class="tag">畢業抉擇</span>
+          </div>
+          <h2>陪伴青年面對升學與職涯方向</h2>
+          <div class="detail-meta">
+            <span>祈禱 ID：PC-332</span>
+            <span>發佈者：青年牧區</span>
+            <span>建立時間：2025-09-06</span>
+            <span>分享鏈結：<a class="share-link" href="details.html?prayer=pc-332">https://prayercoin.app/prayfor/details.html?prayer=pc-332</a></span>
+          </div>
+          <p>牧區內 15 位青年面臨升學與職涯選擇，部分人因家庭期待感到壓力。團隊希望建立陪談機制，並透過禱告提醒他們在神的帶領中尋找呼召。</p>
+          <p>已計畫於 10 月舉辦職場諮詢日，邀請不同領域的前輩分享，並為每位青年安排代禱同伴。</p>
+          <div class="prayer-points">
+            <strong>禱告重點</strong>
+            <ul>
+              <li>求神帶領每位青年在決策上有平安與確據。</li>
+              <li>為家庭溝通禱告，讓父母能提供支持與理解。</li>
+              <li>求神預備合適的導師與資源陪伴。</li>
+            </ul>
+          </div>
+          <div class="stat-chips">
+            <span class="stat-chip"><strong>9</strong>回應紀錄</span>
+            <span class="stat-chip"><strong>3</strong>語音禱告</span>
+            <span class="stat-chip"><strong>2</strong>代幣曝光</span>
+          </div>
+          <section>
+            <h3 id="voice-pc-332">語音禱告牆</h3>
+            <div class="audio-list">
+              <div class="audio-item">
+                <figure>
+                  <img src="https://i.pravatar.cc/64?u=pc332-1" alt="Joel Liu">
+                  <figcaption>Joel Liu</figcaption>
+                </figure>
+                <div class="audio-body">
+                  <strong>語音禱告 #1 · 24 秒</strong>
+                  <span class="anchor-link">上架時間：2025-09-07 09:42</span>
+                  <audio controls preload="none">
+                    <source src="../audio/prayer_pc332_joel.mp3" type="audio/mpeg">
+                    您的瀏覽器不支援音訊播放。
+                  </audio>
+                </div>
+              </div>
+              <div class="audio-item">
+                <figure>
+                  <img src="https://i.pravatar.cc/64?u=pc332-2" alt="楊子晴">
+                  <figcaption>楊子晴</figcaption>
+                </figure>
+                <div class="audio-body">
+                  <strong>語音禱告 #2 · 19 秒</strong>
+                  <span class="anchor-link">上架時間：2025-09-07 21:18</span>
+                  <audio controls preload="none">
+                    <source src="../audio/prayer_pc332_young.mp3" type="audio/mpeg">
+                    您的瀏覽器不支援音訊播放。
+                  </audio>
+                </div>
+              </div>
+            </div>
+          </section>
+        </article>
+        <aside class="detail-sidebar">
+          <div class="role-panel">
+            <h3>操作提醒</h3>
+            <p>此禱告由 <strong>青年牧區</strong> 管理，適合分享給小組與導師。</p>
+            <div class="role-badges">
+              <span class="role-pill role-viewer">未登入：瀏覽</span>
+              <span class="role-pill role-client">一般用戶：留言 · 錄音</span>
+              <span class="role-pill role-uploader">上傳者：更新進度</span>
+              <span class="role-pill role-admin">Admin：覆核</span>
+            </div>
+            <ul class="role-list">
+              <li>一般用戶可提供資源連結或鼓勵訊息。</li>
+              <li>上傳者需定期更新名單與回應狀態。</li>
+              <li>管理員可開啟群發通知給所有關注者。</li>
+            </ul>
+            <div class="hero-actions">
+              <a class="btn btn-outline" href="../login.html">登入後留言</a>
+              <a class="btn btn-primary" href="#voice-pc-332">加入語音禱告</a>
+            </div>
+            <button class="btn btn-outline" type="button">播放全部語音 (Loop)</button>
+          </div>
+        </aside>
+      </div>
+    </section>
+
+    <section class="section detail-wrapper" id="pc-418">
+      <div class="detail-layout">
+        <article class="detail-main">
+          <div class="tag-list">
+            <span class="tag">宣教</span>
+            <span class="tag">跨文化</span>
+          </div>
+          <h2>支持泰北短宣隊的裝備與安全</h2>
+          <div class="detail-meta">
+            <span>祈禱 ID：PC-418</span>
+            <span>發佈者：宣教事工處</span>
+            <span>建立時間：2025-09-05</span>
+            <span>分享鏈結：<a class="share-link" href="details.html?prayer=pc-418">https://prayercoin.app/prayfor/details.html?prayer=pc-418</a></span>
+          </div>
+          <p>短宣隊即將於 11 月前往泰北山區，安排兒童課輔、醫療義診與社區拜訪。需要禱告支持行前訓練、語言適應以及交通安全。</p>
+          <p>目前隊員已完成第一次文化課程，也預備錄製當地語言的敬拜歌曲與見證。</p>
+          <div class="prayer-points">
+            <strong>禱告重點</strong>
+            <ul>
+              <li>求神保守旅途安全與行李運輸。</li>
+              <li>賜給隊員語言智慧，能與在地夥伴建立信任。</li>
+              <li>為經費與物資供應禱告，確保孩童課程順利。</li>
+            </ul>
+          </div>
+          <div class="stat-chips">
+            <span class="stat-chip"><strong>15</strong>回應紀錄</span>
+            <span class="stat-chip"><strong>5</strong>語音禱告</span>
+            <span class="stat-chip"><strong>5</strong>代幣曝光</span>
+          </div>
+          <section>
+            <h3 id="voice-pc-418">語音禱告牆</h3>
+            <div class="audio-list">
+              <div class="audio-item">
+                <figure>
+                  <img src="https://i.pravatar.cc/64?u=pc418-1" alt="Pastor Lee">
+                  <figcaption>Pastor Lee</figcaption>
+                </figure>
+                <div class="audio-body">
+                  <strong>語音禱告 #1 · 38 秒</strong>
+                  <span class="anchor-link">上架時間：2025-09-06 19:02</span>
+                  <audio controls preload="none">
+                    <source src="../audio/prayer_pc418_pastor.mp3" type="audio/mpeg">
+                    您的瀏覽器不支援音訊播放。
+                  </audio>
+                </div>
+              </div>
+              <div class="audio-item">
+                <figure>
+                  <img src="https://i.pravatar.cc/64?u=pc418-2" alt="鄭惠美">
+                  <figcaption>鄭惠美</figcaption>
+                </figure>
+                <div class="audio-body">
+                  <strong>語音禱告 #2 · 25 秒</strong>
+                  <span class="anchor-link">上架時間：2025-09-07 11:37</span>
+                  <audio controls preload="none">
+                    <source src="../audio/prayer_pc418_cheng.mp3" type="audio/mpeg">
+                    您的瀏覽器不支援音訊播放。
+                  </audio>
+                </div>
+              </div>
+              <div class="audio-item">
+                <figure>
+                  <img src="https://i.pravatar.cc/64?u=pc418-3" alt="Han Team">
+                  <figcaption>Han Team</figcaption>
+                </figure>
+                <div class="audio-body">
+                  <strong>語音禱告 #3 · 29 秒</strong>
+                  <span class="anchor-link">上架時間：2025-09-08 13:25</span>
+                  <audio controls preload="none">
+                    <source src="../audio/prayer_pc418_team.mp3" type="audio/mpeg">
+                    您的瀏覽器不支援音訊播放。
+                  </audio>
+                </div>
+              </div>
+            </div>
+          </section>
+        </article>
+        <aside class="detail-sidebar">
+          <div class="role-panel">
+            <h3>操作提醒</h3>
+            <p>此禱告由 <strong>宣教事工處</strong> 管理，需配合行前訓練節奏。</p>
+            <div class="role-badges">
+              <span class="role-pill role-viewer">未登入：瀏覽</span>
+              <span class="role-pill role-client">一般用戶：留言 · 錄音</span>
+              <span class="role-pill role-uploader">上傳者：任務管理</span>
+              <span class="role-pill role-admin">Admin：稽核與匯出</span>
+            </div>
+            <ul class="role-list">
+              <li>隊員可於留言區回報裝備進度與代禱需求。</li>
+              <li>上傳者可上傳行前資料並設定提醒。</li>
+              <li>管理員可下載語音並生成報告。</li>
+            </ul>
+            <div class="hero-actions">
+              <a class="btn btn-outline" href="../login.html">登入後留言</a>
+              <a class="btn btn-primary" href="#voice-pc-418">應援語音禱告</a>
+            </div>
+            <button class="btn btn-outline" type="button">播放全部語音 (Loop)</button>
+          </div>
+        </aside>
+      </div>
+    </section>
+
+    <section class="section detail-wrapper" id="pc-509">
+      <div class="detail-layout">
+        <article class="detail-main">
+          <div class="tag-list">
+            <span class="tag">供應</span>
+            <span class="tag">創業募資</span>
+          </div>
+          <h2>社企夥伴尋找合適投資人</h2>
+          <div class="detail-meta">
+            <span>祈禱 ID：PC-509</span>
+            <span>發佈者：晨曦社企</span>
+            <span>建立時間：2025-09-04</span>
+            <span>分享鏈結：<a class="share-link" href="details.html?prayer=pc-509">https://prayercoin.app/prayfor/details.html?prayer=pc-509</a></span>
+          </div>
+          <p>晨曦社企專注陪伴高風險青少年，目前正尋求種子輪資金，盼望找到對齊異象的投資夥伴。團隊希望透過禱告，每一步都不失去初衷。</p>
+          <p>已與三位潛在投資人接觸，規劃十月舉辦 Demo Day，並準備分享受助者真實故事。</p>
+          <div class="prayer-points">
+            <strong>禱告重點</strong>
+            <ul>
+              <li>求神預備志同道合的資源夥伴。</li>
+              <li>為財務透明與良好見證禱告。</li>
+              <li>保守團隊在壓力中仍有喜樂與勇氣。</li>
+            </ul>
+          </div>
+          <div class="stat-chips">
+            <span class="stat-chip"><strong>6</strong>回應紀錄</span>
+            <span class="stat-chip"><strong>2</strong>語音禱告</span>
+            <span class="stat-chip"><strong>1</strong>代幣曝光</span>
+          </div>
+          <section>
+            <h3 id="voice-pc-509">語音禱告牆</h3>
+            <div class="audio-list">
+              <div class="audio-item">
+                <figure>
+                  <img src="https://i.pravatar.cc/64?u=pc509-1" alt="Kevin Huang">
+                  <figcaption>Kevin Huang</figcaption>
+                </figure>
+                <div class="audio-body">
+                  <strong>語音禱告 #1 · 30 秒</strong>
+                  <span class="anchor-link">上架時間：2025-09-05 10:08</span>
+                  <audio controls preload="none">
+                    <source src="../audio/prayer_pc509_kevin.mp3" type="audio/mpeg">
+                    您的瀏覽器不支援音訊播放。
+                  </audio>
+                </div>
+              </div>
+              <div class="audio-item">
+                <figure>
+                  <img src="https://i.pravatar.cc/64?u=pc509-2" alt="蘇以萱">
+                  <figcaption>蘇以萱</figcaption>
+                </figure>
+                <div class="audio-body">
+                  <strong>語音禱告 #2 · 26 秒</strong>
+                  <span class="anchor-link">上架時間：2025-09-05 22:47</span>
+                  <audio controls preload="none">
+                    <source src="../audio/prayer_pc509_su.mp3" type="audio/mpeg">
+                    您的瀏覽器不支援音訊播放。
+                  </audio>
+                </div>
+              </div>
+            </div>
+          </section>
+        </article>
+        <aside class="detail-sidebar">
+          <div class="role-panel">
+            <h3>操作提醒</h3>
+            <p>此禱告由 <strong>晨曦社企</strong> 發佈，涉及募資資訊，分享前請評估對象。</p>
+            <div class="role-badges">
+              <span class="role-pill role-viewer">未登入：僅檢視</span>
+              <span class="role-pill role-client">一般用戶：留言 · 錄音</span>
+              <span class="role-pill role-uploader">上傳者：調整資金資訊</span>
+              <span class="role-pill role-admin">Admin：審核揭露</span>
+            </div>
+            <ul class="role-list">
+              <li>一般用戶可提供人脈或鼓勵話語。</li>
+              <li>上傳者可更新募資進度與感謝名單。</li>
+              <li>管理員需檢視財務資訊是否合規。</li>
+            </ul>
+            <div class="hero-actions">
+              <a class="btn btn-outline" href="../login.html">登入後留言</a>
+              <a class="btn btn-primary" href="#voice-pc-509">錄製語音禱告</a>
+            </div>
+            <button class="btn btn-outline" type="button">播放全部語音 (Loop)</button>
+          </div>
+        </aside>
+      </div>
+    </section>
+
+    <section class="section detail-wrapper" id="pc-623">
+      <div class="detail-layout">
+        <article class="detail-main">
+          <div class="tag-list">
+            <span class="tag">盼望</span>
+            <span class="tag">情緒支持</span>
+          </div>
+          <h2>陪伴陷入憂鬱的同工重拾盼望</h2>
+          <div class="detail-meta">
+            <span>祈禱 ID：PC-623</span>
+            <span>發佈者：心牧關懷小組</span>
+            <span>建立時間：2025-09-03</span>
+            <span>分享鏈結：<a class="share-link" href="details.html?prayer=pc-623">https://prayercoin.app/prayfor/details.html?prayer=pc-623</a></span>
+          </div>
+          <p>同工佳恩長期照顧家人導致身心俱疲，出現憂鬱症狀。小組盼望透過禱告、陪伴與專業協助，讓他重新看見盼望。</p>
+          <p>團隊已安排心理諮商並陪他進行規律運動，期盼社群禱告能成為他的力量來源。</p>
+          <div class="prayer-points">
+            <strong>禱告重點</strong>
+            <ul>
+              <li>求神賜下真實的安慰與陪伴。</li>
+              <li>為佳恩的睡眠與飲食習慣禱告。</li>
+              <li>保守家人之間的互動與支持系統。</li>
+            </ul>
+          </div>
+          <div class="stat-chips">
+            <span class="stat-chip"><strong>21</strong>回應紀錄</span>
+            <span class="stat-chip"><strong>11</strong>語音禱告</span>
+            <span class="stat-chip"><strong>4</strong>代幣曝光</span>
+          </div>
+          <section>
+            <h3 id="voice-pc-623">語音禱告牆</h3>
+            <div class="audio-list">
+              <div class="audio-item">
+                <figure>
+                  <img src="https://i.pravatar.cc/64?u=pc623-1" alt="吳心怡">
+                  <figcaption>吳心怡</figcaption>
+                </figure>
+                <div class="audio-body">
+                  <strong>語音禱告 #1 · 44 秒</strong>
+                  <span class="anchor-link">上架時間：2025-09-04 14:51</span>
+                  <audio controls preload="none">
+                    <source src="../audio/prayer_pc623_wu.mp3" type="audio/mpeg">
+                    您的瀏覽器不支援音訊播放。
+                  </audio>
+                </div>
+              </div>
+              <div class="audio-item">
+                <figure>
+                  <img src="https://i.pravatar.cc/64?u=pc623-2" alt="Ethan Chang">
+                  <figcaption>Ethan Chang</figcaption>
+                </figure>
+                <div class="audio-body">
+                  <strong>語音禱告 #2 · 36 秒</strong>
+                  <span class="anchor-link">上架時間：2025-09-05 18:07</span>
+                  <audio controls preload="none">
+                    <source src="../audio/prayer_pc623_ethan.mp3" type="audio/mpeg">
+                    您的瀏覽器不支援音訊播放。
+                  </audio>
+                </div>
+              </div>
+              <div class="audio-item">
+                <figure>
+                  <img src="https://i.pravatar.cc/64?u=pc623-3" alt="張采妮">
+                  <figcaption>張采妮</figcaption>
+                </figure>
+                <div class="audio-body">
+                  <strong>語音禱告 #3 · 28 秒</strong>
+                  <span class="anchor-link">上架時間：2025-09-06 09:36</span>
+                  <audio controls preload="none">
+                    <source src="../audio/prayer_pc623_chang.mp3" type="audio/mpeg">
+                    您的瀏覽器不支援音訊播放。
+                  </audio>
+                </div>
+              </div>
+            </div>
+          </section>
+        </article>
+        <aside class="detail-sidebar">
+          <div class="role-panel">
+            <h3>操作提醒</h3>
+            <p>此禱告由 <strong>心牧關懷小組</strong> 管理，涉及敏感情緒資訊，分享前請尊重當事人隱私。</p>
+            <div class="role-badges">
+              <span class="role-pill role-viewer">未登入：僅檢視</span>
+              <span class="role-pill role-client">一般用戶：留言 · 錄音</span>
+              <span class="role-pill role-uploader">上傳者：內容維護</span>
+              <span class="role-pill role-admin">Admin：稽核資料</span>
+            </div>
+            <ul class="role-list">
+              <li>留言時請避免分享可辨識的個資。</li>
+              <li>上傳者需定期清理敏感內容並回覆鼓勵。</li>
+              <li>管理員可開啟專業諮商轉介流程。</li>
+            </ul>
+            <div class="hero-actions">
+              <a class="btn btn-outline" href="../login.html">登入後留言</a>
+              <a class="btn btn-primary" href="#voice-pc-623">給予語音禱告</a>
+            </div>
+            <button class="btn btn-outline" type="button">播放全部語音 (Loop)</button>
+          </div>
+        </aside>
+      </div>
+    </section>
+  </main>
+  <footer>
+    <div class="footer-inner">
+      <span>© 2025 Prayer Coin. All rights reserved.</span>
+      <div class="social-links">
+        <span class="tag-chip">Facebook</span>
+        <span class="tag-chip">Instagram</span>
+        <span class="tag-chip">YouTube</span>
+      </div>
+    </div>
+  </footer>
+</body>
+</html>

@@ -1,0 +1,142 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id             String           @id @default(cuid())
+  email          String           @unique
+  name           String?
+  username       String?          @unique
+  faithTradition String?
+  country        String?
+  solanaAddress  String?
+  passwordHash   String?
+  acceptedTerms  Boolean          @default(false)
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+
+  avatarUrl      String?
+  bio            String?
+  isBlocked      Boolean          @default(false) 
+  reportCount    Int              @default(0)
+
+  walletBalance  Decimal          @default(0.00) @db.Decimal(10,2)
+
+  prayerRequests   PrayerRequest[]
+  prayerResponses  PrayerResponse[]
+  homePrayerCards  HomePrayerCard[] 
+}
+
+model PrayerRequest {
+  id          String          @id @default(cuid())
+  slug        String          @unique
+  title       String
+  description String
+  status      PrayerStatus    @default(DRAFT)
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+
+  ownerId     String?
+  owner       User?           @relation(fields: [ownerId], references: [id])
+
+  responses   PrayerResponse[]
+}
+
+model PrayerResponse {
+  id            String   @id @default(cuid())
+  message       String
+  voiceUrl      String?                // ✅ 錄音檔 URL
+  tokensAwarded Int      @default(0)
+  isAnonymous   Boolean  @default(false)
+  isBlocked     Boolean  @default(false) // ✅ 封鎖
+  reportCount   Int      @default(0)     // ✅ 檢舉次數
+  createdAt     DateTime @default(now())
+
+  // 舊系統：對應 PrayerRequest
+  prayerRequestId String?
+  prayerRequest   PrayerRequest? @relation(fields: [prayerRequestId], references: [id])
+
+  // 新系統：對應 HomePrayerCard
+  homeCardId Int?
+  homeCard   HomePrayerCard? @relation(fields: [homeCardId], references: [id])
+
+  // 作者（回覆者）
+  responderId String?
+  responder   User? @relation(fields: [responderId], references: [id])
+}
+
+enum PrayerStatus {
+  DRAFT
+  PUBLISHED
+  ANSWERED
+  ARCHIVED
+}
+
+model SiteBanner {
+  id                Int      @id @default(autoincrement())
+  eyebrow           String?  @db.VarChar(191)
+  headline          String
+  subheadline       String
+  description       String
+  primaryCtaLabel   String
+  primaryCtaHref    String
+  secondaryCtaLabel String?  @db.VarChar(191)
+  secondaryCtaHref  String?  @db.VarChar(191)
+  heroImage         String?
+  isActive          Boolean  @default(true)  // ✅ 是否啟用（前台要顯示哪一個）
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  @@map("site_banner")
+}
+
+
+model HomePrayerCategory {
+  id          Int               @id @default(autoincrement())
+  name        String
+  slug        String            @unique
+  description String?
+  sortOrder   Int               @default(0)
+  isActive    Boolean           @default(true)
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @default(now()) @updatedAt
+  cards       HomePrayerCard[]
+
+  @@map("home_prayer_category")
+}
+
+model HomePrayerCard {
+  id           Int                @id @default(autoincrement())
+  slug         String             @unique
+  image        String
+  alt          String?
+  title        String
+  description  String
+  tags         Json
+  meta         Json
+  detailsHref  String
+  voiceHref    String
+  sortOrder    Int                @default(0)
+  categoryId   Int
+  category     HomePrayerCategory @relation(fields: [categoryId], references: [id])
+  createdAt    DateTime           @default(now())
+  updatedAt    DateTime           @default(now()) @updatedAt
+
+  // 上傳者 (作者)
+  ownerId      String?
+  owner        User?              @relation(fields: [ownerId], references: [id])
+
+  responses    PrayerResponse[]
+
+  // ✅ 保留封鎖與檢舉
+  isBlocked    Boolean            @default(false)
+  reportCount  Int                @default(0)
+
+  @@map("home_prayer_card")
+  @@index([categoryId])
+}

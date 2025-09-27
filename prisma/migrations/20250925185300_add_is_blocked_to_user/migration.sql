@@ -1,0 +1,4 @@
+-- AlterTable
+ALTER TABLE `user` ADD COLUMN `avatarUrl` VARCHAR(191) NULL,
+    ADD COLUMN `bio` VARCHAR(191) NULL,
+    ADD COLUMN `isBlocked` BOOLEAN NOT NULL DEFAULT false;
