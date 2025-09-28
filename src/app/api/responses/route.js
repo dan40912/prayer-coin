@@ -26,15 +26,18 @@ export async function POST(req) {
       voiceUrl = `/voices/${filename}`; // 存在 DB 的 URL
     }
 
-    const response = await prisma.prayerResponse.create({
-      data: {
-        message,
-        voiceUrl,
-        isAnonymous,
-        responderId: isAnonymous ? null : responderId,
-        homeCardId: Number(requestId),
-      },
-    });
+      const response = await prisma.prayerResponse.create({
+        data: {
+          message,
+          voiceUrl,
+          isAnonymous,
+          responderId: isAnonymous ? null : responderId,
+          homeCardId: Number(requestId),
+        },
+        include: {
+          responder: true, // 放在這裡才會正確 join 出來
+        },
+      });
 
     return NextResponse.json(response, { status: 201 });
   } catch (err) {
