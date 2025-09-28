@@ -1,79 +1,328 @@
-﻿const ROLES = [
-  { id: "role-1", name: "超級管理員", permissions: "全功能" },
-  { id: "role-2", name: "祈禱室管理者", permissions: "祈禱室、需求" },
-  { id: "role-3", name: "財務操作員", permissions: "Impact、交易" }
+﻿"use client";
+
+import { useCallback, useEffect, useMemo, useState } from "react";
+
+const SESSION_STORAGE_KEY = "prayer-coin-admin-session";
+const ROLE_OPTIONS = [
+  { value: "SUPER", label: "超級管理員" },
+  { value: "ADMIN", label: "一般管理員" },
 ];
 
+function readSessionRole() {
+  if (typeof window === "undefined") return null;
+  try {
+    const raw = sessionStorage.getItem(SESSION_STORAGE_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    return parsed?.role ?? null;
+  } catch (error) {
+    sessionStorage.removeItem(SESSION_STORAGE_KEY);
+    return null;
+  }
+}
+
 export default function SettingsPage() {
+  const [accounts, setAccounts] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [form, setForm] = useState({ username: "", password: "", role: "ADMIN" });
+  const [formError, setFormError] = useState("");
+  const [formSubmitting, setFormSubmitting] = useState(false);
+  const [sessionRole, setSessionRole] = useState(null);
+  const [sessionChecked, setSessionChecked] = useState(false);
+
+  useEffect(() => {
+    const role = readSessionRole();
+    setSessionRole(role);
+    setSessionChecked(true);
+  }, []);
+
+  const loadAccounts = useCallback(async () => {
+    if (sessionRole !== "SUPER") {
+      setLoading(false);
+      if (sessionRole !== null) {
+        setError("只有超級管理員可以管理後台帳號");
+      }
+      return;
+    }
+
+    try {
+      setLoading(true);
+      setError("");
+
+      const response = await fetch("/api/admin/accounts", {
+        cache: "no-store",
+        headers: {
+          "x-admin-role": sessionRole ?? "",
+        },
+      });
+
+      if (!response.ok) {
+        const data = await response.json().catch(() => ({}));
+        throw new Error(data.message || "無法載入管理員列表");
+      }
+
+      const data = await response.json();
+      setAccounts(data ?? []);
+    } catch (err) {
+      console.error("載入管理員帳號失敗:", err);
+      setError(err.message || "無法載入管理員列表");
+      setAccounts([]);
+    } finally {
+      setLoading(false);
+    }
+  }, [sessionRole]);
+
+  useEffect(() => {
+    if (!sessionChecked) return;
+    loadAccounts();
+  }, [sessionChecked, loadAccounts]);
+
+  const handleFormChange = (field, value) => {
+    setForm((prev) => ({ ...prev, [field]: value }));
+  };
+
+  const handleCreateAccount = async (event) => {
+    event.preventDefault();
+
+    if (sessionRole !== "SUPER") {
+      setFormError("沒有權限執行此操作");
+      return;
+    }
+
+    if (!form.username.trim() || !form.password.trim()) {
+      setFormError("請輸入帳號與密碼");
+      return;
+    }
+
+    try {
+      setFormSubmitting(true);
+      setFormError("");
+
+      const response = await fetch("/api/admin/accounts", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-admin-role": sessionRole ?? "",
+        },
+        body: JSON.stringify(form),
+      });
+
+      if (!response.ok) {
+        const data = await response.json().catch(() => ({}));
+        throw new Error(data.message || "新增管理員失敗");
+      }
+
+      setForm({ username: "", password: "", role: form.role });
+      await loadAccounts();
+    } catch (err) {
+      setFormError(err.message);
+    } finally {
+      setFormSubmitting(false);
+    }
+  };
+
+  const handleToggleActive = async (account) => {
+    if (sessionRole !== "SUPER") {
+      alert("沒有權限");
+      return;
+    }
+
+    try {
+      const response = await fetch(`/api/admin/accounts/${account.id}`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          "x-admin-role": sessionRole ?? "",
+        },
+        body: JSON.stringify({ isActive: !account.isActive }),
+      });
+
+      if (!response.ok) {
+        const data = await response.json().catch(() => ({}));
+        throw new Error(data.message || "更新失敗");
+      }
+
+      await loadAccounts();
+    } catch (err) {
+      alert(`⚠ ${err.message}`);
+    }
+  };
+
+  const handleChangeRole = async (account, role) => {
+    if (sessionRole !== "SUPER") {
+      alert("沒有權限");
+      return;
+    }
+
+    try {
+      const response = await fetch(`/api/admin/accounts/${account.id}`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          "x-admin-role": sessionRole ?? "",
+        },
+        body: JSON.stringify({ role }),
+      });
+
+      if (!response.ok) {
+        const data = await response.json().catch(() => ({}));
+        throw new Error(data.message || "更新角色失敗");
+      }
+
+      await loadAccounts();
+    } catch (err) {
+      alert(`⚠ ${err.message}`);
+    }
+  };
+
+  const accountsSummary = useMemo(() => {
+    const total = accounts.length;
+    const superAdmins = accounts.filter((account) => account.role === "SUPER" && account.isActive).length;
+    return { total, superAdmins };
+  }, [accounts]);
+
   return (
     <div className="admin-section">
       <header className="admin-section__header">
         <div>
-          <p className="admin-section__eyebrow">治理與法遵</p>
-          <h1>設定治理</h1>
-        </div>
-        <div className="admin-section__header-actions">
-          <button type="button" className="button button--ghost">審核流程</button>
-          <button type="button" className="button button--primary">新增角色</button>
+          <p className="admin-section__eyebrow">權限與後台帳號</p>
+          <h1>權限管理</h1>
+          <p>管理可以登入系統後台的管理員帳號與權限角色。</p>
         </div>
       </header>
 
-      <section className="admin-section__grid">
-        <article className="admin-section__card">
-          <header className="admin-section__card-header">
-            <div>
-              <h2>角色與權限</h2>
-              <p>設定角色對應的功能存取。</p>
-            </div>
-          </header>
+      <section className="admin-section__card">
+        <header className="admin-section__card-header">
+          <div>
+            <h2>管理員列表</h2>
+            <p>目前共有 {accountsSummary.total} 位管理員，其中 {accountsSummary.superAdmins} 位為啟用中的超級管理員。</p>
+          </div>
+        </header>
 
+        {loading ? (
+          <p>載入中…</p>
+        ) : error ? (
+          <p className="error">{error}</p>
+        ) : (
           <table className="admin-table">
             <thead>
               <tr>
+                <th>帳號</th>
                 <th>角色</th>
-                <th>權限範圍</th>
+                <th>狀態</th>
+                <th>最後登入</th>
+                <th>建立時間</th>
                 <th>操作</th>
               </tr>
             </thead>
             <tbody>
-              {ROLES.map((role) => (
-                <tr key={role.id}>
-                  <td>{role.name}</td>
-                  <td>{role.permissions}</td>
-                  <td>
-                    <button type="button" className="link-button">編輯</button>
-                  </td>
+              {accounts.length === 0 ? (
+                <tr>
+                  <td colSpan={6}>目前尚未建立管理員帳號</td>
                 </tr>
-              ))}
+              ) : (
+                accounts.map((account) => (
+                  <tr key={account.id}>
+                    <td>{account.username}</td>
+                    <td>
+                      <select
+                        value={account.role}
+                        onChange={(event) => handleChangeRole(account, event.target.value)}
+                        disabled={sessionRole !== "SUPER"}
+                      >
+                        {ROLE_OPTIONS.map((option) => (
+                          <option key={option.value} value={option.value}>
+                            {option.label}
+                          </option>
+                        ))}
+                      </select>
+                    </td>
+                    <td>
+                      {account.isActive ? (
+                        <span className="status-badge status-badge--active">啟用</span>
+                      ) : (
+                        <span className="status-badge status-badge--blocked">停用</span>
+                      )}
+                    </td>
+                    <td>{account.lastLoginAt ? new Date(account.lastLoginAt).toLocaleString() : "—"}</td>
+                    <td>{new Date(account.createdAt).toLocaleString()}</td>
+                    <td>
+                      <div className="admin-wallet__actions">
+                        <button
+                          type="button"
+                          className="link-button"
+                          onClick={() => handleToggleActive(account)}
+                        >
+                          {account.isActive ? "停用" : "啟用"}
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
-        </article>
+        )}
+      </section>
 
-        <article className="admin-section__card">
-          <header className="admin-section__card-header">
-            <div>
-              <h2>合規中心</h2>
-              <p>掌握隱私與資安稽核狀態。</p>
-            </div>
-            <button type="button" className="link-button">下載政策 →</button>
-          </header>
-          <ul className="admin-accordion">
-            <li>
-              <div>
-                <h3>GDPR / 個資</h3>
-                <time dateTime="2025-09-18">更新：2025-09-18</time>
-              </div>
-              <button type="button" className="link-button">檢視</button>
-            </li>
-            <li>
-              <div>
-                <h3>平台服務條款</h3>
-                <time dateTime="2025-08-30">更新：2025-08-30</time>
-              </div>
-              <button type="button" className="link-button">檢視</button>
-            </li>
-          </ul>
-        </article>
+      <section className="admin-section__card">
+        <header className="admin-section__card-header">
+          <div>
+            <h2>新增管理員</h2>
+            <p>建立新的管理員帳號，並指定可存取的權限範圍。</p>
+          </div>
+        </header>
+
+        <form className="admin-form" onSubmit={handleCreateAccount}>
+          <div className="admin-form__row admin-form__row--equal">
+            <label className="admin-form__field">
+              <span>帳號</span>
+              <input
+                type="text"
+                value={form.username}
+                onChange={(event) => handleFormChange("username", event.target.value)}
+                placeholder="小寫英文字母或數字"
+                disabled={formSubmitting}
+                required
+              />
+            </label>
+            <label className="admin-form__field">
+              <span>密碼</span>
+              <input
+                type="password"
+                value={form.password}
+                onChange={(event) => handleFormChange("password", event.target.value)}
+                placeholder="至少 4 個字元"
+                minLength={4}
+                disabled={formSubmitting}
+                required
+              />
+            </label>
+            <label className="admin-form__field">
+              <span>角色</span>
+              <select
+                value={form.role}
+                onChange={(event) => handleFormChange("role", event.target.value)}
+                disabled={formSubmitting}
+              >
+                {ROLE_OPTIONS.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+            </label>
+          </div>
+
+          {formError ? <p className="error">{formError}</p> : null}
+
+          <div className="admin-form__actions">
+            <button type="submit" className="button button--primary" disabled={formSubmitting}>
+              {formSubmitting ? "建立中…" : "建立管理員"}
+            </button>
+          </div>
+        </form>
       </section>
     </div>
   );

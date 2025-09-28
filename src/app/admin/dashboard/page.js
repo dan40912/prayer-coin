@@ -1,475 +1,534 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 
-const KPI_CARDS = [
-  { id: "prayer-today", label: "今日祈禱次數", value: "1,254", delta: "+12%", tone: "positive" },
-  { id: "rooms-active", label: "活躍祈禱室", value: "86", delta: "+5%", tone: "positive" },
-  { id: "impact-total", label: "Impact 金流 (本週)", value: "NT$420K", delta: "+8%", tone: "positive" },
-  { id: "response-rate", label: "祈禱回應率", value: "78%", delta: "-3%", tone: "negative" }
-];
+const numberFormatter = new Intl.NumberFormat("zh-TW", { maximumFractionDigits: 0 });
+const percentFormatter = new Intl.NumberFormat("zh-TW", {
+  style: "percent",
+  minimumFractionDigits: 1,
+  maximumFractionDigits: 1,
+});
+const currencyFormatter = new Intl.NumberFormat("zh-TW", {
+  style: "currency",
+  currency: "TWD",
+  minimumFractionDigits: 2,
+  maximumFractionDigits: 2,
+});
 
-const QUICK_ACTIONS = [
-  { id: "new-announcement", label: "建立公告" },
-  { id: "review-room", label: "審核祈禱室" },
-  { id: "export-report", label: "匯出報表" }
-];
-
-const REVIEW_QUEUE = [
-  {
-    id: "room-9812",
-    title: "祈禱室申請 #9812",
-    meta: "社區牧場 · 等待初審",
-    owner: "Grace Fellowship",
-    submittedAt: "09:40"
-  },
-  {
-    id: "request-3321",
-    title: "祈禱需求 #3321",
-    meta: "醫療協助 · 高優先",
-    owner: "王小美",
-    submittedAt: "09:15"
-  },
-  {
-    id: "refund-7720",
-    title: "退款申請 #7720",
-    meta: "信用卡 · 待財務審核",
-    owner: "Kevin Lin",
-    submittedAt: "08:52"
-  }
-];
-
-const LEDGER_PROJECTS = [
-  {
-    id: "impact-1",
-    name: "偏鄉醫療巡迴",
-    progress: 72,
-    amount: "NT$1,280,000",
-    image:
-      "https://images.unsplash.com/photo-1526256262350-7da7584cf5eb?auto=format&fit=crop&w=600&q=80"
-  },
-  {
-    id: "impact-2",
-    name: "青年職涯輔導",
-    progress: 54,
-    amount: "NT$620,000",
-    image:
-      "https://images.unsplash.com/photo-1488521787991-ed7bbaae773c?auto=format&fit=crop&w=600&q=80"
-  }
-];
-
-const SUPPORT_TICKETS = [
-  {
-    id: "ticket-21",
-    subject: "帳號權限異常",
-    status: "處理中",
-    assignee: "Irene",
-    updatedAt: "10:05"
-  },
-  {
-    id: "ticket-22",
-    subject: "祈禱室封面無法更新",
-    status: "待回覆",
-    assignee: "Ken",
-    updatedAt: "09:48"
-  },
-  {
-    id: "ticket-23",
-    subject: "Impact 報表下載失敗",
-    status: "已解決",
-    assignee: "Zoey",
-    updatedAt: "09:12"
-  }
-];
-
-const DEFAULT_BANNER_FORM = {
-  eyebrow: "",
-  headline: "",
-  subheadline: "",
-  description: "",
-  primaryCtaLabel: "",
-  primaryCtaHref: "",
-  secondaryCtaLabel: "",
-  secondaryCtaHref: "",
-  heroImage: ""
+const INITIAL_METRICS = {
+  totalUsers: 0,
+  blockedUsers: 0,
+  totalPrayers: 0,
+  totalResponses: 0,
+  averageWallet: 0,
 };
 
+const formatInteger = (value) =>
+  numberFormatter.format(Math.max(0, Math.round(Number.isFinite(value) ? value : Number(value) || 0)));
+
+const formatPercent = (value) =>
+  percentFormatter.format(Math.max(0, Number.isFinite(value) ? value : Number(value) || 0));
+
+const formatCurrency = (value) =>
+  currencyFormatter.format(Number.isFinite(value) ? value : Number(value) || 0);
+
 export default function AdminDashboardPage() {
-  const [bannerForm, setBannerForm] = useState(DEFAULT_BANNER_FORM);
-  const [bannerLoading, setBannerLoading] = useState(true);
-  const [bannerSaving, setBannerSaving] = useState(false);
-  const [bannerStatus, setBannerStatus] = useState(null);
+  const [metrics, setMetrics] = useState(INITIAL_METRICS);
+  const [metricsLoading, setMetricsLoading] = useState(true);
+  const [metricsError, setMetricsError] = useState("");
+  const [lastUpdated, setLastUpdated] = useState(null);
 
-  useEffect(() => {
-    let isMounted = true;
+  const [highRiskUsers, setHighRiskUsers] = useState([]);
+  const [highRiskUsersLoading, setHighRiskUsersLoading] = useState(true);
+  const [highRiskUsersError, setHighRiskUsersError] = useState("");
 
-    const loadBanner = async () => {
-      try {
-        const response = await fetch("/api/banner", { cache: "no-store" });
-        if (!response.ok) throw new Error("failed");
-        const data = await response.json();
-        if (!isMounted) return;
-        setBannerForm({
-          eyebrow: data.eyebrow ?? "",
-          headline: data.headline ?? "",
-          subheadline: data.subheadline ?? "",
-          description: data.description ?? "",
-          primaryCtaLabel: data.primaryCta?.label ?? "",
-          primaryCtaHref: data.primaryCta?.href ?? "",
-          secondaryCtaLabel: data.secondaryCta?.label ?? "",
-          secondaryCtaHref: data.secondaryCta?.href ?? "",
-          heroImage: data.heroImage ?? ""
-        });
-      } catch (error) {
-        if (isMounted) {
-          setBannerStatus({ type: "error", message: "載入 Banner 內容失敗" });
-        }
-      } finally {
-        if (isMounted) setBannerLoading(false);
-      }
-    };
+  const [highRiskPrayers, setHighRiskPrayers] = useState([]);
+  const [highRiskPrayersLoading, setHighRiskPrayersLoading] = useState(true);
+  const [highRiskPrayersError, setHighRiskPrayersError] = useState("");
 
-    loadBanner();
-    return () => {
-      isMounted = false;
-    };
-  }, []);
+  const [userActionId, setUserActionId] = useState(null);
+  const [prayerActionId, setPrayerActionId] = useState(null);
+  const [exporting, setExporting] = useState(false);
 
-  const updateBannerField = (field, value) => {
-    setBannerForm((prev) => ({ ...prev, [field]: value }));
-  };
-
-  const handleBannerSubmit = async (event) => {
-    event.preventDefault();
-    setBannerSaving(true);
-    setBannerStatus(null);
-
-    const payload = {
-      eyebrow: bannerForm.eyebrow.trim(),
-      headline: bannerForm.headline.trim(),
-      subheadline: bannerForm.subheadline.trim(),
-      description: bannerForm.description.trim(),
-      primaryCta: {
-        label: bannerForm.primaryCtaLabel.trim() || "立即註冊",
-        href: bannerForm.primaryCtaHref.trim() || "/signup"
-      },
-      secondaryCta:
-        bannerForm.secondaryCtaLabel.trim() && bannerForm.secondaryCtaHref.trim()
-          ? {
-              label: bannerForm.secondaryCtaLabel.trim(),
-              href: bannerForm.secondaryCtaHref.trim()
-            }
-          : null,
-      heroImage: bannerForm.heroImage.trim()
-    };
+  const loadMetrics = useCallback(async () => {
+    setMetricsLoading(true);
+    setMetricsError("");
 
     try {
-      const response = await fetch("/api/banner", {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload)
-      });
+      const baseParams = new URLSearchParams({ limit: "1", includeSummary: "true" });
+      const blockedParams = new URLSearchParams({ limit: "1", status: "blocked" });
+      const shortParams = new URLSearchParams({ limit: "1" });
 
-      if (!response.ok) {
-        const error = await response.json().catch(() => ({ message: "更新失敗" }));
-        throw new Error(error.message || "更新失敗");
+      const [overallRes, blockedRes, prayersRes, responsesRes] = await Promise.all([
+        fetch(`/api/admin/users?${baseParams.toString()}`, { cache: "no-store" }),
+        fetch(`/api/admin/users?${blockedParams.toString()}`, { cache: "no-store" }),
+        fetch(`/api/admin/prayfor?${shortParams.toString()}`, { cache: "no-store" }),
+        fetch(`/api/admin/prayerresponse?${shortParams.toString()}`, { cache: "no-store" }),
+      ]);
+
+      if (!overallRes.ok || !blockedRes.ok || !prayersRes.ok || !responsesRes.ok) {
+        throw new Error("載入儀表板指標失敗");
       }
 
-      const updated = await response.json();
-      setBannerForm({
-        eyebrow: updated.eyebrow ?? "",
-        headline: updated.headline ?? "",
-        subheadline: updated.subheadline ?? "",
-        description: updated.description ?? "",
-        primaryCtaLabel: updated.primaryCta?.label ?? "",
-        primaryCtaHref: updated.primaryCta?.href ?? "",
-        secondaryCtaLabel: updated.secondaryCta?.label ?? "",
-        secondaryCtaHref: updated.secondaryCta?.href ?? "",
-        heroImage: updated.heroImage ?? ""
+      const [overallData, blockedData, prayersData, responsesData] = await Promise.all([
+        overallRes.json(),
+        blockedRes.json(),
+        prayersRes.json(),
+        responsesRes.json(),
+      ]);
+
+      const totalUsers = overallData.pagination?.total ?? overallData.summary?.totalUsers ?? 0;
+      const blockedUsers =
+        blockedData.pagination?.total ?? overallData.summary?.blockedUsers ?? 0;
+      const totalPrayers = prayersData.pagination?.total ?? 0;
+      const totalResponses = responsesData.pagination?.total ?? 0;
+
+      const averageWalletRaw =
+        typeof overallData.summary?.averageWalletBalance === "number"
+          ? overallData.summary.averageWalletBalance
+          : 0;
+
+      const averageWallet = Number.isFinite(averageWalletRaw)
+        ? Math.round(averageWalletRaw * 100) / 100
+        : 0;
+
+      setMetrics({
+        totalUsers,
+        blockedUsers,
+        totalPrayers,
+        totalResponses,
+        averageWallet,
       });
-      setBannerStatus({ type: "success", message: "Banner 已更新" });
+      setLastUpdated(new Date());
     } catch (error) {
-      setBannerStatus({ type: "error", message: error.message || "儲存失敗" });
+      console.error("載入儀表板指標失敗:", error);
+      setMetricsError(error.message || "載入儀表板指標失敗");
     } finally {
-      setBannerSaving(false);
+      setMetricsLoading(false);
+    }
+  }, []);
+
+  const loadHighRiskUsers = useCallback(async () => {
+    setHighRiskUsersLoading(true);
+    setHighRiskUsersError("");
+
+    try {
+      const params = new URLSearchParams({
+        sort: "reportCount",
+        order: "desc",
+        limit: "5",
+      });
+
+      const res = await fetch(`/api/admin/users?${params.toString()}`, {
+        cache: "no-store",
+      });
+
+      if (!res.ok) {
+        throw new Error("無法取得高風險用戶清單");
+      }
+
+      const data = await res.json();
+      const items = (data.data ?? []).filter((user) => (user.reportCount ?? 0) > 0);
+      setHighRiskUsers(items);
+    } catch (error) {
+      console.error("載入高風險用戶失敗:", error);
+      setHighRiskUsersError(error.message || "無法取得高風險用戶清單");
+    } finally {
+      setHighRiskUsersLoading(false);
+    }
+  }, []);
+
+  const loadHighRiskPrayers = useCallback(async () => {
+    setHighRiskPrayersLoading(true);
+    setHighRiskPrayersError("");
+
+    try {
+      const params = new URLSearchParams({
+        sort: "reportCount",
+        order: "desc",
+        limit: "5",
+        status: "active",
+      });
+
+      const res = await fetch(`/api/admin/prayfor?${params.toString()}`, {
+        cache: "no-store",
+      });
+
+      if (!res.ok) {
+        throw new Error("無法取得禱告事項清單");
+      }
+
+      const data = await res.json();
+      const items = (data.data ?? []).filter((item) => !item.isBlocked);
+      setHighRiskPrayers(items);
+    } catch (error) {
+      console.error("載入禱告待審清單失敗:", error);
+      setHighRiskPrayersError(error.message || "無法取得禱告事項清單");
+    } finally {
+      setHighRiskPrayersLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadMetrics();
+    loadHighRiskUsers();
+    loadHighRiskPrayers();
+  }, [loadMetrics, loadHighRiskUsers, loadHighRiskPrayers]);
+
+  const handleBlockUser = async (userId, nextState) => {
+    try {
+      setUserActionId(userId);
+      const res = await fetch(`/api/admin/users/${userId}/block`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ block: nextState }),
+      });
+
+      if (!res.ok) {
+        throw new Error("更新用戶狀態失敗");
+      }
+
+      await Promise.all([loadHighRiskUsers(), loadMetrics()]);
+    } catch (error) {
+      alert(`⚠ ${error.message}`);
+    } finally {
+      setUserActionId(null);
     }
   };
 
+  const handleBlockPrayer = async (prayerId) => {
+    try {
+      setPrayerActionId(prayerId);
+      const res = await fetch("/api/admin/prayfor", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: prayerId, block: true }),
+      });
+
+      if (!res.ok) {
+        throw new Error("封鎖禱告事項失敗");
+      }
+
+      await loadHighRiskPrayers();
+    } catch (error) {
+      alert(`⚠ ${error.message}`);
+    } finally {
+      setPrayerActionId(null);
+    }
+  };
+
+  const handleExport = () => {
+    if (metricsLoading || exporting) return;
+
+    try {
+      setExporting(true);
+      const rows = [];
+
+      rows.push(["儀表板指標", "數值"]);
+      rows.push(["總註冊用戶數", metrics.totalUsers]);
+      rows.push(["封鎖用戶數", metrics.blockedUsers]);
+      rows.push([
+        "封鎖用戶比例",
+        metrics.totalUsers > 0
+          ? `${((metrics.blockedUsers / metrics.totalUsers) * 100).toFixed(1)}%`
+          : "0%",
+      ]);
+      rows.push(["總禱告事項數", metrics.totalPrayers]);
+      rows.push(["總禱告回應數", metrics.totalResponses]);
+      rows.push(["平均錢包餘額 (NT$)", metrics.averageWallet.toFixed(2)]);
+
+      rows.push([]);
+      rows.push(["高風險用戶 Top 5"]);
+      rows.push(["姓名", "Email", "檢舉次數", "狀態"]);
+      if (highRiskUsers.length === 0) {
+        rows.push(["目前無資料", "", "", ""]);
+      } else {
+        highRiskUsers.forEach((user) => {
+          rows.push([
+            user.name || "未設定",
+            user.email,
+            user.reportCount ?? 0,
+            user.isBlocked ? "Blocked" : "Active",
+          ]);
+        });
+      }
+
+      rows.push([]);
+      rows.push(["待審禱告事項 Top 5"]);
+      rows.push(["標題", "建立者", "檢舉次數", "狀態"]);
+      if (highRiskPrayers.length === 0) {
+        rows.push(["目前無資料", "", "", ""]);
+      } else {
+        highRiskPrayers.forEach((item) => {
+          rows.push([
+            item.title,
+            item.owner?.name || item.owner?.email || "未提供",
+            item.reportCount ?? 0,
+            item.isBlocked ? "Blocked" : "Active",
+          ]);
+        });
+      }
+
+      const csv = rows
+        .map((row) =>
+          row
+            .map((cell) => {
+              const value = cell ?? "";
+              const text = typeof value === "number" ? value.toString() : String(value);
+              return `"${text.replace(/"/g, '""')}"`;
+            })
+            .join(",")
+        )
+        .join("\n");
+
+      const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `dashboard-${new Date().toISOString().slice(0, 10)}.csv`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error("匯出儀表板失敗:", error);
+      alert("⚠ 匯出失敗，請稍後再試");
+    } finally {
+      setExporting(false);
+    }
+  };
+
+  const blockedRatio = useMemo(() => {
+    if (!metrics.totalUsers || metrics.totalUsers <= 0) return 0;
+    return Math.min(Math.max(metrics.blockedUsers / metrics.totalUsers, 0), 1);
+  }, [metrics.blockedUsers, metrics.totalUsers]);
+
+  const metricCards = useMemo(() => {
+    const walletValue = Number.isFinite(metrics.averageWallet)
+      ? Math.round(metrics.averageWallet * 100) / 100
+      : 0;
+
+    return [
+      {
+        id: "total-users",
+        label: "總註冊用戶數",
+        value: formatInteger(metrics.totalUsers),
+        footnote: "含所有狀態",
+      },
+      {
+        id: "blocked-ratio",
+        label: "封鎖用戶比例",
+        value: formatPercent(blockedRatio),
+        footnote: `${formatInteger(metrics.blockedUsers)} 人封鎖中`,
+      },
+      {
+        id: "total-prayers",
+        label: "總禱告事項數",
+        value: formatInteger(metrics.totalPrayers),
+        footnote: "PrayFor Cards",
+      },
+      {
+        id: "total-responses",
+        label: "總禱告回應數",
+        value: formatInteger(metrics.totalResponses),
+        footnote: "涵蓋全部回應狀態",
+      },
+      {
+        id: "average-wallet",
+        label: "平均用戶錢包餘額",
+        value: formatCurrency(walletValue),
+        footnote: walletValue > 0 ? "以新台幣計價" : "目前無有效餘額資料",
+      },
+    ];
+  }, [blockedRatio, metrics.averageWallet, metrics.blockedUsers, metrics.totalPrayers, metrics.totalResponses, metrics.totalUsers]);
+
   return (
-    <div className="admin-dashboard">
+    <div className="admin-section">
       <header className="admin-dashboard__header">
         <div>
-          <p className="admin-dashboard__eyebrow">PRAY COIN 控制台</p>
-          <h1>總覽 Dashboard</h1>
+          <p className="admin-dashboard__eyebrow">PRAY COIN 後台</p>
+          <h1>儀表板總覽</h1>
+          <p>即時掌握平台健康度，並快速處理需要注意的高風險項目。</p>
         </div>
-
         <div className="admin-dashboard__header-actions">
-          {QUICK_ACTIONS.map((action) => (
-            <button key={action.id} type="button" className="button button--ghost">
-              {action.label}
-            </button>
-          ))}
-          <button type="button" className="button button--primary">
-            建立專案
+          {lastUpdated ? (
+            <span className="admin-dashboard__timestamp">
+              最後更新：{lastUpdated.toLocaleString()}
+            </span>
+          ) : null}
+          <button
+            type="button"
+            className="button button--primary"
+            onClick={handleExport}
+            disabled={metricsLoading || exporting}
+          >
+            {exporting ? "匯出中…" : "匯出試算表"}
           </button>
         </div>
       </header>
 
       <section className="admin-dashboard__kpis">
-        {KPI_CARDS.map((card) => (
-          <article key={card.id} className="dashboard-kpi">
-            <p className="dashboard-kpi__label">{card.label}</p>
-            <div className="dashboard-kpi__value-row">
-              <span className="dashboard-kpi__value">{card.value}</span>
-              <span
-                className={`dashboard-kpi__delta dashboard-kpi__delta--${card.tone}`}
-              >
-                {card.delta}
-              </span>
-            </div>
-            <p className="dashboard-kpi__footnote">相較於昨日</p>
+        {metricsLoading ? (
+          Array.from({ length: 4 }).map((_, index) => (
+            <article key={index} className="dashboard-kpi admin-dashboard--loading">
+              <p className="dashboard-kpi__label">載入中…</p>
+              <div className="dashboard-kpi__value-row">
+                <span className="dashboard-kpi__value">—</span>
+              </div>
+              <p className="dashboard-kpi__footnote">&nbsp;</p>
+            </article>
+          ))
+        ) : metricsError ? (
+          <article className="dashboard-card dashboard-card--wide">
+            <p className="error">{metricsError}</p>
+            <button type="button" className="link-button" onClick={loadMetrics}>
+              重新載入
+            </button>
           </article>
-        ))}
+        ) : (
+          metricCards.map((card) => (
+            <article key={card.id} className="dashboard-kpi">
+              <p className="dashboard-kpi__label">{card.label}</p>
+              <div className="dashboard-kpi__value-row">
+                <span className="dashboard-kpi__value">{card.value}</span>
+              </div>
+              <p className="dashboard-kpi__footnote">{card.footnote}</p>
+            </article>
+          ))
+        )}
       </section>
 
       <section className="admin-dashboard__grid">
-        <article className="dashboard-card dashboard-card--wide">
-          <header className="dashboard-card__header">
-            <div>
-              <h2>祈禱與回應趨勢</h2>
-              <p>過去 14 天祈禱與回應的整體動能。</p>
-            </div>
-            <button type="button" className="link-button">
-              下載 CSV →
-            </button>
-          </header>
-          <img
-            src="https://images.unsplash.com/photo-1523475472560-d2df97ec485c?auto=format&fit=crop&w=1200&q=80"
-            alt="折線圖示意"
-            className="dashboard-card__image"
-            loading="lazy"
-          />
-        </article>
-
         <article className="dashboard-card">
           <header className="dashboard-card__header">
             <div>
-              <h2>待處理事項</h2>
-              <p>依緊急程度排序的審核與財務任務。</p>
+              <h2>高風險用戶清單</h2>
+              <p>依檢舉次數排序的 Top 5，用於快速評估是否需要封鎖。</p>
             </div>
           </header>
-          <ul className="dashboard-queue">
-            {REVIEW_QUEUE.map((item) => (
-              <li key={item.id}>
-                <div className="dashboard-queue__main">
-                  <p className="dashboard-queue__title">{item.title}</p>
-                  <p className="dashboard-queue__meta">{item.meta}</p>
-                </div>
-                <div className="dashboard-queue__aside">
-                  <span>{item.owner}</span>
-                  <time dateTime={item.submittedAt}>{item.submittedAt}</time>
-                </div>
-              </li>
-            ))}
-          </ul>
-        </article>
 
-        <article className="dashboard-card">
-          <header className="dashboard-card__header">
+          {highRiskUsersLoading ? (
+            <p>載入中…</p>
+          ) : highRiskUsersError ? (
             <div>
-              <h2>支援工單</h2>
-              <p>最新客服回覆進度與指派。</p>
-            </div>
-          </header>
-          <ul className="dashboard-ticket-list">
-            {SUPPORT_TICKETS.map((ticket) => (
-              <li key={ticket.id}>
-                <div className="dashboard-ticket__title">{ticket.subject}</div>
-                <div className="dashboard-ticket__meta">
-                  <span>{ticket.status}</span>
-                  <span>指派：{ticket.assignee}</span>
-                  <time dateTime={ticket.updatedAt}>{ticket.updatedAt}</time>
-                </div>
-              </li>
-            ))}
-          </ul>
-        </article>
-
-        <article className="dashboard-card dashboard-card--wide">
-          <header className="dashboard-card__header">
-            <div>
-              <h2>首頁 Banner 快速設定</h2>
-              <p>即時調整首頁標題、說明與背景圖片。</p>
-            </div>
-          </header>
-          <form className="dashboard-form" onSubmit={handleBannerSubmit}>
-            <div className="dashboard-form__row">
-              <label>
-                <span>Eyebrow 標籤</span>
-                <input
-                  type="text"
-                  value={bannerForm.eyebrow}
-                  onChange={(event) => updateBannerField("eyebrow", event.target.value)}
-                  disabled={bannerLoading || bannerSaving}
-                  placeholder="例：禱告即影響"
-                />
-              </label>
-              <label>
-                <span>主標題 H1</span>
-                <input
-                  type="text"
-                  value={bannerForm.headline}
-                  onChange={(event) => updateBannerField("headline", event.target.value)}
-                  required
-                  disabled={bannerLoading || bannerSaving}
-                  placeholder="輸入主標"
-                />
-              </label>
-            </div>
-
-            <div className="dashboard-form__row">
-              <label>
-                <span>副標題 H2</span>
-                <input
-                  type="text"
-                  value={bannerForm.subheadline}
-                  onChange={(event) => updateBannerField("subheadline", event.target.value)}
-                  required
-                  disabled={bannerLoading || bannerSaving}
-                  placeholder="輸入副標"
-                />
-              </label>
-            </div>
-
-            <div className="dashboard-form__row">
-              <label>
-                <span>說明文字</span>
-                <textarea
-                  value={bannerForm.description}
-                  onChange={(event) => updateBannerField("description", event.target.value)}
-                  required
-                  disabled={bannerLoading || bannerSaving}
-                  rows={3}
-                  placeholder="輸入描述"
-                />
-              </label>
-            </div>
-
-            <div className="dashboard-form__row dashboard-form__row--equal">
-              <label>
-                <span>主按鈕文字</span>
-                <input
-                  type="text"
-                  value={bannerForm.primaryCtaLabel}
-                  onChange={(event) => updateBannerField("primaryCtaLabel", event.target.value)}
-                  disabled={bannerLoading || bannerSaving}
-                  placeholder="例：立即註冊"
-                />
-              </label>
-              <label>
-                <span>主按鈕連結</span>
-                <input
-                  type="text"
-                  value={bannerForm.primaryCtaHref}
-                  onChange={(event) => updateBannerField("primaryCtaHref", event.target.value)}
-                  disabled={bannerLoading || bannerSaving}
-                  placeholder="例：/signup"
-                />
-              </label>
-            </div>
-
-            <div className="dashboard-form__row dashboard-form__row--equal">
-              <label>
-                <span>副按鈕文字 (選填)</span>
-                <input
-                  type="text"
-                  value={bannerForm.secondaryCtaLabel}
-                  onChange={(event) => updateBannerField("secondaryCtaLabel", event.target.value)}
-                  disabled={bannerLoading || bannerSaving}
-                />
-              </label>
-              <label>
-                <span>副按鈕連結 (選填)</span>
-                <input
-                  type="text"
-                  value={bannerForm.secondaryCtaHref}
-                  onChange={(event) => updateBannerField("secondaryCtaHref", event.target.value)}
-                  disabled={bannerLoading || bannerSaving}
-                />
-              </label>
-            </div>
-
-            <div className="dashboard-form__row dashboard-form__row--image">
-              <label>
-                <span>Hero 圖片 URL</span>
-                <input
-                  type="text"
-                  value={bannerForm.heroImage}
-                  onChange={(event) => updateBannerField("heroImage", event.target.value)}
-                  disabled={bannerLoading || bannerSaving}
-                  placeholder="貼上 Unsplash 或其他圖庫連結"
-                />
-              </label>
-              {bannerForm.heroImage ? (
-                <div className="dashboard-form__preview">
-                  <span>預覽</span>
-                  <img src={bannerForm.heroImage} alt="Hero preview" />
-                </div>
-              ) : null}
-            </div>
-
-            <div className="dashboard-form__actions">
-              {bannerStatus ? (
-                <span
-                  className={
-                    bannerStatus.type === "success"
-                      ? "dashboard-form__status dashboard-form__status--success"
-                      : "dashboard-form__status dashboard-form__status--error"
-                  }
-                >
-                  {bannerStatus.message}
-                </span>
-              ) : null}
-              <button type="submit" className="button button--primary" disabled={bannerSaving}>
-                {bannerSaving ? "儲存中..." : "儲存 Banner"}
+              <p className="error">{highRiskUsersError}</p>
+              <button type="button" className="link-button" onClick={loadHighRiskUsers}>
+                重新載入
               </button>
             </div>
-          </form>
+          ) : highRiskUsers.length === 0 ? (
+            <p>目前沒有需要關注的高風險用戶。</p>
+          ) : (
+            <table className="admin-table">
+              <thead>
+                <tr>
+                  <th>姓名</th>
+                  <th>Email</th>
+                  <th>檢舉次數</th>
+                  <th>狀態</th>
+                  <th>操作</th>
+                </tr>
+              </thead>
+              <tbody>
+                {highRiskUsers.map((user) => (
+                  <tr key={user.id}>
+                    <td>{user.name || "未設定"}</td>
+                    <td>{user.email}</td>
+                    <td>{user.reportCount ?? 0}</td>
+                    <td>
+                      {user.isBlocked ? (
+                        <span className="status-badge status-badge--blocked">Blocked</span>
+                      ) : (
+                        <span className="status-badge status-badge--active">Active</span>
+                      )}
+                    </td>
+                    <td>
+                      <button
+                        type="button"
+                        className="link-button"
+                        onClick={() => handleBlockUser(user.id, !user.isBlocked)}
+                        disabled={userActionId === user.id}
+                      >
+                        {userActionId === user.id
+                          ? "處理中…"
+                          : user.isBlocked
+                          ? "解除封鎖"
+                          : "封鎖"}
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
         </article>
 
-        <article className="dashboard-card dashboard-card--wide">
+        <article className="dashboard-card">
           <header className="dashboard-card__header">
             <div>
-              <h2>Impact Ledger 專案</h2>
-              <p>重點專案的資金進度與佐證。</p>
+              <h2>待審禱告事項</h2>
+              <p>依檢舉次數排序的 Top 5，封鎖後將立即從前台下架。</p>
             </div>
-            <button type="button" className="link-button">
-              檢視全部 →
-            </button>
           </header>
-          <div className="dashboard-ledger">
-            {LEDGER_PROJECTS.map((project) => (
-              <article key={project.id} className="dashboard-ledger__item">
-                <img
-                  src={project.image}
-                  alt={project.name}
-                  loading="lazy"
-                />
-                <div>
-                  <h3>{project.name}</h3>
-                  <p>{project.amount}</p>
-                  <div className="dashboard-ledger__progress">
-                    <span style={{ width: `${project.progress}%` }} />
-                  </div>
-                  <p className="dashboard-ledger__progress-text">
-                    達成 {project.progress}%
-                  </p>
-                </div>
-              </article>
-            ))}
-          </div>
+
+          {highRiskPrayersLoading ? (
+            <p>載入中…</p>
+          ) : highRiskPrayersError ? (
+            <div>
+              <p className="error">{highRiskPrayersError}</p>
+              <button type="button" className="link-button" onClick={loadHighRiskPrayers}>
+                重新載入
+              </button>
+            </div>
+          ) : highRiskPrayers.length === 0 ? (
+            <p>目前沒有需要處理的禱告事項。</p>
+          ) : (
+            <table className="admin-table">
+              <thead>
+                <tr>
+                  <th>標題</th>
+                  <th>建立者</th>
+                  <th>檢舉次數</th>
+                  <th>狀態</th>
+                  <th>操作</th>
+                </tr>
+              </thead>
+              <tbody>
+                {highRiskPrayers.map((item) => (
+                  <tr key={item.id}>
+                    <td>{item.title}</td>
+                    <td>{item.owner?.name || item.owner?.email || "未提供"}</td>
+                    <td>{item.reportCount ?? 0}</td>
+                    <td>
+                      {item.isBlocked ? (
+                        <span className="status-badge status-badge--blocked">Blocked</span>
+                      ) : (
+                        <span className="status-badge status-badge--active">Active</span>
+                      )}
+                    </td>
+                    <td>
+                      {item.isBlocked ? (
+                        <span>已封鎖</span>
+                      ) : (
+                        <button
+                          type="button"
+                          className="link-button"
+                          onClick={() => handleBlockPrayer(item.id)}
+                          disabled={prayerActionId === item.id}
+                        >
+                          {prayerActionId === item.id ? "處理中…" : "封鎖"}
+                        </button>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
         </article>
       </section>
     </div>
   );
 }
+
+

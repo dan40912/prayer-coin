@@ -1,24 +1,32 @@
-import { NextResponse } from "next/server";
-import prisma from "@/lib/prisma";
-import { readAuthSession } from "@/lib/auth-storage"; // 或者改用 JWT
+﻿import { NextResponse } from "next/server";
 
-export async function GET(req) {
+import prisma from "@/lib/prisma";
+import { requireSessionUser } from "@/lib/server-session";
+
+export async function GET() {
   try {
-    // 假設已經有登入系統，這裡應該能讀取 user id
-    // 我先寫死 session 模擬，等你後續替換
-    const userId = "mock-user-id"; 
+    const session = requireSessionUser();
 
     const cards = await prisma.homePrayerCard.findMany({
-      where: {
-        // 如果 HomePrayerCard 跟 User 關聯了，這裡過濾
-        // ownerId: userId
-      },
+      where: { ownerId: session.id },
       orderBy: { updatedAt: "desc" },
+      include: {
+        category: {
+          select: { id: true, name: true, slug: true },
+        },
+      },
     });
 
     return NextResponse.json(cards);
-  } catch (err) {
-    console.error("❌ Failed to fetch cards:", err);
-    return NextResponse.json({ error: "Failed to fetch cards" }, { status: 500 });
+  } catch (error) {
+    if (error?.code === "UNAUTHENTICATED") {
+      return NextResponse.json({ message: "Please sign in." }, { status: 401 });
+    }
+
+    console.error("GET /api/customer/cards error:", error);
+    return NextResponse.json(
+      { message: "Failed to load prayer cards." },
+      { status: 500 }
+    );
   }
 }

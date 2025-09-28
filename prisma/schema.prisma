@@ -25,7 +25,10 @@ model User {
   isBlocked      Boolean          @default(false) 
   reportCount    Int              @default(0)
 
-  walletBalance  Decimal          @default(0.00) @db.Decimal(10,2)
+  walletBalance      Decimal          @default(0.00) @db.Decimal(10,2)
+  bscAddress         String?          @db.VarChar(191)
+  isAddressVerified  Boolean          @default(false)
+  transactions       TokenTransaction[]
 
   prayerRequests   PrayerRequest[]
   prayerResponses  PrayerResponse[]
@@ -51,7 +54,8 @@ model PrayerResponse {
   id            String   @id @default(cuid())
   message       String
   voiceUrl      String?                // ✅ 錄音檔 URL
-  tokensAwarded Int      @default(0)
+  tokensAwarded Decimal  @default(0) @db.Decimal(10,2)
+  isSettled    Boolean  @default(false)
   isAnonymous   Boolean  @default(false)
   isBlocked     Boolean  @default(false) // ✅ 封鎖
   reportCount   Int      @default(0)     // ✅ 檢舉次數
@@ -68,6 +72,7 @@ model PrayerResponse {
   // 作者（回覆者）
   responderId String?
   responder   User? @relation(fields: [responderId], references: [id])
+  tokenTransactions TokenTransaction[] @relation("PrayerResponseTransactions")
 }
 
 enum PrayerStatus {
@@ -132,11 +137,100 @@ model HomePrayerCard {
   owner        User?              @relation(fields: [ownerId], references: [id])
 
   responses    PrayerResponse[]
+  tokenTransactions TokenTransaction[] @relation("HomePrayerCardTransactions")
 
   // ✅ 保留封鎖與檢舉
   isBlocked    Boolean            @default(false)
   reportCount  Int                @default(0)
+  isSettled    Boolean            @default(false)
+  settledAmount Decimal?          @db.Decimal(10,2)
 
   @@map("home_prayer_card")
   @@index([categoryId])
+}
+
+
+
+enum TransactionType {
+  EARN_PRAYER
+  EARN_RESPONSE
+  WITHDRAW
+  DONATE
+}
+
+enum TransactionStatus {
+  PENDING
+  PROCESSING_CHAIN
+  COMPLETED
+  FAILED
+}
+
+enum AdminLogCategory {
+  ACTION
+  SYSTEM
+}
+
+enum AdminLogLevel {
+  INFO
+  WARNING
+  ERROR
+  CRITICAL
+}
+
+enum AdminRole {
+  SUPER
+  ADMIN
+}
+
+model AdminAccount {
+  id           String    @id @default(cuid())
+  username     String    @unique
+  passwordHash String
+  role         AdminRole @default(ADMIN)
+  isActive     Boolean   @default(true)
+  lastLoginAt  DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+}
+
+model TokenTransaction {
+  id                String             @id @default(cuid())
+  userId            String
+  user              User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type              TransactionType
+  status            TransactionStatus  @default(PENDING)
+  amount            Decimal            @db.Decimal(10,2)
+  relatedHomeCardId Int?
+  relatedHomeCard   HomePrayerCard?    @relation("HomePrayerCardTransactions", fields: [relatedHomeCardId], references: [id])
+  relatedResponseId String?
+  relatedResponse   PrayerResponse?    @relation("PrayerResponseTransactions", fields: [relatedResponseId], references: [id])
+  txHash            String?            @db.VarChar(191)
+  targetAddress     String?            @db.VarChar(191)
+  gasFee            Decimal?           @db.Decimal(10,8)
+  metadata          Json?
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
+
+  @@map("token_transaction")
+  @@index([userId, createdAt])
+  @@index([type, status])
+}
+
+model AdminLog {
+  id           Int               @id @default(autoincrement())
+  category     AdminLogCategory
+  level        AdminLogLevel     @default(INFO)
+  message      String
+  action       String?
+  actorId      String?
+  actorEmail   String?
+  targetType   String?
+  targetId     String?
+  requestPath  String?
+  metadata     Json?
+  createdAt    DateTime          @default(now())
+
+  @@map("admin_log")
+  @@index([category, createdAt])
+  @@index([createdAt])
 }

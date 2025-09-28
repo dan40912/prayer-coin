@@ -1,8 +1,9 @@
-// ./src/app/api/admin/prayfor/route.js
+﻿// ./src/app/api/admin/prayfor/route.js
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
+import { logAdminAction, logSystemError } from "@/lib/logger";
 
-// 取得禱告事項列表（含搜尋、分頁、排序、篩選）
+// 取得禱告卡片列表，支援搜尋、狀態篩選與排序
 export async function GET(request) {
   try {
     const { searchParams } = new URL(request.url);
@@ -55,12 +56,21 @@ export async function GET(request) {
       },
     });
   } catch (error) {
+    await logSystemError({
+      message: "取得禱告項目列表失敗",
+      error,
+      requestPath: request.url,
+      metadata: {
+        query: Object.fromEntries(new URL(request.url).searchParams.entries()),
+      },
+    });
+
     console.error("❌ GET /api/admin/prayfor error:", error);
-    return NextResponse.json({ message: "無法取得禱告事項" }, { status: 500 });
+    return NextResponse.json({ message: "無法取得禱告項目列表" }, { status: 500 });
   }
 }
 
-// 更新封鎖狀態
+// 更新禱告項目狀態
 export async function PATCH(request) {
   try {
     const { id, block } = await request.json();
@@ -69,14 +79,30 @@ export async function PATCH(request) {
       return NextResponse.json({ message: "缺少 ID" }, { status: 400 });
     }
 
+    const numericId = Number(id);
     const updated = await prisma.homePrayerCard.update({
-      where: { id: Number(id) }, // ⚠️ homePrayerCard.id 是 Int
+      where: { id: numericId },
       data: { isBlocked: block },
+    });
+
+    await logAdminAction({
+      action: block ? "prayer.block" : "prayer.unblock",
+      message: `更新禱告項目 ${numericId} 狀態為 ${block ? "Blocked" : "Active"}`,
+      targetType: "HomePrayerCard",
+      targetId: String(numericId),
+      requestPath: request.url,
+      metadata: { block },
     });
 
     return NextResponse.json(updated);
   } catch (error) {
+    await logSystemError({
+      message: "更新禱告項目狀態失敗",
+      error,
+      requestPath: request.url,
+    });
+
     console.error("❌ PATCH /api/admin/prayfor error:", error);
-    return NextResponse.json({ message: "更新失敗" }, { status: 500 });
+    return NextResponse.json({ message: "更新禱告項目狀態失敗" }, { status: 500 });
   }
 }

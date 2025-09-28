@@ -1,81 +1,111 @@
-﻿"use client";
+"use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
+
+const PAGE_SIZE = 10;
 
 export default function AdminUsersPage() {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  // 分頁 / 搜尋 / 篩選狀態
   const [page, setPage] = useState(1);
-  const [pageSize] = useState(10);
   const [search, setSearch] = useState("");
-  const [filter, setFilter] = useState("all"); // all | active | blocked
+  const [filter, setFilter] = useState("all");
+  const [pagination, setPagination] = useState({
+    total: 0,
+    page: 1,
+    limit: PAGE_SIZE,
+    totalPages: 1,
+  });
+  const [actionUserId, setActionUserId] = useState(null);
 
-  // 載入用戶
-  const loadUsers = async () => {
+  const loadUsers = useCallback(async () => {
     try {
       setLoading(true);
-      const res = await fetch("/api/admin/users", { cache: "no-store" });
-      if (!res.ok) throw new Error("無法取得用戶清單");
+      setError("");
+
+      const params = new URLSearchParams({
+        page: page.toString(),
+        limit: PAGE_SIZE.toString(),
+        sort: "createdAt",
+        order: "desc",
+      });
+
+      if (search.trim()) {
+        params.set("search", search.trim());
+      }
+
+      if (filter !== "all") {
+        params.set("status", filter);
+      }
+
+      const res = await fetch(`/api/admin/users?${params.toString()}`, {
+        cache: "no-store",
+      });
+
+      if (!res.ok) {
+        throw new Error("無法取得使用者名單");
+      }
+
       const data = await res.json();
-      setUsers(data);
+      const nextPagination = data.pagination ?? {
+        total: 0,
+        page: 1,
+        limit: PAGE_SIZE,
+        totalPages: 1,
+      };
+      const totalPages = Math.max(nextPagination.totalPages || 1, 1);
+
+      if (page > totalPages) {
+        setPage(totalPages);
+        setPagination(nextPagination);
+        setUsers(data.data ?? []);
+        return;
+      }
+
+      setUsers(data.data ?? []);
+      setPagination(nextPagination);
     } catch (err) {
-      setError(err.message);
+      console.error("載入使用者失敗:", err);
+      setError(err.message || "無法取得使用者名單");
     } finally {
       setLoading(false);
     }
-  };
+  }, [filter, page, search]);
 
-  // 切換封鎖狀態
+  useEffect(() => {
+    loadUsers();
+  }, [loadUsers]);
+
   const handleToggleBlock = async (id, block) => {
     try {
+      setActionUserId(id);
       const res = await fetch(`/api/admin/users/${id}/block`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ block }),
       });
-      if (!res.ok) throw new Error("更新失敗");
-      // ✅ 更新當前使用者清單
-      setUsers((prev) =>
-        prev.map((u) =>
-          u.id === id ? { ...u, isBlocked: block } : u
-        )
-      );
+
+      if (!res.ok) {
+        throw new Error("更新狀態失敗");
+      }
+
+      await loadUsers();
     } catch (err) {
-      alert("❌ " + err.message);
+      alert(`⚠ ${err.message}`);
+    } finally {
+      setActionUserId(null);
     }
   };
 
-  useEffect(() => {
-    loadUsers();
-  }, []);
-
-  // ✅ 篩選與搜尋邏輯
-  const filteredUsers = users.filter((user) => {
-    const matchSearch =
-      user.name?.toLowerCase().includes(search.toLowerCase()) ||
-      user.email?.toLowerCase().includes(search.toLowerCase());
-
-    const matchFilter =
-      filter === "all" ||
-      (filter === "active" && !user.isBlocked) ||
-      (filter === "blocked" && user.isBlocked);
-
-    return matchSearch && matchFilter;
-  });
-
-  // ✅ 分頁邏輯
-  const totalPages = Math.ceil(filteredUsers.length / pageSize);
-  const startIndex = (page - 1) * pageSize;
-  const paginatedUsers = filteredUsers.slice(startIndex, startIndex + pageSize);
+  const totalPages = Math.max(pagination.totalPages || 1, 1);
 
   return (
     <div className="admin-section">
       <header className="admin-section__header">
         <div>
-          <p className="admin-section__eyebrow">人員與權限治理</p>
+          <p className="admin-section__eyebrow">使用者與權限管理</p>
           <h1>用戶管理</h1>
         </div>
       </header>
@@ -83,23 +113,23 @@ export default function AdminUsersPage() {
       <section className="admin-section__card">
         <header className="admin-section__card-header">
           <div>
-            <h2>用戶清單</h2>
-            <p>依帳號狀態管理。</p>
+            <h2>用戶列表</h2>
+            <p>透過搜尋與篩選快速找到需要關注的用戶。</p>
           </div>
           <div className="admin-section__filters">
             <input
               type="search"
-              placeholder="搜尋姓名或 Email"
+              placeholder="以姓名或 Email 搜尋"
               value={search}
-              onChange={(e) => {
-                setSearch(e.target.value);
-                setPage(1); // 重置頁數
+              onChange={(event) => {
+                setSearch(event.target.value);
+                setPage(1);
               }}
             />
             <select
               value={filter}
-              onChange={(e) => {
-                setFilter(e.target.value);
+              onChange={(event) => {
+                setFilter(event.target.value);
                 setPage(1);
               }}
             >
@@ -111,7 +141,7 @@ export default function AdminUsersPage() {
         </header>
 
         {loading ? (
-          <p>載入中...</p>
+          <p>載入中…</p>
         ) : error ? (
           <p className="error">{error}</p>
         ) : (
@@ -121,46 +151,45 @@ export default function AdminUsersPage() {
                 <tr>
                   <th>姓名</th>
                   <th>Email</th>
+                  <th>檢舉次數</th>
                   <th>狀態</th>
-                  <th>上次登入</th>
+                  <th>最後更新</th>
                   <th>操作</th>
                 </tr>
               </thead>
               <tbody>
-                {paginatedUsers.length === 0 ? (
+                {users.length === 0 ? (
                   <tr>
-                    <td colSpan={5}>沒有符合的使用者</td>
+                    <td colSpan={6}>目前沒有符合條件的使用者</td>
                   </tr>
                 ) : (
-                  paginatedUsers.map((user) => (
+                  users.map((user) => (
                     <tr key={user.id}>
-                      <td>{user.name || "（未設定）"}</td>
+                      <td>{user.name || "尚未設定"}</td>
                       <td>{user.email}</td>
+                      <td>{user.reportCount ?? 0}</td>
                       <td>
                         {user.isBlocked ? (
-                          <span className="status-badge status-badge--blocked">
-                            Blocked
-                          </span>
+                          <span className="status-badge status-badge--blocked">Blocked</span>
                         ) : (
-                          <span className="status-badge status-badge--active">
-                            Active
-                          </span>
+                          <span className="status-badge status-badge--active">Active</span>
                         )}
                       </td>
                       <td>
-                        {user.lastLogin
-                          ? new Date(user.lastLogin).toLocaleString()
-                          : "尚未登入"}
+                        {user.updatedAt ? new Date(user.updatedAt).toLocaleString() : "—"}
                       </td>
                       <td>
                         <button
                           type="button"
                           className="link-button"
-                          onClick={() =>
-                            handleToggleBlock(user.id, !user.isBlocked)
-                          }
+                          onClick={() => handleToggleBlock(user.id, !user.isBlocked)}
+                          disabled={actionUserId === user.id}
                         >
-                          {user.isBlocked ? "解除封鎖" : "封鎖"}
+                          {actionUserId === user.id
+                            ? "處理中…"
+                            : user.isBlocked
+                            ? "解除封鎖"
+                            : "封鎖"}
                         </button>
                       </td>
                     </tr>
@@ -169,20 +198,19 @@ export default function AdminUsersPage() {
               </tbody>
             </table>
 
-            {/* ✅ 分頁控制 */}
             <div className="pagination">
               <button
                 disabled={page === 1}
-                onClick={() => setPage((p) => p - 1)}
+                onClick={() => setPage((prev) => Math.max(prev - 1, 1))}
               >
                 上一頁
               </button>
               <span>
-                頁數 {page} / {totalPages || 1}
+                第 {page} / {totalPages} 頁
               </span>
               <button
-                disabled={page === totalPages}
-                onClick={() => setPage((p) => p + 1)}
+                disabled={page >= totalPages}
+                onClick={() => setPage((prev) => Math.min(prev + 1, totalPages))}
               >
                 下一頁
               </button>
