@@ -30,20 +30,29 @@ function formatTime(dateLike) {
 }
 
 function buildShareUrl(card) {
-  if (card?.detailsHref) {
-    return card.detailsHref;
+  const origin = typeof window !== "undefined" && window.location?.origin ? window.location.origin : "";
+  const rawHref = card?.detailsHref?.trim();
+
+  if (rawHref) {
+    if (/^https?:\/\//i.test(rawHref)) {
+      return rawHref;
+    }
+
+    if (rawHref.startsWith("/")) {
+      return origin ? `${origin}${rawHref}` : rawHref;
+    }
+
+    const normalized = rawHref.startsWith("/") ? rawHref.slice(1) : rawHref;
+    return origin ? `${origin}/${normalized}` : `/${normalized}`;
   }
 
   const slug = card?.slug || card?.id;
   if (!slug) {
-    return "";
+    return origin;
   }
 
-  if (typeof window !== "undefined" && window.location?.origin) {
-    return `${window.location.origin}/legacy/prayfor/details.html?prayer=${slug}`;
-  }
-
-  return `/legacy/prayfor/details.html?prayer=${slug}`;
+  const pathValue = `/legacy/prayfor/details.html?prayer=${slug}`;
+  return origin ? `${origin}${pathValue}` : pathValue;
 }
 
 export default function CustomerPortalPage() {
@@ -213,8 +222,8 @@ export default function CustomerPortalPage() {
     try {
       if (typeof navigator !== "undefined") {
         if (navigator.share) {
-          await navigator.share({ title: card.title, url });
-          setToast({ type: "success", message: "已呼叫分享選單" });
+          await navigator.share({ title: card.title || "祈禱卡片", url });
+          setToast({ type: "success", message: "已開啟分享選單" });
           return;
         }
 
@@ -236,6 +245,11 @@ export default function CustomerPortalPage() {
     if (typeof window !== "undefined") {
       const confirmed = window.confirm(`確定要刪除「${card.title}」嗎？`);
       if (!confirmed) return;
+    }
+
+    if (card.isBlocked) {
+      setToast({ type: "error", message: "此祈禱卡片已被封鎖，無法刪除" });
+      return;
     }
 
     setCardAction({ id: card.id, type: "delete" });
@@ -261,6 +275,11 @@ export default function CustomerPortalPage() {
   };
 
   const handleToggleVisibility = async (card) => {
+    if (card.isBlocked) {
+      setToast({ type: "error", message: "此祈禱卡片已被封鎖，無法變更顯示" });
+      return;
+    }
+
     setCardAction({ id: card.id, type: "visibility" });
 
     try {
@@ -312,66 +331,94 @@ export default function CustomerPortalPage() {
     return (
       <div className="cp-cards">
         {cards.map((card) => {
+          const responsesCount = card._count?.responses ?? card.responsesCount ?? 0;
+          const reportCount = card.reportCount ?? 0;
           const isDeleting = cardAction?.id === card.id && cardAction?.type === "delete";
           const isToggling = cardAction?.id === card.id && cardAction?.type === "visibility";
+          const canManage = !card.isBlocked;
+          const statusLabel = card.isBlocked ? "已封鎖" : "已發布";
+          const coverAlt = card.alt || `${card.title || "祈禱卡片"} 封面`;
+          const shareDisabled = !buildShareUrl(card);
 
           return (
             <article
               key={card.id}
               className={`cp-card${card.isBlocked ? " cp-card--muted" : ""}`}
             >
-              <div className="cp-card__header">
-                <div>
-                  <h3>{card.title || "未命名的祈禱卡片"}</h3>
-                  {card.description ? (
-                    <p>{card.description}</p>
+              <div className="cp-card__layout">
+                <div className="cp-card__cover">
+                  {card.image ? (
+                    <img src={card.image} alt={coverAlt} loading="lazy" />
                   ) : (
-                    <p className="cp-helper">尚未撰寫描述</p>
+                    <div className="cp-card__placeholder">尚無封面</div>
                   )}
                 </div>
-                <span
-                  className={`cp-status${card.isBlocked ? " cp-status--inactive" : ""}`}
-                >
-                  {card.isBlocked ? "已隱藏" : card.status ?? "草稿"}
-                </span>
-              </div>
 
-              <div className="cp-card__meta">
-                <span>更新：{formatTime(card.updatedAt)}</span>
-                {card.category?.name ? <span>分類：{card.category.name}</span> : null}
-              </div>
+                <div className="cp-card__content">
+                  <div className="cp-card__header">
+                    <div className="cp-card__title">
+                      <h3>{card.title || "未命名的祈禱卡片"}</h3>
+                      {card.description ? (
+                        <p className="cp-card__description">{card.description}</p>
+                      ) : (
+                        <p className="cp-helper">尚未撰寫描述</p>
+                      )}
+                    </div>
+                    <span className={`cp-status${card.isBlocked ? " cp-status--inactive" : ""}`}>
+                      {statusLabel}
+                    </span>
+                  </div>
 
-              <div className="cp-card__actions">
-                <Link
-                  href={`/customer-portal/edit/${card.id}`}
-                  className="cp-link"
-                  prefetch={false}
-                >
-                  編輯
-                </Link>
-                <button
-                  type="button"
-                  className="cp-link cp-link--danger"
-                  onClick={() => handleDeleteCard(card)}
-                  disabled={isDeleting}
-                >
-                  {isDeleting ? "刪除中…" : "刪除"}
-                </button>
-                <button
-                  type="button"
-                  className="cp-link"
-                  onClick={() => handleShareCard(card)}
-                >
-                  分享連結
-                </button>
-                <button
-                  type="button"
-                  className="cp-link cp-link--muted"
-                  onClick={() => handleToggleVisibility(card)}
-                  disabled={isToggling}
-                >
-                  {isToggling ? "更新中…" : card.isBlocked ? "取消隱藏" : "隱藏"}
-                </button>
+                  <div className="cp-card__meta">
+                    <span>更新：{formatTime(card.updatedAt)}</span>
+                    {card.category?.name ? <span>分類：{card.category.name}</span> : null}
+                    <span>回覆：{responsesCount}</span>
+                    <span>被檢舉：{reportCount}</span>
+                  </div>
+
+                  <div className="cp-card__actions">
+                    {canManage ? (
+                      <Link
+                        href={`/customer-portal/edit/${card.id}`}
+                        className="cp-link"
+                        prefetch={false}
+                      >
+                        編輯
+                      </Link>
+                    ) : (
+                      <span className="cp-link cp-link--disabled" aria-disabled="true">
+                        編輯
+                      </span>
+                    )}
+
+                    <button
+                      type="button"
+                      className="cp-link cp-link--danger"
+                      onClick={() => handleDeleteCard(card)}
+                      disabled={!canManage || isDeleting}
+                    >
+                      {isDeleting ? "刪除中…" : "刪除"}
+                    </button>
+
+                    <button
+                      type="button"
+                      className="cp-link"
+                      onClick={() => handleShareCard(card)}
+                      disabled={shareDisabled}
+                    >
+                      分享連結
+                    </button>
+
+                    <button
+                      type="button"
+                      className="cp-link cp-link--muted"
+                      onClick={() => handleToggleVisibility(card)}
+                      disabled={!canManage || isToggling}
+                    >
+                      {isToggling ? "更新中…" : card.isBlocked ? "已封鎖" : "隱藏"}
+                    </button>
+                  </div>
+                </div>
               </div>
             </article>
           );
@@ -379,6 +426,7 @@ export default function CustomerPortalPage() {
       </div>
     );
   };
+
 
   return (
     <>

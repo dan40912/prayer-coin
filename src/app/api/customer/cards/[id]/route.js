@@ -1,4 +1,4 @@
-﻿import { NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 
 import prisma from "@/lib/prisma";
 import { requireSessionUser } from "@/lib/server-session";
@@ -76,6 +76,7 @@ async function getOwnedCard(cardId, userId) {
     where: { id: cardId },
     include: {
       category: { select: { id: true, name: true, slug: true } },
+      _count: { select: { responses: true } },
     },
   });
 
@@ -114,7 +115,7 @@ export async function GET(request, { params }) {
     console.error("GET /api/customer/cards/[id] error:", error);
     return NextResponse.json(
       { message: "Failed to load prayer card." },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -149,6 +150,7 @@ export async function PATCH(request, { params }) {
       data,
       include: {
         category: { select: { id: true, name: true, slug: true } },
+        _count: { select: { responses: true } },
       },
     });
 
@@ -161,7 +163,7 @@ export async function PATCH(request, { params }) {
     console.error("PATCH /api/customer/cards/[id] error:", error);
     return NextResponse.json(
       { message: "Failed to update prayer card." },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -196,6 +198,7 @@ export async function PUT(request, { params }) {
       },
       include: {
         category: { select: { id: true, name: true, slug: true } },
+        _count: { select: { responses: true } },
       },
     });
 
@@ -234,7 +237,7 @@ export async function DELETE(request, { params }) {
     console.error("DELETE /api/customer/cards/[id] error:", error);
     return NextResponse.json(
       { message: "Failed to delete prayer card." },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

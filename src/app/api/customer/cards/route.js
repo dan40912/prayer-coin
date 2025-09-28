@@ -1,4 +1,4 @@
-﻿import { NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 
 import prisma from "@/lib/prisma";
 import { requireSessionUser } from "@/lib/server-session";
@@ -14,6 +14,9 @@ export async function GET() {
         category: {
           select: { id: true, name: true, slug: true },
         },
+        _count: {
+          select: { responses: true },
+        },
       },
     });
 
@@ -26,7 +29,7 @@ export async function GET() {
     console.error("GET /api/customer/cards error:", error);
     return NextResponse.json(
       { message: "Failed to load prayer cards." },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

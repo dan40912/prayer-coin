@@ -5501,3 +5501,70 @@ button.cp-link:disabled {
     align-items: stretch;
   }
 }
+.cp-card__layout {
+  display: grid;
+  gap: 1.5rem;
+  grid-template-columns: minmax(120px, 180px) 1fr;
+  align-items: stretch;
+}
+
+.cp-card__cover {
+  border-radius: 1.1rem;
+  overflow: hidden;
+  background: linear-gradient(135deg, rgba(37, 99, 235, 0.08), rgba(14, 165, 233, 0.08));
+  border: 1px solid rgba(37, 99, 235, 0.18);
+  display: grid;
+  place-items: center;
+}
+
+.cp-card__cover img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.cp-card__placeholder {
+  font-size: 0.9rem;
+  color: var(--text-muted);
+  padding: 1.2rem;
+  text-align: center;
+}
+
+.cp-card__content {
+  display: grid;
+  gap: 1rem;
+}
+
+.cp-card__title h3 {
+  margin: 0 0 0.35rem;
+}
+
+.cp-card__description {
+  margin: 0;
+  color: var(--text-secondary);
+}
+
+.cp-card__actions {
+  align-items: center;
+}
+
+.cp-link--disabled {
+  background: rgba(17, 24, 39, 0.08);
+  color: var(--text-muted);
+  pointer-events: none;
+  cursor: not-allowed;
+}
+
+@media (max-width: 640px) {
+  .cp-card__layout {
+    grid-template-columns: 1fr;
+  }
+
+  .cp-card__cover {
+    max-height: 180px;
+  }
+}
+.cp-card__title {
+  display: grid;
+  gap: 0.35rem;
+}

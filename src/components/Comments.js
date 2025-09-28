@@ -1,160 +1,496 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
+
 import { useAuthSession } from "@/hooks/useAuthSession";
+import { PRAYER_RESPONSE_CREATED } from "@/lib/events";
+
+const MAX_RECORD_SECONDS = 120;
+const COUNTDOWN_START = 3;
+const DEFAULT_SAMPLE_RATE = 16000;
+const DEFAULT_BITRATE = 128000;
+
+const RECORDING_FORMATS = [
+  { mimeType: "audio/mp4;codecs=mp4a.40.2", extension: "m4a" },
+  { mimeType: "audio/webm;codecs=opus", extension: "webm" },
+  { mimeType: "audio/ogg;codecs=opus", extension: "ogg" },
+  { mimeType: "audio/mpeg", extension: "mp3" },
+  { mimeType: "", extension: "webm" },
+];
+
+function resolveRecordingFormat() {
+  if (typeof window === "undefined" || typeof MediaRecorder === "undefined") {
+    return RECORDING_FORMATS[0];
+  }
+  for (const format of RECORDING_FORMATS) {
+    if (!format.mimeType || MediaRecorder.isTypeSupported(format.mimeType)) {
+      return format;
+    }
+  }
+  return { mimeType: "", extension: "webm" };
+}
+
+function getExtensionFromMime(mime = "") {
+  const value = mime.toLowerCase();
+  if (value.includes("mpeg")) return "mp3";
+  if (value.includes("mp4")) return "m4a";
+  if (value.includes("ogg")) return "ogg";
+  if (value.includes("webm")) return "webm";
+  const parts = value.split("/");
+  return parts[1]?.split(";")[0] || "webm";
+}
+
+
+
+function formatSeconds(totalSeconds) {
+  const minutes = Math.floor(totalSeconds / 60)
+    .toString()
+    .padStart(2, "0");
+  const seconds = (totalSeconds % 60).toString().padStart(2, "0");
+  return `${minutes}:${seconds}`;
+}
+
+function getDisplayName(response) {
+  if (response.isAnonymous) return "匿名代禱者";
+  return response.responder?.name || response.responder?.email || "未命名";
+}
+
+function getAvatarUrl(response) {
+  return response.responder?.avatarUrl || null;
+}
+
+function getAvatarFallback(name) {
+  const initial = name?.trim()?.charAt(0) || "祈";
+  return initial.toUpperCase();
+}
 
 export default function Comments({ requestId }) {
   const authUser = useAuthSession();
+
   const [isAnonymous, setIsAnonymous] = useState(false);
   const [text, setText] = useState("");
-  const [recording, setRecording] = useState(false);
-  const [audioUrl, setAudioUrl] = useState(null);
-  const [responses, setResponses] = useState([]);     // ← 從 API 取得
-  const mediaRecorderRef = useRef(null);
-  const audioBlobRef = useRef(null);
+  const [responses, setResponses] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
-  // 初始化：只撈這張卡的回應
+  const [audioUrl, setAudioUrl] = useState(null);
+  const audioBlobRef = useRef(null);
+  const recordingFormatRef = useRef(resolveRecordingFormat());
+
+  const [isRecorderModalOpen, setIsRecorderModalOpen] = useState(false);
+  const [recorderStep, setRecorderStep] = useState("idle");
+  const [countdownValue, setCountdownValue] = useState(null);
+  const [recording, setRecording] = useState(false);
+  const [recordSeconds, setRecordSeconds] = useState(0);
+  const [recordError, setRecordError] = useState("");
+
+  const mediaRecorderRef = useRef(null);
+  const mediaStreamRef = useRef(null);
+  const audioContextRef = useRef(null);
+  const recordChunksRef = useRef([]);
+  const recordTimerRef = useRef(null);
+
   useEffect(() => {
+    let cancelled = false;
+
     (async () => {
       try {
         const res = await fetch(`/api/responses/${requestId}`, { cache: "no-store" });
-        if (!res.ok) throw new Error("fetch failed");
+        if (!res.ok) throw new Error("無法載入回應");
         const data = await res.json();
-        setResponses(data);
-      } catch (e) {
-        console.error("fetchResponses error:", e);
+        if (!cancelled) {
+          setResponses(data);
+          setError("");
+        }
+      } catch (err) {
+        if (!cancelled) setError(err.message || "無法載入回應");
+      } finally {
+        if (!cancelled) setLoading(false);
       }
     })();
+
+    return () => {
+      cancelled = true;
+      cleanupRecording();
+      if (recordTimerRef.current) {
+        clearInterval(recordTimerRef.current);
+        recordTimerRef.current = null;
+      }
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [requestId]);
 
-  const startRecording = async () => {
-    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-    const rec = new MediaRecorder(stream);
-    const chunks = [];
-    rec.ondataavailable = (e) => chunks.push(e.data);
-    rec.onstop = () => {
-      const blob = new Blob(chunks, { type: "audio/mpeg" });
-      audioBlobRef.current = blob;
-      setAudioUrl(URL.createObjectURL(blob));
-    };
-    mediaRecorderRef.current = rec;
-    rec.start();
-    setRecording(true);
+  useEffect(() => {
+    if (!recording) return;
+    if (recordSeconds >= MAX_RECORD_SECONDS) {
+      stopRecording();
+    }
+  }, [recordSeconds, recording]);
+
+  useEffect(() => {
+    if (!isRecorderModalOpen || recorderStep !== "countdown") return;
+    if (countdownValue === null) return;
+
+    if (countdownValue === 0) {
+      setCountdownValue(null);
+      window.setTimeout(() => {
+        beginRecording();
+      }, 1000);
+      return;
+    }
+
+    const timer = window.setTimeout(() => {
+      setCountdownValue((prev) => (prev !== null ? prev - 1 : null));
+    }, 1000);
+
+    return () => window.clearTimeout(timer);
+  }, [countdownValue, isRecorderModalOpen, recorderStep]);
+
+  const cleanupRecording = useCallback(() => {
+    if (recordTimerRef.current) {
+      clearInterval(recordTimerRef.current);
+      recordTimerRef.current = null;
+    }
+
+    const recorder = mediaRecorderRef.current;
+    if (recorder && recorder.state !== "inactive") {
+      try {
+        recorder.stop();
+      } catch (error) {
+        // ignore
+      }
+    }
+    mediaRecorderRef.current = null;
+
+    if (mediaStreamRef.current) {
+      mediaStreamRef.current.getTracks().forEach((track) => track.stop());
+      mediaStreamRef.current = null;
+    }
+
+    if (audioContextRef.current) {
+      audioContextRef.current.close().catch(() => undefined);
+      audioContextRef.current = null;
+    }
+
+    recordChunksRef.current = [];
+    setRecording(false);
+    setRecordSeconds(0);
+  }, []);
+
+  const openRecorder = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        audio: {
+          channelCount: 1,
+          sampleRate: DEFAULT_SAMPLE_RATE,
+          noiseSuppression: true,
+          echoCancellation: true,
+          autoGainControl: false,
+        },
+      });
+      mediaStreamRef.current = stream;
+      setRecordError("");
+      setRecorderStep("countdown");
+      setCountdownValue(COUNTDOWN_START);
+      setIsRecorderModalOpen(true);
+    } catch (err) {
+      console.error("access microphone failed", err);
+      setRecordError("需要麥克風權限才能錄音");
+      cleanupRecording();
+    }
+  };
+
+  const closeRecorderModal = () => {
+    setIsRecorderModalOpen(false);
+    setRecorderStep("idle");
+    setCountdownValue(null);
+    cleanupRecording();
+  };
+
+  const beginRecording = () => {
+    if (!mediaStreamRef.current) return;
+
+    try {
+      let audioContext;
+      try {
+        audioContext = new AudioContext({ sampleRate: DEFAULT_SAMPLE_RATE });
+      } catch (error) {
+        audioContext = new AudioContext();
+      }
+      audioContextRef.current = audioContext;
+
+      const source = audioContext.createMediaStreamSource(mediaStreamRef.current);
+      const compressor = audioContext.createDynamicsCompressor();
+      compressor.threshold.value = -24;
+      compressor.knee.value = 15;
+      compressor.ratio.value = 12;
+      compressor.attack.value = 0.003;
+      compressor.release.value = 0.25;
+
+      const gain = audioContext.createGain();
+      gain.gain.value = 1.15;
+
+      const destination = audioContext.createMediaStreamDestination();
+
+      source.connect(compressor);
+      compressor.connect(gain);
+      gain.connect(destination);
+
+      const fallbackFormat = resolveRecordingFormat();
+      let recorder;
+      let activeFormat = fallbackFormat;
+      let recorderOptions = { audioBitsPerSecond: DEFAULT_BITRATE };
+
+      try {
+        const { recorder: createdRecorder, format, options } = createMediaRecorderWithFallback(destination.stream);
+        recorder = createdRecorder;
+        if (format) {
+          activeFormat = format;
+        }
+        if (options) {
+          recorderOptions = { ...recorderOptions, ...options };
+        }
+      } catch (recorderError) {
+        console.error("media recorder init failed", recorderError);
+        throw recorderError;
+      }
+
+      recordingFormatRef.current = activeFormat;
+      recordChunksRef.current = [];
+
+      recorder.addEventListener("dataavailable", (event) => {
+        if (event.data && event.data.size > 0) {
+          recordChunksRef.current.push(event.data);
+        }
+      });
+
+      recorder.addEventListener("stop", () => {
+        const selectedFormat = recordingFormatRef.current || {};
+        const mimeType = selectedFormat.mimeType || recorderOptions?.mimeType || "audio/webm";
+        const blob = new Blob(recordChunksRef.current, { type: mimeType });
+        if (audioUrl) URL.revokeObjectURL(audioUrl);
+        audioBlobRef.current = blob;
+        setAudioUrl(URL.createObjectURL(blob));
+        cleanupRecording();
+        setRecorderStep("idle");
+        setIsRecorderModalOpen(false);
+      });
+
+      mediaRecorderRef.current = recorder;
+      recorder.start();
+      setRecording(true);
+      setRecordSeconds(0);
+      recordTimerRef.current = window.setInterval(() => {
+        setRecordSeconds((prev) => prev + 1);
+      }, 1000);
+      setRecorderStep("recording");
+    } catch (error) {
+      console.error("begin recording failed", error);
+      setRecordError("錄音時發生錯誤");
+      closeRecorderModal();
+    }
   };
 
   const stopRecording = () => {
-    mediaRecorderRef.current?.stop();
-    setRecording(false);
+    const recorder = mediaRecorderRef.current;
+    if (recorder && recorder.state === "recording") {
+      recorder.stop();
+    }
   };
 
   const resetRecording = () => {
+    if (audioUrl) URL.revokeObjectURL(audioUrl);
     audioBlobRef.current = null;
     setAudioUrl(null);
+    setRecorderStep("idle");
+    setRecordSeconds(0);
     setRecording(false);
   };
 
-  // 送出（仍為 multipart，會把 mp3 寫入 /public/voices）
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    if (recording) return; // 必須先停止錄音
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+    if (recording) return;
     if (!text.trim() && !audioBlobRef.current) return;
 
-    const fd = new FormData();
-    fd.append("requestId", String(requestId));
-    fd.append("message", text.trim());
-    fd.append("isAnonymous", String(isAnonymous));
-    fd.append("responderId", authUser?.id || "");
+    const formData = new FormData();
+    formData.append("requestId", String(requestId));
+    formData.append("message", text.trim());
+    formData.append("isAnonymous", String(isAnonymous));
+    formData.append("responderId", authUser?.id || "");
+
     if (audioBlobRef.current) {
-      fd.append("audio", new File([audioBlobRef.current], "recording.mp3", { type: "audio/mpeg" }));
+      const format = recordingFormatRef.current || {};
+      const type = audioBlobRef.current.type || format.mimeType || resolveRecordingFormat().mimeType || "audio/webm";
+      const extension = format.extension || getExtensionFromMime(type);
+      formData.append(
+        "audio",
+        new File([audioBlobRef.current], `prayer-recording.${extension}`, { type })
+      );
     }
 
-    const res = await fetch("/api/responses", { method: "POST", body: fd });
+    const res = await fetch("/api/responses", { method: "POST", body: formData });
     if (!res.ok) {
-      console.error("submit failed");
+      console.error("submit response failed");
       return;
     }
+
     const saved = await res.json();
-    setResponses((prev) => [saved, ...prev]); // 只更新本卡的清單
+    setResponses((prev) => [saved, ...prev]);
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(new CustomEvent(PRAYER_RESPONSE_CREATED, { detail: saved }));
+    }
     setText("");
-    resetRecording();
     setIsAnonymous(false);
+    resetRecording();
   };
+
+  const renderRecorderModal = () => {
+    if (!isRecorderModalOpen) return null;
+
+    return (
+      <div className="record-modal" role="dialog" aria-modal="true">
+        <div className="record-modal__backdrop" onClick={closeRecorderModal} />
+        <div className="record-modal__card">
+          {recorderStep === "countdown" ? (
+            <>
+              <h4>準備開始錄音</h4>
+              <p>請在安靜環境下對著麥克風說話。</p>
+              <div className="record-modal__count">{countdownValue}</div>
+              <button type="button" className="cp-button cp-button--ghost" onClick={closeRecorderModal}>
+                取消
+              </button>
+            </>
+          ) : null}
+          {recorderStep === "recording" ? (
+            <>
+              <h4>正在錄音</h4>
+              <p>錄音時間上限 {MAX_RECORD_SECONDS} 秒。</p>
+              <div className="record-modal__timer">{formatSeconds(recordSeconds)}</div>
+              <div className="record-modal__actions">
+                <button type="button" className="cp-button cp-button--danger" onClick={stopRecording}>
+                  停止錄音
+                </button>
+              </div>
+            </>
+          ) : null}
+        </div>
+      </div>
+    );
+  };
+
+  const hasAudio = Boolean(audioUrl);
 
   return (
     <section className="comments card">
+      {renderRecorderModal()}
+
+      {recordError ? <p className="cp-alert cp-alert--error">{recordError}</p> : null}
+
       {!authUser && (
         <div className="alert alert-warning">
-          請先 <Link href="/login">登入</Link> 才能留言。
+          請先 <Link href="/login">登入</Link> 後才能留言或錄音。
         </div>
       )}
 
-      <h3 className="section-title">留言區</h3>
-      <ul className="comment-list">
-        {responses.map((r) => (
-          <li key={r.id} className="comment-item">
-            <div className="comment-header">
-              <strong>{r.isAnonymous ? "匿名" : (r.responder?.name || r.responder?.email || "未命名用戶")}</strong>
-              <div className="comment-actions">
-                <button className="btn-small">👍</button>
-                <button className="btn-small">⚠️ 檢舉</button>
-              </div>
-            </div>
-            {r.message ? <p>{r.message}</p> : null}
-            {r.voiceUrl ? (
-              <div className="audio-box">
-                <audio src={r.voiceUrl} controls />
-              </div>
-            ) : null}
-          </li>
-        ))}
-      </ul>
+      <header className="comments__header">
+        <h3>社群禱告牆</h3>
+        <p className="comments__subtitle">留下你的文字或語音，成為他們的力量。</p>
+      </header>
 
-      <h3 className="section-title">立即回應</h3>
+      <div className="comments__list" aria-live="polite">
+        {loading ? (
+          <p>載入回應中…</p>
+        ) : error ? (
+          <p className="cp-alert cp-alert--error">{error}</p>
+        ) : responses.length === 0 ? (
+          <p className="cp-helper">成為第一個回應的朋友吧！</p>
+        ) : (
+          responses.map((response) => {
+            const name = getDisplayName(response);
+            const avatarUrl = getAvatarUrl(response);
+            const avatarFallback = getAvatarFallback(name);
+            return (
+              <article key={response.id} className="comment-item">
+                <div className="comment-item__header">
+                  <div className="comment-item__identity">
+                    <div className="comment-item__avatar" aria-hidden>
+                      {avatarUrl ? (
+                        <img src={avatarUrl} alt={name} loading="lazy" />
+                      ) : (
+                        <span>{avatarFallback}</span>
+                      )}
+                    </div>
+                    <strong>{name}</strong>
+                  </div>
+                  <div className="comment-item__actions">
+                    <button type="button" className="btn-small" disabled>
+                      按讚
+                    </button>
+                    <button type="button" className="btn-small" disabled>
+                      檢舉
+                    </button>
+                  </div>
+                </div>
+                {response.message ? <p>{response.message}</p> : null}
+                {response.voiceUrl ? (
+                  <div className="comment-item__audio">
+                    <audio src={response.voiceUrl} controls preload="metadata" />
+                  </div>
+                ) : null}
+              </article>
+            );
+          })
+        )}
+      </div>
+
+      <h3 className="comments__composer-title">立即回應</h3>
       <form className="comment-form" onSubmit={handleSubmit}>
         <label className="checkbox">
           <input
             type="checkbox"
             checked={isAnonymous}
-            onChange={(e) => setIsAnonymous(e.target.checked)}
+            onChange={(event) => setIsAnonymous(event.target.checked)}
           />
           匿名發表
         </label>
 
         <textarea
           value={text}
-          onChange={(e) => setText(e.target.value)}
-          placeholder="寫下你的回應..."
+          onChange={(event) => setText(event.target.value)}
+          placeholder="和他們說說話，或分享你的代禱內容。"
           rows={4}
         />
 
-        <div className="record-section">
-          {!recording && !audioUrl && (
-            <button type="button" onClick={startRecording} className="button button--primary">
-              🎤 開始錄音
+        <div className="record-toolbar">
+          {!recording && !hasAudio ? (
+            <button
+              type="button"
+              className="cp-button"
+              onClick={async () => {
+                resetRecording();
+                await openRecorder();
+              }}
+              disabled={!authUser}
+            >
+              開始錄音
             </button>
-          )}
+          ) : null}
 
-          {recording && (
-            <button type="button" onClick={stopRecording} className="button button--danger">
-              ⏹ 停止錄音
-            </button>
-          )}
-
-          {audioUrl && !recording && (
+          {hasAudio ? (
             <div className="audio-preview">
-              <p>錄音預覽：</p>
-              <audio src={audioUrl} controls />
-              <div className="audio-buttons">
-                <button type="button" className="button button--secondary" onClick={resetRecording}>
-                  🔄 重錄
+              <p>語音預覽</p>
+              <audio src={audioUrl} controls preload="metadata" />
+              <div className="audio-preview__actions">
+                <button type="button" className="cp-button cp-button--ghost" onClick={resetRecording}>
+                  重錄
                 </button>
               </div>
             </div>
-          )}
+          ) : null}
         </div>
 
-        <button type="submit" className="button button--primary" disabled={recording}>
+        <button type="submit" className="cp-button" disabled={recording || !authUser}>
           送出回應
         </button>
       </form>

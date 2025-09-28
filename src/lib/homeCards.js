@@ -3,6 +3,7 @@ import prisma from "./prisma";
 
 // 讀取所有卡片
 export async function readHomeCards() {
+  console.log("[homeCards] readHomeCards");
   return prisma.homePrayerCard.findMany({
     orderBy: { createdAt: "desc" },
     include: { category: true }
@@ -11,6 +12,7 @@ export async function readHomeCards() {
 
 // 讀取單一卡片
 export async function readHomeCard(id) {
+  console.log("[homeCards] readHomeCard", { id });
   return prisma.homePrayerCard.findUnique({
     where: { id: Number(id) },
     include: { category: true }
@@ -35,3 +37,14 @@ export async function createHomeCard(payload = {}) {
     include: { category: true }
   });
 }
+
+export async function readRelatedHomeCards(id, limit = 3) {
+  console.log("[homeCards] readRelatedHomeCards", { id, limit });
+  return prisma.homePrayerCard.findMany({
+    where: { id: { not: Number(id) } },
+    orderBy: { createdAt: "desc" },
+    take: Math.max(0, Number(limit) || 0),
+    include: { category: true }
+  });
+}
+
