@@ -83,78 +83,6 @@ const SOCIAL_LINKS = [
 //   return authUser;
 // }
 
-// export function SiteHeader({ activePath, hideAuthActions = false }) {
-//   const pathname = usePathname();
-//   const router = useRouter();
-//   const authUser = useAuthSession();
-
-//   const current = activePath ?? pathname;
-
-//   const isAuthenticated = Boolean(authUser);
-
-//   const navItems = useMemo(() => {
-//     if (isAuthenticated) {
-//       return PRIMARY_NAV.filter((item) => item.href !== "/login" && item.href !== "/signup");
-//     }
-//     return PRIMARY_NAV.filter((item) => item.href !== "/customer-portal");
-//   }, [isAuthenticated]);
-
-//   // debug - 暫時印出檢查資訊（開發完請移除）
-//  useEffect(() => {
-//    console.log("SiteHeader debug:", { pathname, current, hideAuthActions, isAuthenticated, authUser });
-// }, [pathname, current, hideAuthActions, isAuthenticated, authUser]);
-  
-//   const handleLogout = useCallback(() => {
-//     clearAuthSession();
-//     router.push("/");
-//   }, [router]);
-
-//   return (
-//     <header>
-//       <div className="navbar">
-//         <Link className="brand" href="/" prefetch={false}>
-//           <img className="brand-logo" src="/legacy/img/logo.png" alt="Prayer Coin logo" />
-//           <span>Prayer Coin</span>
-//         </Link>
-//         <nav className="nav-links">
-//           {navItems.map((item) => {
-//             const isActive = current === item.href;
-//             const className = isActive ? "active" : undefined;
-//             return (
-//               <Link key={item.href} href={item.href} prefetch={false} className={className}>
-//                 {item.label}
-//               </Link>
-//             );
-//           })}
-//         </nav>
-//         {!hideAuthActions && (
-//           <div className="nav-actions">
-//             {isAuthenticated ? (
-//               <>
-//                 {authUser?.name ? <span className="nav-user">Hi, {authUser.name}</span> : null}
-//                 <button type="button" className="nav-link nav-link--button" onClick={handleLogout}>
-//                   登出
-//                 </button>
-//               </>
-//             ) : (
-//               <>
-
-//                 <Link href="/signup" prefetch={false} className="nav-link nav-link--primary">
-//                   註冊
-//                 </Link>
-
-//                 <Link href="/login" prefetch={false} className="nav-link nav-link--button">
-//                   登入
-//                 </Link>
-//               </>
-//             )}
-//           </div>
-//         )}
-//       </div>
-//     </header>
-//   );
-// }
-
 export function SiteHeader({ activePath, hideAuthActions = false }) {
   const pathname = usePathname();
   const router = useRouter();
@@ -171,30 +99,43 @@ export function SiteHeader({ activePath, hideAuthActions = false }) {
     return PRIMARY_NAV.filter((item) => item.href !== "/customer-portal");
   }, [isAuthenticated]);
 
+  const closeMenu = useCallback(() => {
+    setMenuOpen(false);
+  }, []);
+
+  useEffect(() => {
+    closeMenu();
+  }, [current, closeMenu]);
+
   const handleLogout = useCallback(() => {
+    closeMenu();
     clearAuthSession();
     router.push("/");
-  }, [router]);
+  }, [closeMenu, router]);
 
   return (
     <header>
       <div className="navbar">
-        {/* 左邊 Logo */}
         <Link className="brand" href="/" prefetch={false}>
           <img className="brand-logo" src="/legacy/img/logo.png" alt="Prayer Coin logo" />
           <span>Prayer Coin</span>
         </Link>
 
-        {/* 右邊 - 漢堡選單按鈕 */}
         <button
-          className="menu-toggle"
+          type="button"
+          className={`menu-toggle${menuOpen ? " is-open" : ""}`}
           onClick={() => setMenuOpen((prev) => !prev)}
-          aria-label="Toggle navigation"
+          aria-label="切換導覽選單"
+          aria-expanded={menuOpen}
         >
-          {menuOpen ? "✖" : "☰"}
+          <span className="menu-toggle__icon" aria-hidden="true">
+            <span />
+            <span />
+            <span />
+          </span>
+          <span className="sr-only">{menuOpen ? "關閉選單" : "開啟選單"}</span>
         </button>
 
-        {/* 導覽 + 使用者選單 */}
         <nav className={`nav-links ${menuOpen ? "open" : ""}`}>
           {navItems.map((item) => {
             const isActive = current === item.href;
@@ -204,13 +145,15 @@ export function SiteHeader({ activePath, hideAuthActions = false }) {
                 href={item.href}
                 prefetch={false}
                 className={isActive ? "active" : undefined}
+                onClick={closeMenu}
               >
                 {item.label}
               </Link>
             );
           })}
 
-          <div className="nav-actions">
+          {!hideAuthActions ? (
+            <div className="nav-actions">
               {isAuthenticated ? (
                 <>
                   {authUser?.name ? <span className="nav-user">Hi, {authUser.name}</span> : null}
@@ -220,15 +163,16 @@ export function SiteHeader({ activePath, hideAuthActions = false }) {
                 </>
               ) : (
                 <>
-                  <Link href="/signup" prefetch={false} className="nav-link nav-link--primary">
+                  <Link href="/signup" prefetch={false} className="nav-link nav-link--primary" onClick={closeMenu}>
                     註冊
                   </Link>
-                  <Link href="/login" prefetch={false} className="nav-link nav-link--button">
+                  <Link href="/login" prefetch={false} className="nav-link nav-link--button" onClick={closeMenu}>
                     登入
                   </Link>
                 </>
               )}
             </div>
+          ) : null}
         </nav>
       </div>
     </header>

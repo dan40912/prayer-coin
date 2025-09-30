@@ -5,6 +5,9 @@ import Link from "next/link";
 
 import { useAuthSession } from "@/hooks/useAuthSession";
 import { PRAYER_RESPONSE_CREATED } from "@/lib/events";
+import { buildOvercomerSlug } from "@/lib/overcomer";
+
+import { REPORT_REASONS } from "@/constants/reportReasons";
 
 // ===== 可切換的簡易 Debug（預設關閉） =====
 const DEBUG = false;
@@ -102,15 +105,178 @@ function getAvatarFallback(name) {
   return initial.toUpperCase();
 }
 
+function getResponderProfileHref(response) {
+  if (!response || response.isAnonymous) return null;
+  const responder = response.responder;
+  const slug = buildOvercomerSlug(responder);
+  if (slug) {
+    console.log("[overcomer] profileHref slug", slug);
+  }
+  if (!slug) return null;
+  return `/overcomer/${encodeURIComponent(slug)}`;
+}
+
 // ===== 主元件 =====
-export default function Comments({ requestId }) {
+export default function Comments({ requestId, ownerId = null }) {
   const authUser = useAuthSession();
+
+  const ownerIdValue = ownerId ? String(ownerId) : null;
 
   const [isAnonymous, setIsAnonymous] = useState(false);
   const [text, setText] = useState("");
   const [responses, setResponses] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+
+  const [openMenuId, setOpenMenuId] = useState(null);
+  const menuRefs = useRef(new Map());
+  const [reportTarget, setReportTarget] = useState(null);
+  const [reportReason, setReportReason] = useState("");
+  const [reportRemarks, setReportRemarks] = useState("");
+  const [reportSubmitting, setReportSubmitting] = useState(false);
+  const [reportFeedback, setReportFeedback] = useState("");
+  const [reportError, setReportError] = useState("");
+  const [actionNotice, setActionNotice] = useState("");
+  const [actionNoticeType, setActionNoticeType] = useState("success");
+
+  const reportTargetName = reportTarget ? getDisplayName(reportTarget) : "";
+  const reportPreviewMessage = reportTarget?.message
+    ? `${reportTarget.message.slice(0, 200)}${reportTarget.message.length > 200 ? '...' : ''}`
+    : "";
+
+  const setMenuRef = useCallback((id, node) => {
+    if (!menuRefs.current) {
+      menuRefs.current = new Map();
+    }
+    if (node) {
+      menuRefs.current.set(id, node);
+    } else {
+      menuRefs.current.delete(id);
+    }
+  }, []);
+
+  const toggleMenu = useCallback((id) => {
+    setOpenMenuId((prev) => (prev === id ? null : id));
+  }, []);
+
+  const closeReportModal = useCallback(() => {
+    if (reportSubmitting) return;
+    setReportTarget(null);
+    setReportReason("");
+    setReportRemarks("");
+    setReportError("");
+    setReportFeedback("");
+  }, [reportSubmitting]);
+
+  const openReportModal = useCallback((response) => {
+    if (!authUser) {
+      setActionNotice("請先登入後再進行檢舉");
+      setActionNoticeType("error");
+      return;
+    }
+    setOpenMenuId(null);
+    setReportTarget(response);
+    setReportReason("");
+    setReportRemarks("");
+    setReportError("");
+    setReportFeedback("");
+  }, [authUser]);
+
+  const handleShareResponse = useCallback(async (response) => {
+    if (typeof window === "undefined") return;
+    setOpenMenuId(null);
+    const baseUrl = window.location.href.split("#")[0];
+    const shareUrl = `${baseUrl}#prayer-response-${response.id}`;
+    const shareText = response.message
+      ? response.message.slice(0, 120)
+      : "邀請你一起關心這則禱告回應";
+    try {
+      if (navigator.share) {
+        await navigator.share({
+          title: document.title,
+          text: shareText,
+          url: shareUrl,
+        });
+        setActionNotice("已開啟分享功能");
+        setActionNoticeType("success");
+      } else if (navigator.clipboard) {
+        await navigator.clipboard.writeText(shareUrl);
+        setActionNotice("已複製分享連結");
+        setActionNoticeType("success");
+      } else {
+        const textarea = document.createElement("textarea");
+        textarea.value = shareUrl;
+        textarea.setAttribute("readonly", "");
+        textarea.style.position = "absolute";
+        textarea.style.left = "-9999px";
+        document.body.appendChild(textarea);
+        textarea.select();
+        try {
+          document.execCommand("copy");
+          setActionNotice("已複製分享連結");
+          setActionNoticeType("success");
+        } catch (copyErr) {
+          throw new Error("無法使用分享功能");
+        } finally {
+          document.body.removeChild(textarea);
+        }
+      }
+    } catch (err) {
+      if (err?.name === "AbortError") return;
+      setActionNotice(err?.message || "分享失敗，請稍後再試");
+      setActionNoticeType("error");
+    }
+  }, []);
+
+  const handleReportSubmit = useCallback(async (event) => {
+    event.preventDefault();
+    if (!reportTarget) {
+      setReportError("找不到要檢舉的資料");
+      return;
+    }
+    if (!reportReason) {
+      setReportError("請選擇檢舉理由");
+      return;
+    }
+    setReportSubmitting(true);
+    setReportError("");
+    setReportFeedback("");
+
+    try {
+      const response = await fetch("/api/prayer-response/report", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          responseId: reportTarget.id,
+          reason: reportReason,
+          remarks: reportRemarks,
+        }),
+      });
+
+      if (!response.ok) {
+        const data = await response.json().catch(() => ({}));
+        throw new Error(data?.message || "檢舉失敗，請稍後再試");
+      }
+
+      const ownerReporting = ownerIdValue && authUser?.id && String(authUser.id) === ownerIdValue;
+
+      setResponses((prev) =>
+        prev.map((item) =>
+          item.id === reportTarget.id
+            ? { ...item, reportCount: (item.reportCount || 0) + 1, isBlocked: ownerReporting ? true : item.isBlocked }
+            : item
+        )
+      );
+      setReportFeedback("已收到您的檢舉，我們會儘速處理。");
+      window.setTimeout(() => {
+        closeReportModal();
+      }, 1500);
+    } catch (err) {
+      setReportError(err?.message || "檢舉失敗，請稍後再試");
+    } finally {
+      setReportSubmitting(false);
+    }
+  }, [reportTarget, reportReason, reportRemarks, closeReportModal, ownerIdValue, authUser]);
 
   // 錄音狀態
   const [audioUrl, setAudioUrl] = useState(null);
@@ -162,6 +328,38 @@ export default function Comments({ requestId }) {
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [requestId]);
+
+  useEffect(() => {
+    if (!openMenuId) return;
+    const handlePointerDown = (event) => {
+      const menuNode = menuRefs.current?.get(openMenuId);
+      if (!menuNode || menuNode.contains(event.target)) {
+        return;
+      }
+      setOpenMenuId(null);
+    };
+    document.addEventListener("pointerdown", handlePointerDown);
+    return () => document.removeEventListener("pointerdown", handlePointerDown);
+  }, [openMenuId]);
+
+  useEffect(() => {
+    const handleKeydown = (event) => {
+      if (event.key === "Escape") {
+        setOpenMenuId(null);
+        if (reportTarget && !reportSubmitting) {
+          closeReportModal();
+        }
+      }
+    };
+    document.addEventListener("keydown", handleKeydown);
+    return () => document.removeEventListener("keydown", handleKeydown);
+  }, [reportTarget, reportSubmitting, closeReportModal]);
+
+  useEffect(() => {
+    if (!actionNotice) return;
+    const timer = window.setTimeout(() => setActionNotice(""), 2800);
+    return () => window.clearTimeout(timer);
+  }, [actionNotice]);
 
   // 上限秒數自動停止
   useEffect(() => {
@@ -448,6 +646,8 @@ export default function Comments({ requestId }) {
 
   const hasAudio = Boolean(audioUrl);
 
+  const visibleResponses = responses.filter((response) => !response.isBlocked);
+
   return (
     <section className="comments card">
       {renderRecorderModal()}
@@ -462,107 +662,248 @@ export default function Comments({ requestId }) {
         </div>
       )}
 
-      <header className="comments__header">
+      <div className="comments__header">
         <h3>社群禱告牆</h3>
         <p className="comments__subtitle">留下你的文字或語音，成為他們的力量。</p>
-      </header>
+      </div>
+
+      {actionNotice ? (
+        <p className={`cp-alert ${actionNoticeType === "error" ? "cp-alert--error" : "cp-alert--success"} comments__notice`}>
+          {actionNotice}
+        </p>
+      ) : null}
 
       <div className="comments__list" aria-live="polite">
-        {loading ? (
-          <p>載入回應中…</p>
-        ) : error ? (
-          <p className="cp-alert cp-alert--error">{error}</p>
-        ) : responses.length === 0 ? (
-          <p className="cp-helper">成為第一個回應的朋友吧！</p>
-        ) : (
-          responses.map((response) => {
-            const name = getDisplayName(response);
-            const avatarUrl = getAvatarUrl(response);
-            const avatarFallback = getAvatarFallback(name);
-            return (
-              <article key={response.id} className="comment-item">
-                <div className="comment-item__header">
-                  <div className="comment-item__identity">
-                    <div className="comment-item__avatar" aria-hidden>
-                      {avatarUrl ? (
-                        <img src={avatarUrl} alt={name} loading="lazy" />
-                      ) : (
-                        <span>{avatarFallback}</span>
-                      )}
+          {loading ? (
+            <p>載入回應中…</p>
+          ) : error ? (
+            <p className="cp-alert cp-alert--error">{error}</p>
+          ) : visibleResponses.length === 0 ? (
+            <p className="cp-helper">成為第一個回應的朋友吧！</p>
+          ) : (
+            visibleResponses.map((response) => {
+                const name = getDisplayName(response);
+                const avatarUrl = getAvatarUrl(response);
+                const avatarFallback = getAvatarFallback(name);
+                const profileHref = getResponderProfileHref(response);
+                return (
+                  <article
+                    key={response.id}
+                    id={`prayer-response-${response.id}`}
+                    className={`comment-item${response.reportCount > 0 ? " has-reports" : ""}`}
+                  >
+                    <div className="comment-item__header">
+                        <div className="comment-item__identity">
+                          {profileHref ? (
+                            <Link href={profileHref} prefetch={false} className="comment-item__avatar-link">
+                                <div className="comment-item__avatar" aria-hidden>
+                                  {avatarUrl ? (
+                                    <img src={avatarUrl} alt={name} loading="lazy" />
+                                  ) : (
+                                    <span>{avatarFallback}</span>
+                                  )}
+                                </div>
+                            </Link>
+                          ) : (
+                            <div className="comment-item__avatar" aria-hidden>
+                                {avatarUrl ? (
+                                  <img src={avatarUrl} alt={name} loading="lazy" />
+                                ) : (
+                                  <span>{avatarFallback}</span>
+                                )}
+                            </div>
+                          )}
+                          {profileHref ? (
+                            <Link href={profileHref} prefetch={false} className="comment-item__name">
+                                {name}
+                            </Link>
+                          ) : (
+                            <strong>{name}</strong>
+                          )}
+                        </div>
+                        <div className="comment-item__actions">
+                          {response.reportCount > 0 ? (
+                            <span
+                                className="comment-item__report-badge"
+                                title={`被檢舉 ${response.reportCount} 次`}
+                            >
+                                檢舉 × {response.reportCount}
+                            </span>
+                          ) : null}
+                          <div
+                            className={`comment-item__action-menu${openMenuId === response.id ? " is-open" : ""}`}
+                            ref={(node) => setMenuRef(response.id, node)}
+                          >
+                            <button
+                                type="button"
+                                className="comment-item__menu-trigger"
+                                aria-haspopup="true"
+                                aria-expanded={openMenuId === response.id}
+                                aria-controls={`comment-action-menu-${response.id}`}
+                                onClick={() => toggleMenu(response.id)}
+                            >
+                                ⋯
+                            </button>
+                            {openMenuId === response.id ? (
+                                <div className="comment-item__menu" id={`comment-action-menu-${response.id}`} role="menu">
+                                  <button type="button" role="menuitem" onClick={() => handleShareResponse(response)}>
+                                    分享
+                                  </button>
+                                  <button
+                                    type="button"
+                                    role="menuitem"
+                                    className="danger"
+                                    onClick={() => openReportModal(response)}
+                                  >
+                                    檢舉
+                                  </button>
+                                </div>
+                            ) : null}
+                          </div>
+                        </div>
                     </div>
-                    <strong>{name}</strong>
-                  </div>
-                  <div className="comment-item__actions">
-                    <button type="button" className="btn-small" disabled>
-                      按讚
-                    </button>
-                    <button type="button" className="btn-small" disabled>
-                      檢舉
+                    {response.message ? <p>{response.message}</p> : null}
+                    {response.voiceUrl ? (
+                        <div className="comment-item__audio">
+                          <audio src={response.voiceUrl} controls preload="metadata" />
+                        </div>
+                    ) : null}
+                  </article>
+                );
+            })
+          )}
+        </div>
+      {authUser ? (
+        <>
+          <h3 className="comments__composer-title">立即回應</h3>
+          <form className="comment-form" onSubmit={handleSubmit}>
+            <label className="checkbox">
+              <input
+                type="checkbox"
+                checked={isAnonymous}
+                onChange={(event) => setIsAnonymous(event.target.checked)}
+              />
+              匿名發表
+            </label>
+
+            <textarea
+              value={text}
+              onChange={(event) => setText(event.target.value)}
+              placeholder="和他們說說話，或分享你的代禱內容。"
+              rows={4}
+            />
+
+            <div className="record-toolbar">
+              {!recording && !hasAudio ? (
+                <button
+                  type="button"
+                  className="cp-button"
+                  onClick={async () => {
+                    resetRecording();
+                    await openRecorder();
+                  }}
+                >
+                  開始錄音
+                </button>
+              ) : null}
+
+              {hasAudio ? (
+                <div className="audio-preview">
+                  <p>語音預覽</p>
+                  <audio src={audioUrl} controls preload="metadata" />
+                  <div className="audio-preview__actions">
+                    <button type="button" className="cp-button cp-button--ghost" onClick={resetRecording}>
+                      重錄
                     </button>
                   </div>
                 </div>
-                {response.message ? <p>{response.message}</p> : null}
-                {response.voiceUrl ? (
-                  <div className="comment-item__audio">
-                    <audio src={response.voiceUrl} controls preload="metadata" />
-                  </div>
-                ) : null}
-              </article>
-            );
-          })
-        )}
-      </div>
+              ) : null}
+            </div>
 
-      <h3 className="comments__composer-title">立即回應</h3>
-      <form className="comment-form" onSubmit={handleSubmit}>
-        <label className="checkbox">
-          <input
-            type="checkbox"
-            checked={isAnonymous}
-            onChange={(event) => setIsAnonymous(event.target.checked)}
-          />
-          匿名發表
-        </label>
+            <button type="submit" className="cp-button" disabled={recording}>
+              送出回應
+            </button>
+          </form>
+        </>
+      ) : null}
 
-        <textarea
-          value={text}
-          onChange={(event) => setText(event.target.value)}
-          placeholder="和他們說說話，或分享你的代禱內容。"
-          rows={4}
-        />
 
-        <div className="record-toolbar">
-          {!recording && !hasAudio ? (
+        {reportTarget ? (
+        <div className="comment-report-modal" role="dialog" aria-modal="true">
+          <div className="comment-report-modal__backdrop" onClick={closeReportModal} />
+          <div className="comment-report-modal__card">
             <button
               type="button"
-              className="cp-button"
-              onClick={async () => {
-                resetRecording();
-                await openRecorder();
-              }}
-              disabled={!authUser}
+              className="comment-report-modal__close"
+              onClick={closeReportModal}
+              disabled={reportSubmitting}
+              aria-label="關閉檢舉視窗"
             >
-              開始錄音
+              ×
             </button>
-          ) : null}
+            <h4>檢舉禱告回應</h4>
+            <p className="comment-report-modal__hint">
+              請選擇檢舉原因並留下必要的補充說明，我們會盡快安排管理員審核。
+            </p>
+            <div className="comment-report-modal__preview">
+              <p className="comment-report-modal__preview-label">檢舉對象</p>
+              <strong>{reportTargetName || "未知使用者"}</strong>
+              {reportPreviewMessage ? (
+                <p className="comment-report-modal__preview-message">{reportPreviewMessage}</p>
+              ) : (
+                <p className="comment-report-modal__preview-message muted">這則回應沒有文字內容</p>
+              )}
+            </div>
+            <form onSubmit={handleReportSubmit} className="comment-report-modal__form">
+              <fieldset className="comment-report-modal__fieldset">
+                <legend>檢舉原因</legend>
+                {REPORT_REASONS.map((reason) => (
+                  <label key={reason.value} className="comment-report-modal__reason">
+                    <input
+                      type="radio"
+                      name="reportReason"
+                      value={reason.value}
+                      checked={reportReason === reason.value}
+                      onChange={(event) => setReportReason(event.target.value)}
+                      disabled={reportSubmitting}
+                    />
+                    <span>{reason.label}</span>
+                  </label>
+                ))}
+              </fieldset>
 
-          {hasAudio ? (
-            <div className="audio-preview">
-              <p>語音預覽</p>
-              <audio src={audioUrl} controls preload="metadata" />
-              <div className="audio-preview__actions">
-                <button type="button" className="cp-button cp-button--ghost" onClick={resetRecording}>
-                  重錄
+              <label className="comment-report-modal__remarks">
+                <span>備註說明</span>
+                <textarea
+                  value={reportRemarks}
+                  onChange={(event) => setReportRemarks(event.target.value)}
+                  rows={4}
+                  placeholder="若需要補充說明，請在此留言。"
+                  disabled={reportSubmitting}
+                />
+              </label>
+
+              {reportError ? <p className="cp-alert cp-alert--error">{reportError}</p> : null}
+              {reportFeedback ? <p className="cp-alert cp-alert--success">{reportFeedback}</p> : null}
+
+              <div className="comment-report-modal__actions">
+                <button
+                  type="button"
+                  className="cp-button cp-button--ghost"
+                  onClick={closeReportModal}
+                  disabled={reportSubmitting}
+                >
+                  取消
+                </button>
+                <button type="submit" className="cp-button" disabled={reportSubmitting}>
+                  {reportSubmitting ? "送出中..." : "送出檢舉"}
                 </button>
               </div>
-            </div>
-          ) : null}
+            </form>
+          </div>
         </div>
+      ) : null}
 
-        <button type="submit" className="cp-button" disabled={recording || !authUser}>
-          送出回應
-        </button>
-      </form>
     </section>
   );
 }

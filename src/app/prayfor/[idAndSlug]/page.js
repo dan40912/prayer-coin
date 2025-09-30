@@ -5,6 +5,7 @@ import { SiteFooter, SiteHeader } from "@/components/site-chrome";
 import Comments from "@/components/Comments";
 import PrayerAudioPlayer from "@/components/PrayerAudioPlayer";
 import ShareButton from "@/components/ShareButton";
+import PrayerRequestActions from "@/components/PrayerRequestActions";
 import { readHomeCard, readRelatedHomeCards } from "@/lib/homeCards";
 import { slugify } from "@/lib/slugify";
 
@@ -37,6 +38,10 @@ function parseIdAndSlug(idAndSlug = "") {
   if (!Number.isInteger(id) || id <= 0) return null;
   const slug = slugParts.length ? slugParts.join("+") : null;
   return { id, slug };
+}
+
+function getOwnerInitial(name) {
+  return name?.trim()?.charAt(0)?.toUpperCase() || "祈";
 }
 
 export async function generateMetadata({ params }) {
@@ -96,6 +101,11 @@ export default async function PrayerDetailPage({ params }) {
     : undefined;
 
   const metaItems = formatMeta(card.meta);
+  const owner = card.owner ?? null;
+  const ownerIdValue = owner?.id ? String(owner.id) : null;
+  const ownerName = owner?.name?.trim() || "匿名發起人";
+  const ownerAvatar = owner?.avatarUrl?.trim() || "";
+  const ownerBio = owner?.bio?.trim() || "";
 
   return (
     <>
@@ -104,13 +114,22 @@ export default async function PrayerDetailPage({ params }) {
       <main className="pray-detail">
         <section className="pray-hero" style={heroStyle}>
           <div className="pray-hero__content">
-            <nav className="breadcrumb" aria-label="breadcrumb">
-              <SafeLink href="/prayfor" prefetch={false} className="breadcrumb__link">
-                祈禱列表
-              </SafeLink>
-              <span className="breadcrumb__separator" aria-hidden="true">/</span>
-              <span>{card.title}</span>
-            </nav>
+            <div className="pray-hero__top">
+              <nav className="breadcrumb" aria-label="breadcrumb">
+                <SafeLink href="/prayfor" prefetch={false} className="breadcrumb__link">
+                  祈禱列表
+                </SafeLink>
+                <span className="breadcrumb__separator" aria-hidden="true">/</span>
+                <span>{card.title}</span>
+              </nav>
+              <PrayerRequestActions
+                cardId={card.id}
+                canonicalUrl={canonical}
+                title={card.title}
+                description={card.description || metaItems.join("、")}
+                reportCount={card.reportCount ?? 0}
+              />
+            </div>
             <h1>{card.title}</h1>
             {card.tags?.length ? (
               <ul className="pray-hero__tags" aria-label="祈禱主題">
@@ -144,7 +163,6 @@ export default async function PrayerDetailPage({ params }) {
                   </ul>
                 </div>
               ) : null}
-
               <div className="pray-article__note">
                 <h4>如何回應</h4>
                 <p>
@@ -158,14 +176,32 @@ export default async function PrayerDetailPage({ params }) {
                 <ShareButton canonical={canonical} />
               </div>
 
+              <section className="pray-owner-card">
+                <h4>祈禱發起人</h4>
+                <div className="pray-owner-card__content">
+                  <div className="pray-owner-card__avatar" aria-hidden="true">
+                    {ownerAvatar ? (
+                      <img src={ownerAvatar} alt={ownerName} loading="lazy" />
+                    ) : (
+                      <span>{getOwnerInitial(ownerName)}</span>
+                    )}
+                  </div>
+                  <div className="pray-owner-card__details">
+                    <strong>{ownerName}</strong>
+                    <p className={ownerBio ? undefined : 'muted'}>{ownerBio || '這位發起人尚未留下自我介紹。'}</p>
+                  </div>
+                </div>
+              </section>
+
               <PrayerAudioPlayer
                 requestId={String(card.id)}
                 initialTrack={card.voiceHref ? { voiceUrl: card.voiceHref, speaker: card.title || "祈禱錄音" } : null}
               />
+
             </div>
           </article>
 
-          <Comments requestId={String(card.id)} />
+          <Comments requestId={String(card.id)} ownerId={ownerIdValue} />
         </section>
 
         <section className="pray-related">

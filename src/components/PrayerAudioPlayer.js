@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { PRAYER_RESPONSE_CREATED } from "@/lib/events";
 
 const FALLBACK_SPEAKER = "匿名祈禱者";
+const PRAYER_AUDIO_START_EVENT = "prayer-audio:start";
 
 function resolveUrl(url) {
   if (!url) return "";
@@ -150,16 +151,31 @@ export default function PrayerAudioPlayer({ requestId }) {
     };
   }, [fetchTracks]);
 
-  const startPlayback = async () => {
+  const startPlayback = useCallback(async () => {
     if (!playlistRef.current.length) {
       setError("目前沒有可播放的音訊");
       return;
     }
     setIsModalOpen(true);
     await playTrackAt(0);
-  };
+  }, [playTrackAt]);
 
-  const togglePause = async () => {
+  useEffect(() => {
+    if (typeof window === "undefined") return undefined;
+
+    const handleExternalStart = (event) => {
+      const targetId = String(event?.detail?.requestId ?? "");
+      if (!targetId) return;
+      if (targetId !== String(requestId)) return;
+      void startPlayback();
+    };
+
+    window.addEventListener(PRAYER_AUDIO_START_EVENT, handleExternalStart);
+    return () => {
+      window.removeEventListener(PRAYER_AUDIO_START_EVENT, handleExternalStart);
+    };
+  }, [requestId, startPlayback]);
+const togglePause = async () => {
     const audio = audioRef.current;
     if (!audio) return;
     if (audio.paused) {
@@ -188,7 +204,7 @@ export default function PrayerAudioPlayer({ requestId }) {
   return (
     <div className="pray-audio">
       <button type="button" className="cp-button" onClick={startPlayback}>
-        祈禱音訊
+        收聽禱告
       </button>
 
       {error ? <p className="cp-alert cp-alert--error pray-audio__error">{error}</p> : null}
@@ -263,3 +279,4 @@ export default function PrayerAudioPlayer({ requestId }) {
     </div>
   );
 }
+

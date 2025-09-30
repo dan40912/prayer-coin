@@ -72,17 +72,17 @@ const NAV_ITEMS = [
       </svg>
     ),
   },
-  {
-    href: "/admin/analytics",
-    label: "洞察分析",
-    roles: ["SUPER", "ADMIN"],
-    icon: (
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-        <path d="M21 12A9 9 0 1 1 12 3" stroke="currentColor" strokeWidth="1.4" fill="currentColor" />
-        <path d="M12 12v-6" stroke="#fff" strokeWidth="1.6" strokeLinecap="round" />
-      </svg>
-    ),
-  },
+  // {
+  //   href: "/admin/analytics",
+  //   label: "洞察分析",
+  //   roles: ["SUPER", "ADMIN"],
+  //   icon: (
+  //     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+  //       <path d="M21 12A9 9 0 1 1 12 3" stroke="currentColor" strokeWidth="1.4" fill="currentColor" />
+  //       <path d="M12 12v-6" stroke="#fff" strokeWidth="1.6" strokeLinecap="round" />
+  //     </svg>
+  //   ),
+  // },
   {
     href: "/admin/wallet",
     label: "錢包管理",
@@ -228,7 +228,7 @@ export default function AdminLayout({ children }) {
       </aside>
 
       <div className="admin-shell__main">
-        <header className="admin-shell__topbar">
+        {/* <header className="admin-shell__topbar">
           <form className="admin-shell__search" role="search">
             <input type="search" placeholder="搜尋祈禱室、用戶或專案" aria-label="Search" />
           </form>
@@ -237,7 +237,7 @@ export default function AdminLayout({ children }) {
             <button type="button">語系</button>
             <button type="button">快速新增</button>
           </div>
-        </header>
+        </header> */}
 
         <div className="admin-shell__scroll">
           <div className="admin-shell__content">{children}</div>

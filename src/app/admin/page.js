@@ -126,7 +126,7 @@ export default function AdminLoginPage() {
           <div className="admin-auth__form-group">
             <label htmlFor="twoFactor">
               二階段驗證碼
-              <span className="admin-auth__hint">（Demo：輸入 123456 即可）</span>
+              <span className="admin-auth__hint"></span>
             </label>
             <input
               id="twoFactor"

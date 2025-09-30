@@ -15,7 +15,10 @@ export async function readHomeCard(id) {
   console.log("[homeCards] readHomeCard", { id });
   return prisma.homePrayerCard.findUnique({
     where: { id: Number(id) },
-    include: { category: true }
+    include: {
+      category: true,
+      owner: { select: { id: true, name: true, avatarUrl: true, bio: true } }
+    }
   });
 }
 

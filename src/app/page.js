@@ -235,7 +235,7 @@ export default async function HomePage() {
       <div className="content-image-wrapper">
         {/* 這裡可以放一張代表集氣、光芒或社會連結的圖片 */}
         <img
-          src="https://images.unsplash.com/photo-1542838132-72049d501069?q=80&w=2000&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
+          src="legacy/img/not-beliver.jpg"
           alt="Universal power and support"
           loading="lazy"
           className="content-image"
@@ -278,7 +278,7 @@ export default async function HomePage() {
         <div className="content-image-wrapper">
           {/* 這裡可以放一張代表屬靈、靜謐或連結的圖片 */}
           <img
-            src="https://images.unsplash.com/photo-1517446559798-28318621d9ab?q=80&w=2000&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
+            src="legacy/img/homepage-beleve.jpg"
             alt="Faith connection and prayer guidance"
             loading="lazy"
             className="content-image"

@@ -32,7 +32,11 @@ model User {
 
   prayerRequests   PrayerRequest[]
   prayerResponses  PrayerResponse[]
+  prayerResponseReports PrayerResponseReport[]
+  homePrayerCardReports HomePrayerCardReport[]
   homePrayerCards  HomePrayerCard[] 
+  resetToken       String?   @db.VarChar(255)
+  resetTokenExpiry DateTime?
 }
 
 model PrayerRequest {
@@ -73,7 +77,44 @@ model PrayerResponse {
   responderId String?
   responder   User? @relation(fields: [responderId], references: [id])
   tokenTransactions TokenTransaction[] @relation("PrayerResponseTransactions")
+  reports        PrayerResponseReport[]
 }
+
+model HomePrayerCardReport {
+  id          Int             @id @default(autoincrement())
+  cardId      Int
+  card        HomePrayerCard  @relation(fields: [cardId], references: [id], onDelete: Cascade)
+  reporterId  String
+  reporter    User            @relation(fields: [reporterId], references: [id])
+  reason      String
+  remarks     String?
+  createdAt   DateTime        @default(now())
+
+  @@index([cardId])
+  @@index([reason])
+  @@index([createdAt])
+  @@unique([cardId, reporterId])
+  @@map("home_prayer_card_report")
+}
+
+model PrayerResponseReport {
+  id          Int             @id @default(autoincrement())
+  responseId  String
+  response    PrayerResponse  @relation(fields: [responseId], references: [id], onDelete: Cascade)
+  reporterId  String
+  reporter    User            @relation(fields: [reporterId], references: [id])
+  reason      String
+  remarks     String?
+  createdAt   DateTime        @default(now())
+
+  @@index([responseId])
+  @@index([reason])
+  @@index([createdAt])
+  @@unique([responseId, reporterId])
+  @@map("prayer_response_report")
+}
+
+
 
 enum PrayerStatus {
   DRAFT
@@ -138,6 +179,7 @@ model HomePrayerCard {
 
   responses    PrayerResponse[]
   tokenTransactions TokenTransaction[] @relation("HomePrayerCardTransactions")
+  reports      HomePrayerCardReport[]
 
   // ✅ 保留封鎖與檢舉
   isBlocked    Boolean            @default(false)
