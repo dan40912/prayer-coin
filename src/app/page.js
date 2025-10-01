@@ -81,9 +81,9 @@ export default async function HomePage() {
 <section className="section bg-light-flow" id="platform-intro">
   <div className="section__container text-center">
     {/* 標題與簡介 */}
-    <h2>PRAY COIN 如何將心意轉化為行動？</h2>
+    <h2>Let's Pray</h2>
     <p className="intro-text">
-      **PRAY COIN** 是一個創新的代禱與影響力平台。我們將傳統的善意與現代科技結合，讓您的每一個行動，都能被量化、被追蹤、並產生真實的社會效益。
+      Let's Pray 是一個創新的代禱與影響力平台。我們將傳統的善意與現代科技結合，讓您的每一個行動，都能被量化、被追蹤、並產生真實的社會效益。
     </p>
 
     {/* 三個特色小格 (col-4 / Feature Cards) */}
@@ -105,8 +105,8 @@ export default async function HomePage() {
       {/* 特色 3：獲得代幣 (追蹤影響力) */}
       <div className="feature-item">
         <span className="icon-circle">🪙</span>
-        <h3>獲得代幣</h3>
-        <p>每次集氣或參與禱告，您將獲得 **PRAY COIN**，追蹤您所累積的正面影響力與貢獻。</p>
+        <h3>訂閱追蹤</h3>
+        <p>全球代禱或特定代禱事項都可以通知您，立刻參與集氣</p>
       </div>
     </div>
 
@@ -117,7 +117,7 @@ export default async function HomePage() {
         className="button button--large button--primary"
         prefetch={false}
       >
-        加入 PRAY COIN，啟動您的善意循環
+        立即加入
       </Link>
     </div>
   </div>
@@ -169,9 +169,9 @@ export default async function HomePage() {
 
         {/* Cards Section */}
         <section className="section">
-          <h2>最新祈禱需求</h2>
+          <h2>禱告版</h2>
           <p>
-            以下案例由合作教會與 NGO 提供，已通過基礎審核，可即時加入守望與資源連結。
+            以下均為平台使用者自行產生，請仔細留意內容，若有違規事項敬請協助檢舉，為大家守望一個安全的網路環境。
           </p>
           <div className="card-grid">
             {cards.map((card) => (
@@ -187,11 +187,11 @@ export default async function HomePage() {
                   </div>
                   <h3>{card.title}</h3>
                   <p>{card.description}</p>
-                  <div className="prayer-meta">
+                  {/* <div className="prayer-meta">
                     {card.meta.map((line, idx) => (
                       <span key={idx}>{line}</span>
                     ))}
-                  </div>
+                  </div> */}
                 </div>
                <div className="card-footer">
                   { /* compute a stable details href instead of relying on card.detailsHref */ }
@@ -202,9 +202,9 @@ export default async function HomePage() {
                   >
                     查看詳情 →
                   </Link>
-                  <SafeLink className="voice-link" href={card?.voiceHref} prefetch={false}>
+                  {/* <SafeLink className="voice-link" href={card?.voiceHref} prefetch={false}>
                     收聽禱告錄音
-                  </SafeLink>
+                  </SafeLink> */}
                 </div>
               </article>
             ))}
@@ -217,12 +217,12 @@ export default async function HomePage() {
         <span className="badge-soft">🤝 跨越信仰，一同成就美好</span>
         <h2>你的善意，就是最好的「集氣」力量</h2>
         <p>
-          即使沒有特定信仰，你也能透過 **PRAY COIN** 平台貢獻一份獨特的能量。我們將你的每次關注與行動，轉化為對社會專案的實質支持和鼓勵。
+          即使沒有特定信仰，你也能透過平台貢獻一份獨特的能量。我們將你的每次關注與行動，轉化為對社會專案的實質支持和鼓勵。
         </p>
         <ul className="power-list">
-          <li>✨ **點擊集氣**：為急需幫助的個人或社群專案點亮一盞燈。</li>
-          <li>🎯 **追蹤影響**：看見你的集氣如何轉化為實際的進度更新與正面改變。</li>
-          <li>💡 **普世關懷**：不論背景，為共同的社會議題發聲與支持。</li>
+          <li>✨ 點擊集氣：為急需幫助的個人或社群專案點亮一盞燈。</li>
+          <li>🎯 追蹤影響：看見你的集氣如何轉化為實際的進度更新與正面改變。</li>
+          <li>💡 普世關懷：不論背景，為共同的社會議題發聲與支持。</li>
         </ul>
         <Link
           href="/legacy/search" // 連結到您的搜尋頁面
@@ -251,24 +251,24 @@ export default async function HomePage() {
           <span className="badge-soft badge-light">🕊️ 深入信仰，連結社群</span>
           <h2>學習禱告的藝術，與全球聖徒同行</h2>
           <p>
-            不論您是信仰新手或是資深信徒，**PRAY COIN** 不僅是一個代禱平台，更是您的屬靈成長夥伴。
+            不論您是信仰新手或是資深信徒，不僅是一個代禱平台，更是您的屬靈成長夥伴。
           </p>
           <div className="feature-cards">
             <div className="feature-card">
               <h3>🙌 禱告入門指引</h3>
               <p>
-                提供基礎的禱告範本與主題式指南，帶領您學習如何有效地與上主對話，建立個人靈修生活。
+               如果您不知道怎麼禱告，可以跟著我們一起，從深處轉向主。
               </p>
             </div>
             <div className="feature-card">
               <h3>🔗 聖徒共禱連結</h3>
               <p>
-                與其他有共同負擔的信徒連結，為同一件人事物在靈裡合一，見證禱告帶來的驚人突破與回應。
+                與其他有共同負擔的信徒連結，為同一件人事物在靈裡合一，見證禱告的力量。
               </p>
             </div>
           </div>
           <Link
-            href="../index.html#howto" // 連結到您網站導航中「使用說明」的錨點
+            href="/howto" // 連結到您網站導航中「使用說明」的錨點
             className="button button--primary"
             prefetch={false}
           >
@@ -294,7 +294,7 @@ export default async function HomePage() {
       {/* 關於我們連結 */}
       <div className="info-link-group">
         <h3>平台宗旨</h3>
-        <p>深入了解 PRAY COIN 的創立願景、團隊核心價值與我們承諾帶來的社會影響力。</p>
+        <p>深入了解 Let's Pray 的創立願景、團隊核心價值與我們承諾帶來的社會影響力。</p>
         <Link
           href="/about"
           className="link-arrow"

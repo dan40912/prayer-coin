@@ -139,6 +139,12 @@ export default async function PrayerDetailPage({ params }) {
               </ul>
             ) : null}
             {metaItems.length ? <p className="pray-hero__meta">{metaItems.join(" • ")}</p> : null}
+              <PrayerAudioPlayer
+                requestId={String(card.id)}
+                initialTrack={card.voiceHref ? { voiceUrl: card.voiceHref, speaker: card.title || "祈禱錄音" } : null}
+              />
+
+
           </div>
         </section>
 
@@ -166,15 +172,15 @@ export default async function PrayerDetailPage({ params }) {
               <div className="pray-article__note">
                 <h4>如何回應</h4>
                 <p>
-                  若你想提供實質幫助或禱告支持，請使用平台回應機制或聯絡提交單位，我們重視匿名與隱私保護。
+                  歡迎註冊成為用戶，並在下方留下您寶貴的錄音一起替他們加油打氣，更可以為他們禱告。
                 </p>
               </div>
 
-              <div className="pray-share">
+              {/* <div className="pray-share">
                 <h4>分享這張祈禱卡片</h4>
                 <p className="pray-share__hint">透過社群或訊息讓更多人加入代禱行列。</p>
                 <ShareButton canonical={canonical} />
-              </div>
+              </div> */}
 
               <section className="pray-owner-card">
                 <h4>祈禱發起人</h4>
@@ -221,7 +227,7 @@ export default async function PrayerDetailPage({ params }) {
                     <div>
                       <strong>{item.title}</strong>
                       <p className="muted small">
-                        {formatMeta(item.meta).slice(0, 2).join(" • ") || "敬請期待"}
+                        {formatMeta(item.meta).slice(0, 2).join(" • ") || "有空可以進來看看"}
                       </p>
                     </div>
                   </SafeLink>

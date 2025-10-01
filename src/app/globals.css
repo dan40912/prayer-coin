@@ -302,6 +302,24 @@ main {
   border-style: dashed;
 }
 @media (max-width: 768px) {
+      header .nav-links.open{
+        position: absolute;
+    left: 9rem;
+      }
+header .menu-toggle{
+  margin-right: -3rem;
+}
+  header .brand{
+    position: unset;
+    padding-right: 10rem;
+  }
+
+  .section{
+    padding: 1rem;
+  }
+  main{
+    padding: 0 0.5rem;
+  }
   .menu-toggle{
     position: fixed;
     right: 4rem;

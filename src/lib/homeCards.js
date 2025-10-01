@@ -5,6 +5,7 @@ import prisma from "./prisma";
 export async function readHomeCards() {
   console.log("[homeCards] readHomeCards");
   return prisma.homePrayerCard.findMany({
+    where: { isBlocked: false },
     orderBy: { createdAt: "desc" },
     include: { category: true }
   });
@@ -44,7 +45,7 @@ export async function createHomeCard(payload = {}) {
 export async function readRelatedHomeCards(id, limit = 3) {
   console.log("[homeCards] readRelatedHomeCards", { id, limit });
   return prisma.homePrayerCard.findMany({
-    where: { id: { not: Number(id) } },
+    where: { id: { not: Number(id) },isBlocked: false  },
     orderBy: { createdAt: "desc" },
     take: Math.max(0, Number(limit) || 0),
     include: { category: true }

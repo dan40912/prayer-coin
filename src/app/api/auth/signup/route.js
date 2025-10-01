@@ -1,18 +1,15 @@
 ﻿import { NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
-
 import prisma from "@/lib/prisma";
 
 const REQUIRED_FIELDS = [
   "fullName",
   "username",
   "email",
-  "faithTradition",
   "country",
-  "solanaAddress",
   "password",
   "confirmPassword",
-  "acceptedTerms"
+  "acceptedTerms",
 ];
 
 const normalizeString = (value) => (typeof value === "string" ? value.trim() : "");
@@ -21,6 +18,7 @@ export async function POST(request) {
   try {
     const payload = await request.json();
 
+    // 檢查必填欄位
     for (const field of REQUIRED_FIELDS) {
       if (payload[field] === undefined || payload[field] === null) {
         return NextResponse.json({ message: `${field} is required` }, { status: 400 });
@@ -30,14 +28,12 @@ export async function POST(request) {
     const fullName = normalizeString(payload.fullName);
     const username = normalizeString(payload.username).toLowerCase();
     const email = normalizeString(payload.email).toLowerCase();
-    const faithTradition = normalizeString(payload.faithTradition);
     const country = normalizeString(payload.country);
-    const solanaAddress = normalizeString(payload.solanaAddress);
     const password = normalizeString(payload.password);
     const confirmPassword = normalizeString(payload.confirmPassword);
     const acceptedTerms = Boolean(payload.acceptedTerms);
 
-    if (!fullName || !username || !email || !faithTradition || !country || !solanaAddress) {
+    if (!fullName || !username || !email || !country) {
       return NextResponse.json({ message: "所有欄位皆需填寫" }, { status: 400 });
     }
 
@@ -63,8 +59,8 @@ export async function POST(request) {
 
     const existing = await prisma.user.findFirst({
       where: {
-        OR: [{ email }, { username }]
-      }
+        OR: [{ email }, { username }],
+      },
     });
 
     if (existing) {
@@ -78,12 +74,10 @@ export async function POST(request) {
         email,
         name: fullName,
         username,
-        faithTradition,
         country,
-        solanaAddress,
         passwordHash,
-        acceptedTerms: true
-      }
+        acceptedTerms: true,
+      },
     });
 
     return NextResponse.json(
@@ -93,11 +87,9 @@ export async function POST(request) {
           email: user.email,
           name: user.name,
           username: user.username,
-          faithTradition: user.faithTradition,
           country: user.country,
-          solanaAddress: user.solanaAddress,
-          createdAt: user.createdAt
-        }
+          createdAt: user.createdAt,
+        },
       },
       { status: 201 }
     );

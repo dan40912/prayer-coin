@@ -1,48 +1,47 @@
 ﻿import Link from "next/link";
 
 import { SiteFooter, SiteHeader } from "@/components/site-chrome";
-
 import SignupForm from "./SignupForm";
 
 export const metadata = {
   title: "Prayer Coin | 註冊帳戶",
-  description: "幾分鐘完成註冊，立即發布禱告、接受語音回應並獲得代幣激勵。"
+  description: "把你的聲音分享出去，讓別人聽見並回應，在陪伴中得到力量。"
 };
 
 const stepItems = [
   {
     index: "1",
-    title: "填寫基本資訊",
-    description: "提供姓名、信仰與國家，幫助我們維護社群安全。"
+    title: "分享你的聲音",
+    description: "錄下禱告或心聲，勇敢說出你的需要。"
   },
   {
     index: "2",
-    title: "綁定 Solana 收款錢包",
-    description: "禱告互動獎勵將自動發放至你的地址。"
+    title: "有人會聽見",
+    description: "你的聲音不會孤單，社群會真實回應。"
   },
   {
     index: "3",
-    title: "啟動祈禱任務",
-    description: "建立禱告、邀請守望者，用語音與文字陪伴彼此。"
+    title: "彼此陪伴",
+    description: "透過語音與文字交流，建立溫暖的連結。"
   }
 ];
 
 const heroStats = [
   { label: "已提交禱告", value: "38,420+" },
   { label: "社群語音禱告", value: "126,800 秒" },
-  { label: "代幣發放成功率", value: "99.8%" }
+  { label: "彼此陪伴成功率", value: "99.8%" }
 ];
 
-const kycReasons = [
-  "確保語音禱告與代幣獎勵的真實性與可追溯性。",
-  "協助我們遵循區塊鏈與慈善相關的在地合規。",
-  "保護社群安全，防止惡意註冊或資金詐騙。"
+const signupReasons = [
+  "讓每一個聲音都來自真實的你。",
+  "給彼此安心的環境，放心分享心聲。",
+  "保護社群安全，避免惡意註冊。"
 ];
 
 const postSignupBenefits = [
-  "建立禱告、邀請他人以文字或語音回應。",
-  "透過客製化圖片與標題，優化社群分享。",
-  "在 Dashboard 追蹤代幣流向、曝光成效與互動。"
+  "立即錄下你的禱告或心聲，讓人聽見並回應。",
+  "收到來自社群的語音與文字陪伴。",
+  "在 Dashboard 追蹤你的分享與互動成效。"
 ];
 
 export default function SignupPage() {
@@ -53,11 +52,15 @@ export default function SignupPage() {
       <main>
         <div className="auth-wrapper">
           <div className="auth-grid">
+            {/* Hero Section */}
             <section className="auth-card auth-hero">
               <div>
-                <span className="badge-mini">STEP 1 · KYC Onboarding</span>
-                <h1>加入禱告與陪伴的生態</h1>
-                <p>幾分鐘完成註冊，立即發布禱告、接受語音回應，並透過代幣獲得激勵。</p>
+                <span className="badge-mini">STEP 1 · 分享你的聲音</span>
+                <h1>讓你的聲音被聽見</h1>
+                <p>
+                  只要幾分鐘，分享你的禱告或心聲，別人就能透過語音回應，
+                  給你真實的陪伴與支持。
+                </p>
               </div>
 
               <div className="stepper">
@@ -82,12 +85,15 @@ export default function SignupPage() {
               </div>
             </section>
 
+            {/* Signup Section */}
             <section className="auth-card">
               <div>
                 <h1>建立 Prayer Coin 帳戶</h1>
-                <p>完成基本資料與 KYC 項目，進一步體驗禱告分享、語音回應與代幣激勵。</p>
+                <p>
+                  註冊後你可以立即錄下禱告，讓別人聽見並回應，從陪伴中獲得力量。
+                </p>
               </div>
-
+{/* 
               <div className="social-buttons">
                 <button className="social-button google" type="button">
                   使用 Google 註冊
@@ -95,30 +101,35 @@ export default function SignupPage() {
                 <button className="social-button facebook" type="button">
                   使用 Facebook 註冊
                 </button>
-              </div>
-
-              <div className="auth-divider">或使用電子信箱註冊</div>
+              </div> */}
+{/* 
+              <div className="auth-divider">或使用電子信箱註冊</div> */}
 
               <SignupForm />
 
               <div className="auth-footer">
                 <span>
-                  已經有禱告帳戶？<Link href="/login" prefetch={false}>前往登入</Link>。
+                  已經有禱告帳戶？
+                  <Link href="/login" prefetch={false}>
+                    前往登入
+                  </Link>
+                  。
                 </span>
               </div>
             </section>
 
+            {/* Side Notes */}
             <aside className="auth-card">
               <div className="auth-note">
-                <strong>為何需要 KYC？</strong>
+                <strong>為什麼需要註冊？</strong>
                 <ul className="auth-meta-list">
-                  {kycReasons.map((reason) => (
+                  {signupReasons.map((reason) => (
                     <li key={reason}>{reason}</li>
                   ))}
                 </ul>
               </div>
               <div className="auth-note">
-                <strong>註冊完成後可以做什麼？</strong>
+                <strong>註冊後你可以做什麼？</strong>
                 <ul className="auth-meta-list">
                   {postSignupBenefits.map((benefit) => (
                     <li key={benefit}>{benefit}</li>
@@ -134,4 +145,3 @@ export default function SignupPage() {
     </>
   );
 }
-

@@ -95,7 +95,7 @@ export default function SignupForm() {
         </div>
         <div className="form-group">
           <label className="form-label" htmlFor="faith">
-            信仰傳統 <span className="required-badge">必填</span>
+           您是否有信仰 ? <span className="required-badge">必填</span>
           </label>
           <select
             className="form-select"
@@ -107,15 +107,17 @@ export default function SignupForm() {
             <option value="" disabled>
               請選擇
             </option>
-            <option>基督教</option>
-            <option>天主教</option>
-            <option>東正教</option>
-            <option>其他（請於禱告內容補充）</option>
+            <option>基督徒</option>
+            <option>佛教</option>
+            <option>伊斯蘭教</option>
+            <option>道教</option>
+            <option>一貫道</option>
+            <option>無信仰</option>
           </select>
         </div>
         <div className="form-group">
           <label className="form-label" htmlFor="country">
-            居住國家 <span className="required-badge">必填</span>
+            居住區域 <span className="required-badge">必填</span>
           </label>
           <select
             className="form-select"
@@ -132,6 +134,9 @@ export default function SignupForm() {
             <option>新加坡</option>
             <option>馬來西亞</option>
             <option>美國</option>
+            <option>中國</option>
+            <option>日本</option>
+            <option>韓國</option>
             <option>其他</option>
           </select>
         </div>
@@ -154,7 +159,7 @@ export default function SignupForm() {
           />
         </div>
         <div className="form-group">
-          <label className="form-label" htmlFor="sol-address">
+          {/* <label className="form-label" htmlFor="sol-address">
             Solana 收款地址 <span className="required-badge">必填</span>
           </label>
           <input
@@ -166,7 +171,7 @@ export default function SignupForm() {
             onChange={updateField("solanaAddress")}
             required
           />
-          <span className="form-helper">請確認地址正確，代幣獎勵將直接發送至此地址。</span>
+          <span className="form-helper">請確認地址正確，代幣獎勵將直接發送至此地址。</span> */}
         </div>
         <div className="form-group">
           <label className="form-label" htmlFor="signup-password">
