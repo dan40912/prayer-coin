@@ -6,7 +6,7 @@ export async function GET(req, { params }) {
 
   try {
     const responses = await prisma.prayerResponse.findMany({
-      where: { homeCardId: Number(homeCardId) },
+      where: { homeCardId: Number(homeCardId),isBlocked: false, },
       orderBy: { createdAt: "desc" },
       include: { responder: true }, // 把使用者帶出來 (如果不是匿名)
     });

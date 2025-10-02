@@ -3,8 +3,9 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-
+import { useAuthSession } from "@/hooks/useAuthSession";
 import { SiteFooter, SiteHeader } from "@/components/site-chrome";
+
 
 const INITIAL_FORM = {
   title: "",
@@ -21,13 +22,17 @@ const INITIAL_FORM = {
 const HERO_POINTS = [
   "分享自己的需要，讓社群一起守望",
   "接住別人的禱告，把支持化為行動",
-  "透過 Impact Ledger 看見信心的足跡"
 ];
 
 export default function CustomerPortalCreatePage() {
+  const authUser = useAuthSession();
+  const handleChange = (field) => (event) => {
+  setForm((prev) => ({ ...prev, [field]: event.target.value }));
+};
   const router = useRouter();
   const [form, setForm] = useState(INITIAL_FORM);
   const [status, setStatus] = useState(null);
+   const [selectedFile, setSelectedFile] = useState(null); 
   const [submitting, setSubmitting] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [redirectTimer, setRedirectTimer] = useState(null);
@@ -68,12 +73,26 @@ export default function CustomerPortalCreatePage() {
     }
   }, [redirectTimer]);
 
-  const handleChange = (field) => (event) => {
-    setForm((prev) => ({ ...prev, [field]: event.target.value }));
-  };
+ const handleFileChange = (event) => {
+  const file = event.target.files[0];
+  if (file && file.type.startsWith('image/')) {
+    setSelectedFile(file);
+    setStatus(null); // 清除錯誤訊息
+  } else {
+    setSelectedFile(null);
+    setStatus({ type: "error", message: "請選擇有效的圖片檔案" });
+  }
+};
 
   const handleSubmit = async (event) => {
     event.preventDefault();
+
+    if (!authUser || !authUser.id) {
+      // 處理未登入或無法取得 ID 的情況 (雖然理論上應被路由守衛攔截)
+      setStatus({ type: "error", message: "請先登入才能建立卡片。" });
+      return;
+    }
+
     if (!categoryId) {
       setStatus({ type: "error", message: "請選擇一個分類" });
       return;
@@ -82,12 +101,48 @@ export default function CustomerPortalCreatePage() {
     setSubmitting(true);
     setStatus(null);
 
+
+    let imageUrl = form.image; 
+  if (selectedFile) {
+    setStatus({ type: "info", message: "正在上傳圖片..." });
+    const formData = new FormData();
+    formData.append("file", selectedFile); // 關鍵：名稱要與後端 data.get('file') 對應
+
+    try {
+      const uploadResponse = await fetch("/api/upload-image", { 
+        method: "POST",
+        body: formData, // fetch API 會自動處理 Content-Type: multipart/form-data
+      });
+
+      if (!uploadResponse.ok) {
+        const error = await uploadResponse.json().catch(() => ({ message: "圖片上傳失敗" }));
+        throw new Error(error.message || "圖片上傳失敗");
+      }
+
+      const uploadResult = await uploadResponse.json();
+      imageUrl = uploadResult.url; // 取得上傳後的圖片 URL
+    } catch (error) {
+      setSubmitting(false);
+      setStatus({ type: "error", message: error.message || "圖片上傳失敗" });
+      return; // 上傳失敗，停止後續流程
+    }
+  }
+
+  // --- B. 卡片資料提交步驟 ---
+  if (!imageUrl) {
+    setSubmitting(false);
+    setStatus({ type: "error", message: "未提供圖片 URL" });
+    return;
+  }
+  
     const payload = {
       title: form.title,
       slug: form.slug,
-      image: form.image,
+      image: imageUrl, 
       alt: form.alt,
       description: form.description,
+      ownerId: authUser?.id,
+      
       tags: form.tags
         .split(",")
         .map((tag) => tag.trim())
@@ -100,7 +155,7 @@ export default function CustomerPortalCreatePage() {
       voiceHref: form.voiceHref,
       categoryId
     };
-
+ console.log("Payload sent:", payload); 
     try {
       const response = await fetch("/api/home-cards", {
         method: "POST",
@@ -158,7 +213,7 @@ export default function CustomerPortalCreatePage() {
           </div>
         </section>
 
-        <header className="customer-create__header">
+        <div className="customer-create__header">
           <div>
             <p className="customer-create__eyebrow">Customer Portal</p>
             <h2>新增首頁祈禱卡片</h2>
@@ -177,7 +232,7 @@ export default function CustomerPortalCreatePage() {
               {status.message}
             </span>
           ) : null}
-        </header>
+        </div>
           <form className="cp-form" onSubmit={handleSubmit}>
   {/* 基本資訊 */}
   <div className="cp-input-card">
@@ -227,23 +282,28 @@ export default function CustomerPortalCreatePage() {
         </select>
       </label>
       <label>
-        <span>圖片 URL <span className="cp-badge cp-badge--required">必填</span></span>
+        <span>上傳圖片 <span className="cp-badge cp-badge--required">必填</span></span>
         <input
-          type="url"
-          value={form.image}
-          onChange={handleChange("image")}
-          placeholder="貼上 Unsplash 或其他圖庫連結"
+          type="file" // *** 關鍵：檔案選擇 ***
+          accept="image/*" // 限制只接受圖片檔案
+          onChange={handleFileChange}
           required
+          className="cp-file-input" 
         />
+        <small className="cp-helper">選擇一張圖片作為卡片封面</small>
       </label>
     </div>
-    <div className="cp-preview">
-      {previewImage ? (
-        <img src={previewImage} alt={form.alt || form.title || "卡片預覽"} />
-      ) : (
-        <div className="cp-placeholder">尚未選擇圖片</div>
-      )}
-    </div>
+      {/* 圖片預覽邏輯：優先預覽本機選擇的檔案 */}
+      <div className="cp-preview">
+        {selectedFile ? (
+          // 使用 URL.createObjectURL 建立本機預覽
+          <img src={URL.createObjectURL(selectedFile)} alt={form.alt || form.title || "卡片預覽"} />
+        ) : previewImage ? (
+          <img src={previewImage} alt={form.alt || form.title || "卡片預覽"} />
+        ) : (
+          <div className="cp-placeholder">尚未選擇圖片</div>
+        )}
+      </div>
     <label>
       <span>圖片替代文字</span>
       <input
@@ -273,7 +333,7 @@ export default function CustomerPortalCreatePage() {
   </div>
 
   {/* 其他資訊 */}
-  <div className="cp-input-card">
+  {/* <div className="cp-input-card">
     <h3 className="cp-input-card__title">其他資訊</h3>
     <div className="cp-row cp-row--equal">
       <label>
@@ -315,7 +375,7 @@ export default function CustomerPortalCreatePage() {
         />
       </label>
     </div>
-  </div>
+  </div> */}
 
   {/* 按鈕 */}
   <div className="cp-actions">

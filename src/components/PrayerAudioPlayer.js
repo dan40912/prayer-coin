@@ -156,9 +156,13 @@ export default function PrayerAudioPlayer({ requestId }) {
       setError("目前沒有可播放的音訊");
       return;
     }
+    if (audioRef.current && !isModalOpen) {
+      setIsModalOpen(true);
+      return;
+    }
     setIsModalOpen(true);
     await playTrackAt(0);
-  }, [playTrackAt]);
+  }, [isModalOpen, playTrackAt]);
 
   useEffect(() => {
     if (typeof window === "undefined") return undefined;
@@ -187,6 +191,10 @@ const togglePause = async () => {
     }
   };
 
+  const closeModal = () => {
+    setIsModalOpen(false);
+  };
+
   const stopPlayback = () => {
     resetPlaybackState();
   };
@@ -211,10 +219,10 @@ const togglePause = async () => {
 
       {isModalOpen ? (
         <div className="pray-audio-modal" role="dialog" aria-modal="true">
-          <div className="pray-audio-modal__backdrop" onClick={stopPlayback} />
+          <div className="pray-audio-modal__backdrop" onClick={closeModal} />
           <div className="pray-audio-modal__card pray-audio-modal__card--player">
             <div className="pray-audio-modal__player">
-              <button type="button" className="pray-audio-modal__close" onClick={stopPlayback}>
+              <button type="button" className="pray-audio-modal__close" onClick={closeModal}>
                 ×
               </button>
 

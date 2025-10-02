@@ -15,6 +15,7 @@ function sanitizeUpdatePayload(body) {
     : [];
 
   return {
+  
     slug: body.slug?.trim(),
     image: body.image?.trim() || "",
     alt: body.alt?.trim() || "",
@@ -23,7 +24,7 @@ function sanitizeUpdatePayload(body) {
     tags,
     meta,
     detailsHref: body.detailsHref?.trim(),
-    voiceHref: body.voiceHref?.trim()
+    voiceHref: payload.voiceHref?.trim() || "TEMP_VOICE_URL"
   };
 }
 

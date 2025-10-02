@@ -30,29 +30,37 @@ function formatTime(dateLike) {
 }
 
 function buildShareUrl(card) {
-  const origin = typeof window !== "undefined" && window.location?.origin ? window.location.origin : "";
-  const rawHref = card?.detailsHref?.trim();
-
-  if (rawHref) {
-    if (/^https?:\/\//i.test(rawHref)) {
-      return rawHref;
-    }
-
-    if (rawHref.startsWith("/")) {
-      return origin ? `${origin}${rawHref}` : rawHref;
-    }
-
-    const normalized = rawHref.startsWith("/") ? rawHref.slice(1) : rawHref;
-    return origin ? `${origin}/${normalized}` : `/${normalized}`;
-  }
-
-  const slug = card?.slug || card?.id;
-  if (!slug) {
-    return origin;
-  }
-
-  const pathValue = `/legacy/prayfor/details.html?prayer=${slug}`;
-  return origin ? `${origin}${pathValue}` : pathValue;
+  // 獲取網站的 Origin，並確保結尾沒有斜線
+  const origin = typeof window !== "undefined" && window.location?.origin
+    ? window.location.origin.replace(/\/$/, "")
+    : "";
+    
+  const rawHref = card?.detailsHref?.trim();
+  
+  // 1. 優先使用完整的自定義連結 (絕對路徑)
+  if (rawHref && /^https?:\/\//i.test(rawHref)) {
+    return rawHref;
+  }
+  
+  // 2. 如果有自定義相對路徑，則組合 Origin + 路徑
+  if (rawHref) {
+    // 移除 rawHref 開頭的斜線，避免雙斜線
+    const path = rawHref.replace(/^\/+/, "");
+    return origin ? `${origin}/${path}` : `/${path}`;
+  }
+  
+  // 3. 如果沒有 detailsHref，使用 slug 或 id 產生 ID+Slug 乾淨路由連結
+  const slug = card?.slug || card?.id;
+  if (slug) {
+    // 這是您要求的格式：/prayfor/[ID]+[Slug] 或 /prayfor/[ID]
+    const idAndSlug = card.id && card.slug ? `${card.id}+${card.slug}` : slug;
+    const pathValue = `prayfor/${idAndSlug}`; 
+    
+    return origin ? `${origin}/${pathValue}` : `/${pathValue}`;
+  }
+  
+  // 4. 最後的備用方案：返回網站根目錄
+  return origin || "/";
 }
 
 export default function CustomerPortalPage() {
@@ -495,7 +503,7 @@ export default function CustomerPortalPage() {
                     href="/customer-portal/create"
                     prefetch={false}
                   >
-                    新增祈禱卡片
+                    新增代禱事項
                   </Link>
                 </div>
               </div>
@@ -504,9 +512,9 @@ export default function CustomerPortalPage() {
             <section className="cp-hero">
               <div className="cp-hero__content">
                 <p className="cp-badge">Member Workspace</p>
-                <h1>祈禱影響力中心</h1>
+                <h1>禱告影響力中心</h1>
                 <p>
-                  在這裡集中管理你的祈禱故事、更新祈禱進度與狀態，並透過分享讓更多人參與支持。
+                  在這裡集中管理你的禱告故事、更新禱告進度與狀態，並透過分享讓更多人參與支持。
                 </p>
                 <div className="cp-hero__actions">
                   <Link

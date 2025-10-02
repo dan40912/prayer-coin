@@ -166,7 +166,7 @@ model HomePrayerCard {
   tags         Json
   meta         Json
   detailsHref  String
-  voiceHref    String
+  voiceHref    String?
   sortOrder    Int                @default(0)
   categoryId   Int
   category     HomePrayerCategory @relation(fields: [categoryId], references: [id])

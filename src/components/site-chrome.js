@@ -118,7 +118,7 @@ export function SiteHeader({ activePath, hideAuthActions = false }) {
       <div className="navbar">
         <Link className="brand" href="/" prefetch={false}>
           <img className="brand-logo" src="/legacy/img/logo.png" alt="Prayer Coin logo" />
-          <span>Prayer Coin</span>
+          <span>Pray For U</span>
         </Link>
 
         <button
@@ -163,7 +163,7 @@ export function SiteHeader({ activePath, hideAuthActions = false }) {
                 </>
               ) : (
                 <>
-                  <Link href="/signup" prefetch={false} className="nav-link nav-link--primary" onClick={closeMenu}>
+                  <Link href="/signup" prefetch={false} className="nav-link nav-link--primary signup-white" onClick={closeMenu} >
                     註冊
                   </Link>
                   <Link href="/login" prefetch={false} className="nav-link nav-link--button" onClick={closeMenu}>

@@ -2,14 +2,9 @@
 
 export const metadata = {
   title: "Prayer Coin | 關於我們",
-  description: "認識 Prayer Coin 的使命、核心價值與團隊故事。"
+  // 優化：強調解決「無聲的呼求」與「不知如何回應」的困境
+  description: "認識 Prayer Coin 的使命、核心價值與團隊故事。我們正在將無聲的禱告，轉化為可被看見、被回應的溫暖行動。"
 };
-
-const heroChecklist = [
-  "建立安全的禱告發佈與回應流程，避免信息被遺忘",
-  "透過代幣鼓勵持續的陪伴與語音禱告",
-  "提供教會、機構、個人都能使用的開放生態"
-];
 
 const coreValues = [
   { title: "真實陪伴", description: "結合文字與語音禱告，讓彼此的生命故事被聽見，取代快速、片段的社群互動。" },
@@ -18,40 +13,48 @@ const coreValues = [
   { title: "合規守護", description: "遵循區域法規、重視資料隱私，確保每筆禱告、每次代幣交易都在安全環境中進行。" }
 ];
 
-const missionChecklist = [
-  "Beta 測試涵蓋 12 個國家、60+ 禱告小組",
-  "導入語音轉寫與自動代幣回饋機制",
-  "提供儀表板即時洞察祈禱影響力"
-];
 
 const imageHighlights = [
   {
-    src: "https://images.unsplash.com/photo-1515705576963-95cad62945b6?auto=format&fit=crop&w=900&q=80",
-    alt: "家庭禱告",
-    caption: "家庭守望：為彼此代禱與感謝"
+    src: "/img/categories/world.jpg",
+    alt: "世界局勢",
+    caption: "為了世界局勢和福音的廣傳，我們來禱告"
   },
   {
-    src: "https://images.unsplash.com/photo-1464998857633-50e59fbf2fe6?auto=format&fit=crop&w=900&q=80",
-    alt: "青年團契",
-    caption: "青年團契：用禱告陪伴尋找方向"
+    src: "/img/categories/personal.jpg",
+    alt: "個人狀況",
+    caption: "和彼得， 我們不願意漏掉任何一位"
   },
   {
-    src: "https://images.unsplash.com/photo-1496307042754-b4aa456c4a2d?auto=format&fit=crop&w=900&q=80",
-    alt: "跨文化宣教",
-    caption: "跨文化宣教：在不同語言中彼此祝福"
+    src: "/img/categories/gospel.jpg",
+    alt: "福音",
+    caption: "為了福音的廣傳"
   }
 ];
 
 const milestones = [
-  { title: "2024 Q4 · Private Beta", description: "完成第一版禱告牆、語音禱告與自動代幣發放流程。" },
-  { title: "2025 Q2 · Global Rollout", description: "推出行動版體驗、開放 API 與教會專屬儀表板。" },
-  { title: "2025 Q4 · DAO 試運轉", description: "啟動社群提案機制，代幣治理禱告專案資源分配。" }
+  { title: "2025 09 · Private Beta", description: "因為大失眠和禱告後的感覺，完成第一版禱告牆、語音禱告功能" },
+  { title: "2025 10 · Global Rollout", description: "準備推送至Github開源" },
+  { title: "2025 11 · Let's Pray for Everyone", description: "徵求管理和維運人才" }
 ];
 
-const teamFocuses = [
-  { title: "Product & UX", description: "設計友善的禱告體驗，協助用戶在 3 分鐘內完成分享與邀請。" },
-  { title: "Faith & Care", description: "牧養顧問為祈禱內容把關，提供情緒支援與危機轉介流程。" },
-  { title: "Blockchain & Data", description: "建構安全可靠的代幣機制與資料洞察，確保代幣流向透明。" }
+// 創建新的資訊結構，取代舊的 teamFocuses
+const engagementPoints = [
+    {
+        icon: "💖", // 捐款與支持圖標
+        title: "非營利模式與透明捐贈",
+        description: "Prayer Coin **不收取任何費用**。若您願意支持平臺運行，我們接受 **USDT** 或 Email 聯繫直接捐贈。您將收到平臺運營的**透明帳目報告**。"
+    },
+    {
+        icon: "🤝", // 合作與管理圖標
+        title: "社群管理員招募",
+        description: "我們歡迎有熱忱的夥伴加入管理團隊。管理員資格將依據個人在社群中的**貢獻度與服務意願**來評估與授予，共同守護這個溫暖的空間。"
+    },
+    {
+        icon: "⛪", // 教會合作圖標
+        title: "系統複製與教會合作",
+        description: "我們提供系統複製服務，讓您的教會組織也能擁有專屬的語音禱告平臺。請透過 Email 聯繫我們，瞭解詳細的**合作與技術支援方案**。"
+    }
 ];
 
 export default function AboutPage() {
@@ -60,31 +63,44 @@ export default function AboutPage() {
       <SiteHeader activePath="/about" />
 
       <main>
+        {/* --- 英雄區塊：強化痛點與解決方案 --- */}
         <section className="section hero hero-split">
           <div>
-            <span className="badge-soft">OUR STORY</span>
-            <h1>把禱告變成可被看見、被回應的行動</h1>
+            <span className="badge-soft">我們的故事 (OUR STORY)</span>
+            {/* 優化標題：直指痛點，點出解決方案的核心價值 */}
+            <h1>我們都在 Let's Pray For You !</h1>
             <p>
-              Prayer Coin 由一群熱衷禱告與科技的夥伴所組成，期待運用區塊鏈的透明與信任特性，凝聚世界各地的守望者。
-              我們相信每一個禱告都值得被紀錄、被回應，也值得在社群中看見真實的陪伴。
+              {/* 優化文案：更強調「無從開始幫助」的解決方案 */}
+              你需要別人的禱告嗎? 你想聽聽別人為你禱告和祝福嗎? 
+          
             </p>
-            <ul className="checklist">
-              {heroChecklist.map((item) => (
-                <li key={item}>{item}</li>
-              ))}
-            </ul>
           </div>
           <div className="hero-media">
             <img
-              src="https://images.unsplash.com/photo-1521737604893-d14cc237f11d?auto=format&fit=crop&w=1200&q=80"
+              src="/img/voice.png"
               alt="團隊禱告與協作"
             />
           </div>
         </section>
-
-        <section className="section">
+               <section className="section">
+          <div className="media-feature">
+            <div>
+              <span className="badge-soft">你曾經這樣嗎? </span>
+              <h2>有待禱事項，有心卻不知道從何禱告起? </h2>
+              <p>
+                {/* 優化文案：將痛點轉化為使命的起點 */}
+                只說一句阿們很敷衍，但我不知道怎麼更深層的幫助別人，或是進入他的負擔裡面，希望我能夠透過聲音和文字，更多的幫助和參與到這個事項中。
+              </p>
+            </div>
+            <img
+              src="img/pray.png"
+              alt="全球禱告社群"
+            />
+          </div>
+        </section>
+        {/* <section className="section">
           <h2>我們的核心價值</h2>
-          <p>從禱告到行動，我們以四個關鍵價值推動 Prayer Coin 的產品發展與社群文化。</p>
+          <p>從禱告到行動，我們以四個關鍵價值推動 Prayer Coin 的產品發展與社群文化。我們深知**真誠的陪伴**是解決冷漠的最佳良藥。</p>
           <div className="layout-grid columns-2" style={{ marginTop: "1.5rem" }}>
             {coreValues.map((value) => (
               <div key={value.title} className="gradient-card">
@@ -93,33 +109,16 @@ export default function AboutPage() {
               </div>
             ))}
           </div>
-        </section>
+        </section> */}
+
+        {/* --- 使命區塊：深化連結與影響力 --- */}
+       
 
         <section className="section">
-          <div className="media-feature">
-            <div>
-              <span className="badge-soft">MISSION</span>
-              <h2>從本地小組到全球祈禱網絡</h2>
-              <p>
-                Prayer Coin 的雛形來自於一個線上小組。疫情期間，我們經歷了遠距禱告的限制，因而開始思考：如何讓禱告不因距離而消失？如何記錄每一次回應的恩典？
-              </p>
-              <p>透過數位工具與代幣激勵，我們看見跨文化、跨城市的守望者相互扶持，也看見禱告所帶來的真實改變。</p>
-              <ul className="checklist">
-                {missionChecklist.map((item) => (
-                  <li key={item}>{item}</li>
-                ))}
-              </ul>
-            </div>
-            <img
-              src="https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=1200&q=80"
-              alt="全球禱告社群"
-            />
-          </div>
-        </section>
-
-        <section className="section">
-          <h2>祈禱網絡剪影</h2>
-          <p>實際禱告情境示意，圖像取自 Unsplash 免授權素材，用於呈現未來內容配置的靈感。</p>
+          <h2>禱告事項</h2>
+          <p>
+            您將會看到這樣的真實光景：**每一個需要幫助的人，都會有回應的聲音。
+          </p>
           <div className="image-grid" style={{ marginTop: "1.5rem" }}>
             {imageHighlights.map((item) => (
               <div key={item.caption} className="image-card">
@@ -132,7 +131,7 @@ export default function AboutPage() {
 
         <section className="section">
           <h2>發展里程碑</h2>
-          <p>我們正在邁向開放治理與更廣泛的全球合作，每一個里程碑都是社群共同的成果。</p>
+          <p>我們正在邁向開放治理與更廣泛的全球合作，每一個里程碑都是社群共同的成果，**確保平臺能長遠、可靠地承載每一個生命的需求**。</p>
           <div className="timeline">
             {milestones.map((milestone) => (
               <div key={milestone.title} className="timeline-item">
@@ -143,19 +142,19 @@ export default function AboutPage() {
           </div>
         </section>
 
-        <section className="section">
-          <h2>團隊焦點</h2>
-          <p>
-            Prayer Coin 由產品設計、牧養輔導、資料工程與區塊鏈專家組成。我們也持續招募對禱告有負擔、擅長行動設計與資料分析的夥伴加入。
-          </p>
-          <div className="layout-grid columns-3" style={{ marginTop: "1.5rem" }}>
-            {teamFocuses.map((focus) => (
-              <div key={focus.title} className="gradient-card">
-                <strong>{focus.title}</strong>
-                <p>{focus.description}</p>
-              </div>
-            ))}
-          </div>
+        {/* --- 新增區塊：參與方式與透明承諾 (取代舊的團隊焦點) --- */}
+        <section className="section section-large"> {/* section-large 讓這個重要區塊上下留白更多 */}
+            <h2 className="text-center">參與方式與透明承諾</h2>
+            <p className="text-center lead-text">Prayer Coin 是一個以奉獻為基礎的平臺。我們不收費，但邀請您以不同方式成為這個使命的一部分。</p>
+            <div className="icon-grid columns-3" style={{ marginTop: "2.5rem" }}> {/* 替換為 icon-grid，讓圖標和文字更集中 */}
+                {engagementPoints.map((point) => (
+                    <div key={point.title} className="card-icon-top card-shadow-hover"> {/* 增加 card-shadow-hover 增加互動性 */}
+                        <div className="icon-lg icon-theme-color">{point.icon}</div> {/* 使用 emoji 作為圖標，並設定主題色 */}
+                        <strong>{point.title}</strong>
+                        <p>{point.description}</p>
+                    </div>
+                ))}
+            </div>
         </section>
       </main>
 
