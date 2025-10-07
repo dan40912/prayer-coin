@@ -7,12 +7,6 @@ import { readActiveCategories } from "@/lib/homeCategories";
 import { readHomeCards } from "@/lib/homeCards";
 export const dynamic = "force-dynamic";
 
-const heroChecklist = [
-  "即時掌握祈禱需求與回應進度",
-  "將禱告行動轉換為可追蹤的社會影響",
-  "Dashboard 隨時更新社群指標與資源流向",
-];
-
 export default async function HomePage() {
   const [banner, categories, topCards] = await Promise.all([
     readBanner(),
@@ -57,11 +51,7 @@ export default async function HomePage() {
                 </Link>
               ) : null}
             </div>
-            <ul className="hero__checklist">
-              {heroChecklist.map((item, idx) => (
-                <li key={idx}>{item}</li>
-              ))}
-            </ul>
+
           </div>
         </section>
 
@@ -70,8 +60,8 @@ export default async function HomePage() {
           initialCards={topCards}
         />
 
-        <section className="section bg-light-flow" id="platform-intro">
-  <div className="section__container text-center">
+  <section className="section bg-light-flow" id="platform-intro">
+    <div className="section__container text-center">
     {/* 標題與簡介 */}
     <h2>Let's Pray</h2>
     <p className="intro-text">

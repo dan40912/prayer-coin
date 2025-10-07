@@ -76,17 +76,43 @@ export default function PrayerAudioPlayer({ requestId }) {
       audio.src = sourceUrl;
       audio.currentTime = 0;
 
+      const advanceToNext = () => {
+        const tracks = playlistRef.current;
+        const nextIndex = index + 1;
+
+        if (isLoop && tracks.length > 0) {
+          void playTrackAt(nextIndex % tracks.length);
+          return;
+        }
+
+        if (nextIndex >= tracks.length) {
+          const endedAudio = audioRef.current;
+          if (endedAudio) {
+            endedAudio.pause();
+            try {
+              endedAudio.currentTime = 0;
+            } catch (setTimeError) {
+              console.warn("無法重設音訊時間", setTimeError);
+            }
+          }
+          setIsPaused(true);
+          return;
+        }
+
+        void playTrackAt(nextIndex);
+      };
+
       audio.onloadedmetadata = () => {
         if (!audio.duration || audio.duration === Infinity || audio.duration === 0) {
           console.warn("略過 duration=0 的音訊", { track });
-          playTrackAt(index + 1);
+          advanceToNext();
         }
       };
 
-      audio.onended = () => playTrackAt(index + 1);
+      audio.onended = advanceToNext;
       audio.onerror = () => {
         console.warn("音訊播放失敗，略過", { track });
-        playTrackAt(index + 1);
+        advanceToNext();
       };
 
       currentIndexRef.current = index;
@@ -99,8 +125,8 @@ export default function PrayerAudioPlayer({ requestId }) {
         setError("");
         return true;
       } catch (err) {
-        console.warn("play failed, skip", { error: err });
-        playTrackAt(index + 1);
+        console.warn("播放失敗，嘗試播放下一則", { error: err });
+        advanceToNext();
         return false;
       }
     },

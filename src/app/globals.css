@@ -3015,7 +3015,7 @@ textarea.form-control:focus {
 
 .hero--full .hero__content {
   position: relative;
-  max-width: 680px;
+
   display: grid;
   gap: 1.1rem;
   animation: heroFade 1.2s ease-out forwards;
