@@ -133,6 +133,52 @@
   gap: 1.5rem;
 }
 
+.pray-article__content {
+  display: grid;
+  gap: 1.25rem;
+  color: var(--text-primary);
+  line-height: 1.7;
+}
+
+.pray-article__content p {
+  margin: 0;
+}
+
+.pray-article__content h2,
+.pray-article__content h3,
+.pray-article__content h4,
+.pray-article__content h5,
+.pray-article__content h6 {
+  margin: 0;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.pray-article__content ul,
+.pray-article__content ol {
+  margin: 0;
+  padding-left: 1.5rem;
+  display: grid;
+  gap: 0.5rem;
+}
+
+.pray-article__content li {
+  line-height: 1.6;
+}
+
+.pray-article__content blockquote {
+  margin: 0;
+  padding-left: 1rem;
+  border-left: 4px solid var(--border-strong);
+  color: var(--text-secondary);
+}
+
+.pray-article__content img {
+  max-width: 100%;
+  border-radius: 12px;
+  height: auto;
+}
+
 .pray-article__lead {
   margin: 0;
   font-size: 1.05rem;

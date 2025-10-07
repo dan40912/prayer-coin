@@ -8,6 +8,7 @@ import ShareButton from "@/components/ShareButton";
 import PrayerRequestActions from "@/components/PrayerRequestActions";
 import { readHomeCard, readRelatedHomeCards } from "@/lib/homeCards";
 import { slugify } from "@/lib/slugify";
+import { sanitizeHtmlForDisplay, sanitizeHtmlToPlainText } from "@/lib/htmlSanitizer";
 
 import "@/styles/prayer-detail.css";
 
@@ -53,7 +54,10 @@ export async function generateMetadata({ params }) {
   console.log("[PrayerDetail] generateMetadata card", { id: parsed.id, found: Boolean(card) });
   if (!card) return {};
 
-  const description = card.description || formatMeta(card.meta).join(" • ");
+  const metaItems = formatMeta(card.meta);
+  const descriptionText = sanitizeHtmlToPlainText(card.description);
+  const combinedMeta = metaItems.join(" • ");
+  const description = descriptionText || combinedMeta;
   return {
     title: `${card.title} ｜ Prayer Coin`,
     description: description || "邀請一起為這份需要代禱。",
@@ -101,6 +105,8 @@ export default async function PrayerDetailPage({ params }) {
     : undefined;
 
   const metaItems = formatMeta(card.meta);
+  const descriptionHtml = sanitizeHtmlForDisplay(card.description);
+  const descriptionPlainText = sanitizeHtmlToPlainText(card.description);
   const owner = card.owner ?? null;
   const ownerIdValue = owner?.id ? String(owner.id) : null;
   const ownerName = owner?.name?.trim() || "匿名發起人";
@@ -126,7 +132,7 @@ export default async function PrayerDetailPage({ params }) {
                 cardId={card.id}
                 canonicalUrl={canonical}
                 title={card.title}
-                description={card.description || metaItems.join("、")}
+                description={descriptionPlainText || metaItems.join("、")}
                 reportCount={card.reportCount ?? 0}
               />
             </div>
@@ -157,7 +163,12 @@ export default async function PrayerDetailPage({ params }) {
             ) : null}
 
             <div className="pray-article__body">
-              {card.description ? <p className="pray-article__lead">{card.description}</p> : null}
+              {descriptionHtml ? (
+                <div
+                  className="pray-article__content"
+                  dangerouslySetInnerHTML={{ __html: descriptionHtml }}
+                />
+              ) : null}
 
               {metaItems.length ? (
                 <div className="pray-article__meta">
