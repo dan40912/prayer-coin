@@ -205,7 +205,8 @@ export default function PrayerAudioPlayer({ requestId }) {
       window.removeEventListener(PRAYER_AUDIO_START_EVENT, handleExternalStart);
     };
   }, [requestId, startPlayback]);
-const togglePause = async () => {
+
+  const togglePause = async () => {
     const audio = audioRef.current;
     if (!audio) return;
     if (audio.paused) {
@@ -218,7 +219,7 @@ const togglePause = async () => {
   };
 
   const closeModal = () => {
-    setIsModalOpen(false);
+    resetPlaybackState();
   };
 
   const stopPlayback = () => {
@@ -248,7 +249,12 @@ const togglePause = async () => {
           <div className="pray-audio-modal__backdrop" onClick={closeModal} />
           <div className="pray-audio-modal__card pray-audio-modal__card--player">
             <div className="pray-audio-modal__player">
-              <button type="button" className="pray-audio-modal__close" onClick={closeModal}>
+              <button
+                type="button"
+                className="pray-audio-modal__close"
+                onClick={closeModal}
+                aria-label="關閉播放視窗"
+              >
                 ×
               </button>
 

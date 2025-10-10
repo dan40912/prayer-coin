@@ -1,6 +1,5 @@
-﻿import prisma from './prisma';
-import { slugify } from './slugify';
-import { buildOvercomerSlug } from './overcomer';
+import prisma from "./prisma";
+import { buildOvercomerSlug } from "./overcomer";
 
 const RESPONSES_TAKE = 20;
 const CARDS_TAKE = 12;
@@ -15,30 +14,37 @@ const OVERCOMER_SELECT = {
   createdAt: true,
   homePrayerCards: {
     where: { isBlocked: false },
-    orderBy: { createdAt: 'desc' },
+    orderBy: { createdAt: "desc" },
     take: CARDS_TAKE,
     select: {
       id: true,
       title: true,
       description: true,
       image: true,
+      alt: true,
+      detailsHref: true,
       updatedAt: true,
       _count: { select: { responses: true } },
     },
   },
   prayerResponses: {
     where: { isBlocked: false, homeCardId: { not: null } },
-    orderBy: { createdAt: 'desc' },
+    orderBy: { createdAt: "desc" },
     take: RESPONSES_TAKE,
     select: {
       id: true,
       message: true,
       voiceUrl: true,
+      reportCount: true,
       createdAt: true,
       homeCard: {
         select: {
           id: true,
           title: true,
+          image: true,
+          alt: true,
+          detailsHref: true,
+          slug: true,
         },
       },
     },
@@ -47,7 +53,7 @@ const OVERCOMER_SELECT = {
 
 export async function readOvercomerProfile(username) {
   const raw = username?.trim();
-  console.log('[overcomer] readOvercomerProfile input', raw);
+  console.log("[overcomer] readOvercomerProfile input", raw);
   if (!raw) return null;
 
   const normalized = raw.toLowerCase();
@@ -56,12 +62,12 @@ export async function readOvercomerProfile(username) {
   try {
     user = await prisma.user.findFirst({
       where: {
-        username: { equals: normalized, mode: 'insensitive' },
+        username: { equals: normalized, mode: "insensitive" },
       },
       select: OVERCOMER_SELECT,
     });
   } catch (error) {
-    console.warn('[overcomer] findFirst failed, fallback to findUnique', error);
+    console.warn("[overcomer] findFirst failed, fallback to findUnique", error);
     user = await prisma.user.findUnique({
       where: { username: normalized },
       select: OVERCOMER_SELECT,
@@ -69,7 +75,7 @@ export async function readOvercomerProfile(username) {
   }
 
   if (!user) {
-    console.log('[overcomer] readOvercomerProfile result', null);
+    console.log("[overcomer] readOvercomerProfile result", null);
     return null;
   }
 
@@ -79,7 +85,7 @@ export async function readOvercomerProfile(username) {
     homePrayerCards: user.homePrayerCards ?? [],
     prayerResponses: user.prayerResponses ?? [],
   };
-  console.log('[overcomer] readOvercomerProfile result', {
+  console.log("[overcomer] readOvercomerProfile result", {
     id: enriched.id,
     username: enriched.username,
     slug: enriched.slug,
@@ -91,14 +97,11 @@ export async function readOvercomerProfile(username) {
 
 export function buildOvercomerCardPath(card) {
   if (!card?.id) return null;
-  const title = card.title || '祈禱卡片';
-  return `/prayfor/${card.id}+${slugify(title)}`;
+  return `/prayfor/${card.id}`;
 }
 
 export function buildOvercomerResponsePath(response) {
   const card = response?.homeCard;
   if (!card?.id) return null;
-  const title = card.title || '祈禱卡片';
-  return `/prayfor/${card.id}+${slugify(title)}`;
+  return `/prayfor/${card.id}`;
 }
-

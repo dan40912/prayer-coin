@@ -5,14 +5,18 @@ import { SiteFooter, SiteHeader } from "@/components/site-chrome";
 import { readBanner } from "@/lib/banner";
 import { readActiveCategories } from "@/lib/homeCategories";
 import { readHomeCards } from "@/lib/homeCards";
+import { readHomeStats } from "@/lib/homeStats";
 export const dynamic = "force-dynamic";
 
 export default async function HomePage() {
-  const [banner, categories, topCards] = await Promise.all([
+  const [banner, categories, topCards, stats] = await Promise.all([
     readBanner(),
     readActiveCategories(),
-    readHomeCards({ sort: "responses", limit: 6 })
+    readHomeCards({ sort: "responses", limit: 6 }),
+    readHomeStats()
   ]);
+
+  const { totalPrayerCards, totalUsers, totalVoiceResponses } = stats;
 
   return (
     <>
@@ -52,6 +56,29 @@ export default async function HomePage() {
               ) : null}
             </div>
 
+          </div>
+        </section>
+
+        <section className="section home-stats" aria-label="平台統計數據">
+          <div className="home-stats__container">
+            <article className="home-stats__item">
+              <span className="home-stats__icon" aria-hidden="true">🙏</span>
+              <span className="home-stats__label">總禱告事項</span>
+              <strong className="home-stats__value">{totalPrayerCards.toLocaleString("zh-TW")}</strong>
+              <p className="home-stats__hint">匯聚全球迫切需要的代禱焦點</p>
+            </article>
+            <article className="home-stats__item">
+              <span className="home-stats__icon" aria-hidden="true">🫶</span>
+              <span className="home-stats__label">總註冊用戶</span>
+              <strong className="home-stats__value">{totalUsers.toLocaleString("zh-TW")}</strong>
+              <p className="home-stats__hint">一起禱告、陪伴與關心的同行者</p>
+            </article>
+            <article className="home-stats__item">
+              <span className="home-stats__icon" aria-hidden="true">🎧</span>
+              <span className="home-stats__label">總錄音回復</span>
+              <strong className="home-stats__value">{totalVoiceResponses.toLocaleString("zh-TW")}</strong>
+              <p className="home-stats__hint">被聽見、被記錄的祝福與回應</p>
+            </article>
           </div>
         </section>
 

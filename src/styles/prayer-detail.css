@@ -888,18 +888,32 @@
 
 .pray-audio-modal__close {
   position: absolute;
-  top: 0.5rem;
-  right: 0.5rem;
+  top: 0.4rem;
+  right: 0.4rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.75rem;
+  height: 2.75rem;
   background: transparent;
   border: none;
-  font-size: 1.5rem;
+  border-radius: 999px;
+  font-size: 2rem;
   line-height: 1;
   cursor: pointer;
   color: var(--text-secondary);
+  transition: transform 0.18s ease, color 0.18s ease, background-color 0.18s ease;
+  z-index: 2;
 }
 
-.pray-audio-modal__close:hover {
+.pray-audio-modal__close:hover,
+.pray-audio-modal__close:focus-visible {
   color: var(--accent);
+  background-color: rgba(37, 99, 235, 0.12);
+}
+
+.pray-audio-modal__close:active {
+  transform: scale(0.92);
 }
 
 .pray-audio-modal__playlist {

@@ -31,11 +31,12 @@ function buildWhereClause({ categorySlug, categoryId, search }) {
 
   const normalizedQuery = search?.trim();
   if (normalizedQuery) {
+    const makeContainsFilter = () => ({ contains: normalizedQuery });
     and.push({
       OR: [
-        { title: { contains: normalizedQuery, mode: "insensitive" } },
-        { description: { contains: normalizedQuery, mode: "insensitive" } },
-        { category: { name: { contains: normalizedQuery, mode: "insensitive" } } }
+        { title: makeContainsFilter() },
+        { description: makeContainsFilter() },
+        { category: { name: makeContainsFilter() } }
       ]
     });
   }

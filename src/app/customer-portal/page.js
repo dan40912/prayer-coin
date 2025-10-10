@@ -166,12 +166,9 @@ function buildShareUrl(card) {
     return origin ? `${origin}/${path}` : `/${path}`;
   }
 
-  // 3. Fallback to a canonical prayfor route using id + slug when possible.
-  const slug = card?.slug || card?.id;
-  if (slug) {
-    const idAndSlug = card.id && card.slug ? `${card.id}+${card.slug}` : slug;
-    const pathValue = `prayfor/${idAndSlug}`;
-
+  // 3. Fallback to a canonical prayfor route using the numeric id.
+  if (card?.id) {
+    const pathValue = `prayfor/${card.id}`;
     return origin ? `${origin}/${pathValue}` : `/${pathValue}`;
   }
 
@@ -208,14 +205,15 @@ export default function CustomerPortalPage() {
 
 
   const [cards, setCards] = useState([]);
-
   const [cardsLoading, setCardsLoading] = useState(true);
-
   const [cardsError, setCardsError] = useState("");
-
   const [cardAction, setCardAction] = useState(null);
 
 
+  const [responses, setResponses] = useState([]);
+  const [responsesLoading, setResponsesLoading] = useState(true);
+  const [responsesError, setResponsesError] = useState("");
+  const [responseAction, setResponseAction] = useState(null);
 
   const [toast, setToast] = useState(null);
 
@@ -369,10 +367,32 @@ export default function CustomerPortalPage() {
     }
   }, []);
 
+  const loadResponses = useCallback(async () => {
+    setResponsesLoading(true);
+    setResponsesError("");
+
+    try {
+      const res = await fetch("/api/customer/responses", { cache: "no-store" });
+      const data = await res.json().catch(() => null);
+
+      if (!res.ok) {
+        throw new Error(data?.message || "無法載入個人回應。");
+      }
+
+      setResponses(Array.isArray(data) ? data : []);
+    } catch (error) {
+      console.error("載入個人回應發生錯誤:", error);
+      setResponsesError(error.message || "無法載入個人回應。");
+    } finally {
+      setResponsesLoading(false);
+    }
+  }, []);
+
   useEffect(() => {
     loadProfile();
     loadCards();
-  }, [loadProfile, loadCards]);
+    loadResponses();
+  }, [loadProfile, loadCards, loadResponses]);
 
   useEffect(() => {
     if (!toast) return;
@@ -658,6 +678,45 @@ export default function CustomerPortalPage() {
 
 
 
+
+  const handleToggleResponseVisibility = async (reply) => {
+    if (!reply?.id) {
+      return;
+    }
+
+    setResponseAction({ id: reply.id, type: "visibility" });
+
+    try {
+      const res = await fetch(`/api/customer/responses/${reply.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ isBlocked: !reply.isBlocked }),
+      });
+
+      const data = await res.json().catch(() => null);
+
+      if (!res.ok) {
+        throw new Error(data?.message || "無法更新回應顯示狀態。");
+      }
+
+      setResponses((prev) =>
+        prev.map((item) => (item.id === data.id ? data : item)),
+      );
+      setToast({
+        type: "success",
+        message: data.isBlocked ? "回應已隱藏" : "回應已恢復顯示",
+      });
+    } catch (error) {
+      console.error("更新回應顯示狀態時發生錯誤:", error);
+      setToast({
+        type: "error",
+        message: error.message || "無法更新回應顯示狀態。",
+      });
+    } finally {
+      setResponseAction(null);
+    }
+  };
+
   const renderCards = () => {
     if (cardsLoading) {
       return <p className="cp-helper">祈禱卡載入中...</p>;
@@ -689,7 +748,8 @@ export default function CustomerPortalPage() {
           const canManage = !card.isBlocked;
           const statusLabel = card.isBlocked ? "已封存" : "已公開";
           const coverAlt = card.alt || `${card.title || "祈禱卡"} 封面`;
-          const shareDisabled = !buildShareUrl(card);
+          const shareHref = buildShareUrl(card);
+          const shareDisabled = !shareHref;
 
           return (
             <article
@@ -698,13 +758,26 @@ export default function CustomerPortalPage() {
             >
               <div className="cp-card__layout">
                 <div className="cp-card__cover">
-                  {card.image ? (
+                  {shareHref ? (
+                    <a
+                      href={shareHref}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      aria-label={`\u6AA2\u8996 ${card.title || "\u7948\u79B1\u5361\u7247"}`}
+                      style={{ display: "block" }}
+                    >
+                      {card.image ? (
+                        <img src={card.image} alt={coverAlt} loading="lazy" />
+                      ) : (
+                        <div className="cp-card__placeholder">{"\u5C1A\u7121\u5C01\u9762"}</div>
+                      )}
+                    </a>
+                  ) : card.image ? (
                     <img src={card.image} alt={coverAlt} loading="lazy" />
                   ) : (
-                    <div className="cp-card__placeholder">尚無封面</div>
+                    <div className="cp-card__placeholder">{"\u5C1A\u7121\u5C01\u9762"}</div>
                   )}
                 </div>
-
                 <div className="cp-card__content">
                   <div className="cp-card__header">
                     <div className="cp-card__title">
@@ -783,6 +856,136 @@ export default function CustomerPortalPage() {
 
 
 
+
+
+
+
+  const renderResponses = () => {
+    if (responsesLoading) {
+      return <p className="cp-helper">個人回應載入中...</p>;
+    }
+
+    if (responsesError) {
+      return <p className="cp-alert cp-alert--error">{responsesError}</p>;
+    }
+
+    if (!responses.length) {
+      return <p className="cp-helper">尚未發表任何個人回應。</p>;
+    }
+
+    return (
+      <div className="cp-replies">
+        {responses.map((reply) => {
+          const cardTitle = reply?.homeCard?.title || "祈禱卡片";
+          const shareHref = reply?.homeCard?.id ? buildShareUrl(reply.homeCard) : "";
+          const showShareLink = Boolean(shareHref);
+          const isToggling =
+            responseAction?.id === reply.id && responseAction?.type === "visibility";
+          const reportCount = reply.reportCount ?? 0;
+          const publishedAt = formatTime(reply.createdAt);
+          const cardImage = reply.homeCard?.image;
+          const cardAlt = reply.homeCard?.alt || `${cardTitle} 封面`;
+
+          return (
+            <article
+              key={reply.id}
+              className={`cp-reply${reply.isBlocked ? " cp-reply--muted" : ""}`}
+            >
+              <div className="cp-reply__header">
+                <div className="cp-reply__card">
+                  {cardImage ? (
+                    <img src={cardImage} alt={cardAlt} className="cp-reply__thumb" loading="lazy" />
+                  ) : (
+                    <span className="cp-reply__thumb cp-reply__thumb--placeholder" aria-hidden="true">🙏</span>
+                  )}
+                  <div className="cp-reply__card-info">
+                    <h3>{cardTitle}</h3>
+                    {showShareLink ? (
+                      <Link href={shareHref} prefetch={false} className="cp-link">
+                        查看代禱事項
+                      </Link>
+                    ) : null}
+                  </div>
+                </div>
+                <span className={`cp-status${reply.isBlocked ? " cp-status--inactive" : ""}`}>
+                  {reply.isBlocked ? "已隱藏" : "已顯示"}
+                </span>
+              </div>
+
+              {reply.message ? (
+                <p className="cp-reply__content">{reply.message}</p>
+              ) : null}
+
+              {reply.voiceUrl ? (
+                <audio
+                  className="cp-reply__audio"
+                  controls
+                  preload="none"
+                  src={reply.voiceUrl}
+                >
+                  您的瀏覽器不支援音訊播放。
+                </audio>
+              ) : null}
+
+              <div className="cp-reply__footer">
+                <div className="cp-reply__meta">
+                  <span>發佈時間：{publishedAt}</span>
+                  <span>檢舉數：{reportCount}</span>
+                </div>
+                <div className="cp-reply__actions">
+                  <button
+                    type="button"
+                    className="cp-link cp-link--muted"
+                    onClick={() => handleToggleResponseVisibility(reply)}
+                    disabled={isToggling}
+                  >
+                    {isToggling ? "切換中..." : reply.isBlocked ? "顯示" : "隱藏"}
+                  </button>
+                </div>
+              </div>
+            </article>
+          );
+        })}
+      </div>
+    );
+  };
+
+  const userStats = useMemo(() => {
+    const list = Array.isArray(cards) ? cards : [];
+    const totalCards = list.length;
+
+    let totalResponses = 0;
+    let totalReports = 0;
+
+    for (const card of list) {
+      const cardResponses =
+        card?._count?.responses ??
+        card?.responsesCount ??
+        (Array.isArray(card?.responses) ? card.responses.length : 0);
+      const cardReports =
+        card?.reportCount ??
+        card?._count?.reports ??
+        (Array.isArray(card?.reports) ? card.reports.length : 0);
+
+      const numericResponses = Number(cardResponses);
+      const numericReports = Number(cardReports);
+
+      totalResponses += Number.isFinite(numericResponses) ? numericResponses : 0;
+      totalReports += Number.isFinite(numericReports) ? numericReports : 0;
+    }
+
+    return { totalCards, totalResponses, totalReports };
+  }, [cards]);
+
+  const renderUserStatValue = (value) => {
+    if (cardsError) {
+      return "載入失敗";
+    }
+    if (cardsLoading) {
+      return "載入中...";
+    }
+    return value.toLocaleString("zh-TW");
+  };
 
 
   return (
@@ -874,7 +1077,7 @@ export default function CustomerPortalPage() {
                     href="/customer-portal/create"
                     prefetch={false}
                   >
-                    新增祈禱卡
+                    新增代禱事項
                   </Link>
                 </div>
               </div>
@@ -882,41 +1085,36 @@ export default function CustomerPortalPage() {
 
 
 
-            <section className="cp-hero">
-              <div className="cp-hero__content">
-                <p className="cp-badge">Member Workspace</p>
-                <h1>客戶祈禱中心</h1>
-                <p>
-                  在這裡管理你的祈禱卡，更新內容、追蹤狀態並與社群共享代禱需要。
-                </p>
-                <div className="cp-hero__actions">
-                  <Link
-                    className="cp-button"
-                    href="/customer-portal/create"
-                    prefetch={false}
-                  >
-                    建立祈禱卡
-                  </Link>
-                  <Link
-                    className="cp-button cp-button--ghost"
-                    href="/customer-portal/edit"
-                    prefetch={false}
-                  >
-                    檢視我的清單
-                  </Link>
-                </div>
-              </div>
-              <div className="cp-hero__stats">
-                <div className="cp-stat">
-                  <span>祈禱卡</span>
-                  <strong>{cards.length}</strong>
-                </div>
-                <div className="cp-stat">
-                  <span>封存數</span>
-                  <strong>{cards.filter((card) => card.isBlocked).length}</strong>
-                </div>
+            <section className="section home-stats" aria-label="我的平台統計數據">
+              <div className="home-stats__container">
+                {/* <article className="home-stats__item">
+                  <span className="home-stats__icon" aria-hidden="true">👤</span>
+                  <span className="home-stats__label">登入使用者</span>
+                  <strong className="home-stats__value">{resolvedName}</strong>
+                  <p className="home-stats__hint">{resolvedEmail}</p>
+                </article> */}
+                <article className="home-stats__item">
+                  <span className="home-stats__icon" aria-hidden="true">🙏</span>
+                  <span className="home-stats__label">代禱事項</span>
+                  <strong className="home-stats__value">{renderUserStatValue(userStats.totalCards)}</strong>
+                  <p className="home-stats__hint">您曾建立的代禱事項總數</p>
+                </article>
+                <article className="home-stats__item">
+                  <span className="home-stats__icon" aria-hidden="true">🎧</span>
+                  <span className="home-stats__label">禱告錄音</span>
+                  <strong className="home-stats__value">{renderUserStatValue(userStats.totalResponses)}</strong>
+                  <p className="home-stats__hint">收到的禱告錄音回應</p>
+                </article>
+                <article className="home-stats__item">
+                  <span className="home-stats__icon" aria-hidden="true">⚠️</span>
+                  <span className="home-stats__label">被檢舉數</span>
+                  <strong className="home-stats__value">{renderUserStatValue(userStats.totalReports)}</strong>
+                  <p className="home-stats__hint">累計的檢舉紀錄</p>
+                </article>
               </div>
             </section>
+
+            
 
 
 
@@ -926,9 +1124,9 @@ export default function CustomerPortalPage() {
 
                 <div>
 
-                  <h2>我的祈禱卡片</h2>
+                  <h2>我的代禱事項</h2>
 
-                  <p>編輯、分享、隱藏祈禱卡片，掌握你的禱告旅程。</p>
+                  <p>編輯、分享、隱藏代禱事項，掌握你的禱告旅程。</p>
 
                 </div>
 
@@ -952,6 +1150,17 @@ export default function CustomerPortalPage() {
 
               {renderCards()}
 
+            </section>
+
+            <section className="cp-section cp-section--replies">
+              <div className="cp-section__head">
+                <div>
+                  <h2>我的個人回應</h2>
+                  <p>檢視並管理您曾為代禱事項留下的文字與音訊回應。</p>
+                </div>
+              </div>
+
+              {renderResponses()}
             </section>
 
           </>
@@ -1163,6 +1372,12 @@ export default function CustomerPortalPage() {
   );
 
 }
+
+
+
+
+
+
 
 
 

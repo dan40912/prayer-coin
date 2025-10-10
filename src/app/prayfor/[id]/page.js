@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { notFound, redirect } from "next/navigation";
+import { notFound } from "next/navigation";
 
 import { SiteFooter, SiteHeader } from "@/components/site-chrome";
 import Comments from "@/components/Comments";
@@ -7,7 +7,6 @@ import PrayerAudioPlayer from "@/components/PrayerAudioPlayer";
 import ShareButton from "@/components/ShareButton";
 import PrayerRequestActions from "@/components/PrayerRequestActions";
 import { readHomeCard, readRelatedHomeCards } from "@/lib/homeCards";
-import { slugify } from "@/lib/slugify";
 import { sanitizeHtmlForDisplay, sanitizeHtmlToPlainText } from "@/lib/htmlSanitizer";
 
 import "@/styles/prayer-detail.css";
@@ -30,15 +29,15 @@ function formatMeta(meta = []) {
   return Array.isArray(meta) ? meta.filter(Boolean) : [];
 }
 
-function parseIdAndSlug(idAndSlug = "") {
-  if (!idAndSlug || typeof idAndSlug !== "string") return null;
-  const decoded = decodeURIComponent(idAndSlug.trim());
-  if (!decoded) return null;
-  const [rawId, ...slugParts] = decoded.split("+");
-  const id = Number(rawId);
+function parseId(paramValue) {
+  const raw = typeof paramValue === "string" ? paramValue.trim() : "";
+  if (!raw) return null;
+  const value = raw.split("%2B").join("+"); // tolerate encoded plus signs
+  const match = value.match(/^(\d+)/);
+  if (!match) return null;
+  const id = Number(match[1]);
   if (!Number.isInteger(id) || id <= 0) return null;
-  const slug = slugParts.length ? slugParts.join("+") : null;
-  return { id, slug };
+  return id;
 }
 
 function getOwnerInitial(name) {
@@ -46,12 +45,12 @@ function getOwnerInitial(name) {
 }
 
 export async function generateMetadata({ params }) {
-  console.log("[PrayerDetail] generateMetadata params", params?.idAndSlug);
-  const parsed = parseIdAndSlug(params?.idAndSlug);
-  if (!parsed) return {};
+  console.log("[PrayerDetail] generateMetadata params", params?.id);
+  const id = parseId(params?.id);
+  if (!id) return {};
 
-  const card = await readHomeCard(parsed.id);
-  console.log("[PrayerDetail] generateMetadata card", { id: parsed.id, found: Boolean(card) });
+  const card = await readHomeCard(id);
+  console.log("[PrayerDetail] generateMetadata card", { id, found: Boolean(card) });
   if (!card) return {};
 
   const metaItems = formatMeta(card.meta);
@@ -70,25 +69,19 @@ export async function generateMetadata({ params }) {
 }
 
 export default async function PrayerDetailPage({ params }) {
-  console.log("[PrayerDetail] params raw", params?.idAndSlug);
-  const parsed = parseIdAndSlug(params?.idAndSlug);
-  console.log("[PrayerDetail] parsed", parsed);
+  console.log("[PrayerDetail] params raw", params?.id);
+  const id = parseId(params?.id);
+  console.log("[PrayerDetail] parsed", id);
 
-  if (!parsed) {
+  if (!id) {
     return notFound();
   }
 
-  const card = await readHomeCard(parsed.id);
-  console.log("[PrayerDetail] card", { id: parsed.id, found: Boolean(card) });
+  const card = await readHomeCard(id);
+  console.log("[PrayerDetail] card", { id, found: Boolean(card) });
 
   if (!card) {
     return notFound();
-  }
-
-  const canonicalSlug = slugify(card.title);
-  if (parsed.slug && parsed.slug !== canonicalSlug) {
-    console.log("[PrayerDetail] redirecting canonical slug", { from: parsed.slug, to: canonicalSlug });
-    redirect(`/prayfor/${card.id}+${canonicalSlug}`);
   }
 
   const relatedCards = (await readRelatedHomeCards(card.id, 3)).filter(
@@ -96,7 +89,7 @@ export default async function PrayerDetailPage({ params }) {
   );
   console.log("[PrayerDetail] relatedCards", relatedCards.map((item) => item?.id));
 
-  const canonical = `/prayfor/${card.id}+${canonicalSlug}`;
+  const canonical = `/prayfor/${card.id}`;
 
   const heroStyle = card.image
     ? {
@@ -230,7 +223,7 @@ export default async function PrayerDetailPage({ params }) {
               relatedCards.map((item) => (
                 <li key={item.id}>
                   <SafeLink
-                    href={item?.id ? `/prayfor/${item.id}+${slugify(item.title)}` : undefined}
+                    href={item?.id ? `/prayfor/${item.id}` : undefined}
                     prefetch={false}
                     className="pray-related__item"
                   >
