@@ -7,6 +7,13 @@ import { readActiveCategories } from "@/lib/homeCategories";
 import { readHomeCards } from "@/lib/homeCards";
 export const dynamic = "force-dynamic";
 
+export const metadata = {
+  title: "Start Pray | 禱告中心 | 禱告幣",
+  // 優化：強調解決「無聲的呼求」與「不知如何回應」的困境
+  description: "探索祈禱與影響力，上傳錄音，聲歷其境，循環撥放，獲得代幣，追蹤影響力。",
+};
+
+
 const heroChecklist = [
   "即時掌握祈禱需求與回應進度",
   "將禱告行動轉換為可追蹤的社會影響",
@@ -34,51 +41,7 @@ export default async function HomePage() {
           initialCards={topCards}
         />
 
-        <section className="section bg-light-flow" id="platform-intro">
-  <div className="section__container text-center">
-    {/* 標題與簡介 */}
-    <h2>Let's Pray</h2>
-    <p className="intro-text">
-      Let's Pray 是一個創新的代禱與影響力平台。我們將傳統的善意與現代科技結合，讓您的每一個行動，都能被量化、被追蹤、並產生真實的社會效益。
-    </p>
-
-    {/* 三個特色小格 (col-4 / Feature Cards) */}
-    <div className="feature-grid-3">
-      {/* 特色 1：上傳錄音 */}
-      <div className="feature-item">
-        <span className="icon-circle">🎙️</span>
-        <h3>上傳錄音</h3>
-        <p>無論是個人的代禱、祝福、或是集氣宣言，透過簡短錄音將您的心意傳遞給全世界。</p>
-      </div>
-
-      {/* 特色 2：聲歷其境 (社群共鳴) */}
-      <div className="feature-item">
-        <span className="icon-circle">👂</span>
-        <h3>聲歷其境</h3>
-        <p>聆聽來自不同社群與專案的真實需求，感受最迫切的呼求，讓愛與關懷零距離。</p>
-      </div>
-
-      {/* 特色 3：獲得代幣 (追蹤影響力) */}
-      <div className="feature-item">
-        <span className="icon-circle">🪙</span>
-        <h3>訂閱追蹤</h3>
-        <p>全球代禱或特定代禱事項都可以通知您，立刻參與集氣</p>
-      </div>
-    </div>
-
-    {/* 導引按鈕 */}
-    <div className="cta-register">
-      <Link
-        href="/signup" // 假設您的註冊頁面是 /signup
-        className="button button--large button--primary"
-        prefetch={false}
-      >
-        立即加入
-      </Link>
-    </div>
-  </div>
-</section>
-            <section className="section bg-gradient-power" id="universal-power">
+   <section className="section bg-gradient-power" id="universal-power">
   <div className="section__container">
     <div className="content-grid-2">
       <div className="content-text">

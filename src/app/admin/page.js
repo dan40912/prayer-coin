@@ -36,8 +36,8 @@ export default function AdminLoginPage() {
   const handleSubmit = async (event) => {
     event.preventDefault();
 
-    if (twoFactor.trim() !== "123456") {
-      setError("二階段驗證碼錯誤，請輸入 123456。");
+    if (twoFactor.trim() !== "199405") {
+      setError("二階段驗證碼錯誤");
       return;
     }
 
@@ -82,7 +82,7 @@ export default function AdminLoginPage() {
         <div className="admin-auth__brand">
           <Image
             src="/legacy/img/logo.png"
-            alt="Prayer Coin"
+            alt="Start Pray"
             width={56}
             height={56}
             className="admin-auth__logo"

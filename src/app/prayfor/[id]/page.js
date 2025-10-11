@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { notFound, redirect } from "next/navigation";
+import { notFound } from "next/navigation";
 
 import { SiteFooter, SiteHeader } from "@/components/site-chrome";
 import Comments from "@/components/Comments";
@@ -7,7 +7,7 @@ import PrayerAudioPlayer from "@/components/PrayerAudioPlayer";
 import ShareButton from "@/components/ShareButton";
 import PrayerRequestActions from "@/components/PrayerRequestActions";
 import { readHomeCard, readRelatedHomeCards } from "@/lib/homeCards";
-import { slugify } from "@/lib/slugify";
+import { sanitizeHtmlForDisplay, sanitizeHtmlToPlainText } from "@/lib/htmlSanitizer";
 
 import "@/styles/prayer-detail.css";
 
@@ -29,15 +29,15 @@ function formatMeta(meta = []) {
   return Array.isArray(meta) ? meta.filter(Boolean) : [];
 }
 
-function parseIdAndSlug(idAndSlug = "") {
-  if (!idAndSlug || typeof idAndSlug !== "string") return null;
-  const decoded = decodeURIComponent(idAndSlug.trim());
-  if (!decoded) return null;
-  const [rawId, ...slugParts] = decoded.split("+");
-  const id = Number(rawId);
+function parseId(paramValue) {
+  const raw = typeof paramValue === "string" ? paramValue.trim() : "";
+  if (!raw) return null;
+  const value = raw.split("%2B").join("+"); // tolerate encoded plus signs
+  const match = value.match(/^(\d+)/);
+  if (!match) return null;
+  const id = Number(match[1]);
   if (!Number.isInteger(id) || id <= 0) return null;
-  const slug = slugParts.length ? slugParts.join("+") : null;
-  return { id, slug };
+  return id;
 }
 
 function getOwnerInitial(name) {
@@ -45,17 +45,20 @@ function getOwnerInitial(name) {
 }
 
 export async function generateMetadata({ params }) {
-  console.log("[PrayerDetail] generateMetadata params", params?.idAndSlug);
-  const parsed = parseIdAndSlug(params?.idAndSlug);
-  if (!parsed) return {};
+  console.log("[PrayerDetail] generateMetadata params", params?.id);
+  const id = parseId(params?.id);
+  if (!id) return {};
 
-  const card = await readHomeCard(parsed.id);
-  console.log("[PrayerDetail] generateMetadata card", { id: parsed.id, found: Boolean(card) });
+  const card = await readHomeCard(id);
+  console.log("[PrayerDetail] generateMetadata card", { id, found: Boolean(card) });
   if (!card) return {};
 
-  const description = card.description || formatMeta(card.meta).join(" • ");
+  const metaItems = formatMeta(card.meta);
+  const descriptionText = sanitizeHtmlToPlainText(card.description);
+  const combinedMeta = metaItems.join(" • ");
+  const description = descriptionText || combinedMeta;
   return {
-    title: `${card.title} ｜ Prayer Coin`,
+    title: `${card.title} ｜ Start Pray`,
     description: description || "邀請一起為這份需要代禱。",
     openGraph: {
       title: card.title,
@@ -66,25 +69,19 @@ export async function generateMetadata({ params }) {
 }
 
 export default async function PrayerDetailPage({ params }) {
-  console.log("[PrayerDetail] params raw", params?.idAndSlug);
-  const parsed = parseIdAndSlug(params?.idAndSlug);
-  console.log("[PrayerDetail] parsed", parsed);
+  console.log("[PrayerDetail] params raw", params?.id);
+  const id = parseId(params?.id);
+  console.log("[PrayerDetail] parsed", id);
 
-  if (!parsed) {
+  if (!id) {
     return notFound();
   }
 
-  const card = await readHomeCard(parsed.id);
-  console.log("[PrayerDetail] card", { id: parsed.id, found: Boolean(card) });
+  const card = await readHomeCard(id);
+  console.log("[PrayerDetail] card", { id, found: Boolean(card) });
 
   if (!card) {
     return notFound();
-  }
-
-  const canonicalSlug = slugify(card.title);
-  if (parsed.slug && parsed.slug !== canonicalSlug) {
-    console.log("[PrayerDetail] redirecting canonical slug", { from: parsed.slug, to: canonicalSlug });
-    redirect(`/prayfor/${card.id}+${canonicalSlug}`);
   }
 
   const relatedCards = (await readRelatedHomeCards(card.id, 3)).filter(
@@ -92,7 +89,7 @@ export default async function PrayerDetailPage({ params }) {
   );
   console.log("[PrayerDetail] relatedCards", relatedCards.map((item) => item?.id));
 
-  const canonical = `/prayfor/${card.id}+${canonicalSlug}`;
+  const canonical = `/prayfor/${card.id}`;
 
   const heroStyle = card.image
     ? {
@@ -101,6 +98,8 @@ export default async function PrayerDetailPage({ params }) {
     : undefined;
 
   const metaItems = formatMeta(card.meta);
+  const descriptionHtml = sanitizeHtmlForDisplay(card.description);
+  const descriptionPlainText = sanitizeHtmlToPlainText(card.description);
   const owner = card.owner ?? null;
   const ownerIdValue = owner?.id ? String(owner.id) : null;
   const ownerName = owner?.name?.trim() || "匿名發起人";
@@ -126,7 +125,7 @@ export default async function PrayerDetailPage({ params }) {
                 cardId={card.id}
                 canonicalUrl={canonical}
                 title={card.title}
-                description={card.description || metaItems.join("、")}
+                description={descriptionPlainText || metaItems.join("、")}
                 reportCount={card.reportCount ?? 0}
               />
             </div>
@@ -157,7 +156,12 @@ export default async function PrayerDetailPage({ params }) {
             ) : null}
 
             <div className="pray-article__body">
-              {card.description ? <p className="pray-article__lead">{card.description}</p> : null}
+              {descriptionHtml ? (
+                <div
+                  className="pray-article__content"
+                  dangerouslySetInnerHTML={{ __html: descriptionHtml }}
+                />
+              ) : null}
 
               {metaItems.length ? (
                 <div className="pray-article__meta">
@@ -219,7 +223,7 @@ export default async function PrayerDetailPage({ params }) {
               relatedCards.map((item) => (
                 <li key={item.id}>
                   <SafeLink
-                    href={item?.id ? `/prayfor/${item.id}+${slugify(item.title)}` : undefined}
+                    href={item?.id ? `/prayfor/${item.id}` : undefined}
                     prefetch={false}
                     className="pray-related__item"
                   >

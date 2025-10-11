@@ -193,7 +193,7 @@ export default function AdminLayout({ children }) {
     <div className="admin-shell">
       <aside className="admin-shell__sidebar">
         <div className="admin-shell__brand">
-          <Image src="/legacy/img/logo.png" alt="Prayer Coin logo" width={42} height={42} />
+          <Image src="/legacy/img/logo.png" alt="Start Pray logo" width={42} height={42} />
           <div>
             <p>PRAY COIN</p>
             <span>Admin 後台</span>

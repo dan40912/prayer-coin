@@ -4,15 +4,15 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Prayer Coin | 禱告詳情總覽</title>
+  <title>Start Pray | 禱告詳情總覽</title>
   <link rel="stylesheet" href="../css/wireframe.css">
 </head>
 <body>
   <header>
     <div class="navbar">
       <a class="brand" href="../index.html">
-        <img class="brand-logo" src="../img/logo.png" alt="Prayer Coin logo">
-        <span>Prayer Coin</span>
+        <img class="brand-logo" src="../img/logo.png" alt="Start Pray logo">
+        <span>Start Pray</span>
       </a>
       <nav class="nav-links">
         <a href="../index.html">首頁</a>
@@ -697,7 +697,7 @@
   </main>
   <footer>
     <div class="footer-inner">
-      <span>© 2025 Prayer Coin. All rights reserved.</span>
+      <span>© 2025 Start Pray. All rights reserved.</span>
       <div class="social-links">
         <span class="tag-chip">Facebook</span>
         <span class="tag-chip">Instagram</span>

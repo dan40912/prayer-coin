@@ -1,234 +1,191 @@
 ﻿import { SiteFooter, SiteHeader } from "@/components/site-chrome";
 
-const HERO_STATS = [
-  { label: "Beta 上線", value: "2025 Q2" },
-  { label: "活躍祈禱室", value: "320+" },
-  { label: "影響力金流", value: "NT" }
-];
+export const metadata = {
+  title: "Start Pray | 白皮書 | 免責聲明 | 禱告幣",
+  // 優化：強調解決「無聲的呼求」與「不知如何回應」的困境
+  description: "PRAY COIN 技術路線圖：從中心化到去中心化我們的發展分為四個階段，旨在逐步提升平台的透明度、可信度與用戶內容的永久性。",
+};
 
-const MISSION_PILLARS = [
+
+const TERMS_SECTIONS = [
   {
-    title: "祈禱室網絡",
-    description:
-      "協助牧者、社群領袖建立在地化祈禱室，透過模組化工具收集需求、回應與代禱更新。"
+    title: "服務定位",
+    body:
+      "Start Pray 為祈禱與影響力連結的數位平台，旨在協助社群組織、教會與公益專案以透明方式呈現需求與成果。平台不提供任何金融投資或保證收益。"
   },
   {
-    title: "透明影響力",
-    description:
-      "以 Impact Ledger 記錄資源流向與成果證明，支援捐款稽核、志工時數與社會影響評估。"
+    title: "使用原則",
+    items: [
+      "使用者應確保所提交之祈禱、資料與討論符合所在地法律與社群準則。",
+      "平台所呈現之影響力數據僅供參考，並非法律、財務或醫療專業建議。",
+      "任何捐款或資源動員行動請依組織內部審核流程辦理，Start Pray 不介入資金保管。"
+    ]
   },
   {
-    title: "使命型代幣",
-    description:
-      "Prayer Coin (PCN) 作為社群協作激勵，連結禱告、志願服務與資源挹注的代幣經濟。"
+    title: "責任限制",
+    body:
+      "對於使用者於平台上之互動、留言、連結或第三方整合所造成的損失，Start Pray 與其合作夥伴不承擔任何直接或間接責任。"
   }
 ];
 
-const TOKEN_SECTIONS = [
+const RISK_CARDS = [
   {
-    heading: "代幣用途",
-    bullets: [
-      "解鎖祈禱室進階工具與 API 存取",
-      "作為 Impact 專案的治理與投票憑證",
-      "激勵志工、代禱夥伴與教會推動者"
-    ]
+    heading: "技術風險",
+    description:
+      "雖採用雲端備援與資安檢測，仍可能因硬體故障、網路中斷或第三方服務異常導致資料延遲或暫時無法存取。"
   },
   {
-    heading: "發行模型",
-    bullets: [
-      "初始供給：1 億枚，4 年線性釋出",
-      "20% 生態激勵、15% 技術研發、10% 影響力基金",
-      "剩餘配置將進入 DAO 庫存，由治理投票支用"
-    ]
+    heading: "法遵風險",
+    description:
+      "各國宗教、公益與金融相關法規差異甚大，使用者應依所在地之法律完成必要申報、稅務與治理程序。"
   },
   {
-    heading: "法遵架構",
-    bullets: [
-      "採用 RegTech 夥伴監控交易異常，符合 AML/KYT",
-      "遵循台灣、歐盟與美國 NGO 與慈善相關規範",
-      "於主要市場委任法律顧問與會計師事務所"
-    ]
+    heading: "內容風險",
+    description:
+      "平台提供檢舉、審核機制，但無法保證所有內容皆即時驗證；如遇冒用、詐欺請即刻通知客服團隊。"
+  },
+  {
+    heading: "合作風險",
+    description:
+      "與第三方 API、支付、外部社群之連結僅為便利性提供，Start Pray 不對其服務品質作任何保證。"
   }
 ];
 
-const ARCHITECTURE_LAYERS = [
-  {
-    layer: "體驗層",
-    description:
-      "Next.js + React Server Components 建構前台體驗，搭配多語系、行動端優化與可及性 AA 標準。"
-  },
-  {
-    layer: "應用層",
-    description:
-      "採微服務設計，包含祈禱室、Impact Ledger、通知中心、KYC 驗證與內容審核工作流。"
-  },
-  {
-    layer: "資料層",
-    description:
-      "以 PostgreSQL 與 ClickHouse 分別處理交易與分析資料，重要資訊採用 KMS 加密與 Tokenization。"
-  },
-  {
-    layer: "區塊鏈層",
-    description:
-      "Polygon PoS 為主要發行網路，並透過跨鏈橋接支援 TRON 與 Stellar 的低手續費場景。"
-  }
+const PRIVACY_ITEMS = [
+  "平台依《個人資料保護法》蒐集、處理與利用使用者資料，僅於提供祈禱媒合與影響力呈現目的範圍內使用。",
+  "未經同意不會出售或出租個資，惟於法令要求、司法調查或為保護使用者權益時得提供必要資訊。",
+  "使用者得隨時透過 legal@prayercoin.app 請求查閱、更正或刪除相關紀錄。"
 ];
 
-const ROADMAP_PHASES = [
-  {
-    quarter: "2025 Q2",
-    title: "Beta Launch",
-    items: [
-      "啟動封測祈禱室與 Impact Ledger",
-      "完成祈禱需求審核 SOP 與客服流程",
-      "釋出第一版 PCN 發行白皮書"
-    ]
-  },
-  {
-    quarter: "2025 Q3",
-    title: "Growth",
-    items: [
-      "上線行動 App 與即時推播",
-      "導入多國法遵指南與付款通路",
-      "推行社群大使與志工激勵計畫"
-    ]
-  },
-  {
-    quarter: "2025 Q4",
-    title: "Network",
-    items: [
-      "開放開發者 API 與小組專案模板",
-      "整合更多 Denomination 與教派夥伴",
-      "引進 ESG 報告模組與第三方保證"
-    ]
-  },
-  {
-    quarter: "2026",
-    title: "DAO 與開放治理",
-    items: [
-      "成立 Prayer DAO，治理行動與基金配置",
-      "釋出 SDK 與 UI 套件，協助夥伴自建應用",
-      "導入可驗證祈禱紀錄（Verifiable Prayer Proof）"
-    ]
-  }
-];
 
 export default function WhitepaperPage() {
   return (
     <>
       <SiteHeader activePath="/whitepaper" />
       <main className="whitepaper-page">
-        <section className="whitepaper-hero">
-          <div>
-            <p className="whitepaper-hero__eyebrow">Prayer Coin Whitepaper</p>
-            <h1>為全球祈禱社群打造的影響力經濟體</h1>
-            <p>
-              我們將祈禱、志工與捐助數據化，藉由代幣經濟與透明治理，讓每一次代禱都能看見成果與被賦能的生命故事。
-            </p>
-            <div className="whitepaper-hero__actions">
-              <a href="#token" className="button button--primary">
-                查看代幣模型
-              </a>
-              <a href="#roadmap" className="button button--ghost">
-                探索 Roadmap
-              </a>
-            </div>
-          </div>
-          <aside className="whitepaper-hero__stats">
-            {HERO_STATS.map((stat) => (
-              <div key={stat.label}>
-                <span>{stat.label}</span>
-                <strong>{stat.value}</strong>
-              </div>
-            ))}
-          </aside>
-        </section>
+ <section id="tech-roadmap">
+<div className="roadmap-header">
+<h2>PRAY COIN 技術路線圖：從中心化到去中心化</h2>
+<p>我們的發展分為四個階段，旨在逐步提升平台的透明度、可信度與用戶內容的永久性。</p>
+{/* 突出顯示當前階段 */}
+<div className="current-status-tag">
+目前階段：Phase 0（中心化啟動）
+</div>
+</div>
 
-        <section className="whitepaper-section" id="mission">
-          <h2>使命與願景</h2>
-          <p>
-            Prayer Coin 致力於將祈禱行動與實際影響連結，讓全球教會、宣教士與 NGO 能在同一個平台協作、互相代禱並共享資源。透過資料驅動的儀表板與代幣激勵機制，我們要讓善的循環更快被看見。
-          </p>
-          <div className="whitepaper-grid whitepaper-grid--three">
-            {MISSION_PILLARS.map((pillar) => (
-              <article key={pillar.title} className="whitepaper-card">
-                <h3>{pillar.title}</h3>
-                <p>{pillar.description}</p>
+<div className="roadmap-stages-container">
+
+{/* Phase 0: 中心化啟動 (CURRENT) */}
+<div className="roadmap-stage current-stage" data-phase="0">
+  <div className="stage-title-wrap">
+    <span className="stage-label">Phase 0</span>
+    <h3 className="stage-title">中心化啟動</h3>
+  </div>
+  <div className="stage-content">
+    <p className="stage-goal">
+      **現階段：** 平台已上線並運作。所有帳戶和交易都集中儲存在我們的資料庫中，包含模擬的 PRAY COIN 餘額。
+    </p>
+    <p className="stage-focus">
+      **核心重點：** 快速啟動、最小可行產品 (MVP)。所有信任度基於我們的隱私和透明政策。
+    </p>
+    <p className="stage-risk">
+      **風險/挑戰：** 中心化依賴；用戶信任度需靠政策維護。
+    </p>
+  </div>
+</div>
+
+{/* Phase 1: 數位資產發行 (NEXT) */}
+<div className="roadmap-stage next-stage" data-phase="1">
+  <div className="stage-title-wrap">
+    <span className="stage-label">Phase 1</span>
+    <h3 className="stage-title">數位資產發行</h3>
+  </div>
+  <div className="stage-content">
+    <p className="stage-goal">
+      **目標：** 在 Binance Smart Chain (BSC) 上正式發行 PRAY COIN 代幣。代幣具備公開的經濟模型、多重簽名管理和專業審計。
+    </p>
+    <p className="stage-focus">
+      **核心重點：** 發行官方數位貨幣。代幣可在市場上流通，但用戶的內容和資料仍集中管理。
+    </p>
+    <p className="stage-risk">
+      **風險/挑戰：** 代幣發行與合規性、市場流動性。
+    </p>
+  </div>
+</div>
+
+{/* Phase 2: 內容混合上鏈 */}
+<div className="roadmap-stage" data-phase="2">
+  <div className="stage-title-wrap">
+    <span className="stage-label">Phase 2</span>
+    <h3 className="stage-title">內容混合上鏈</h3>
+  </div>
+  <div className="stage-content">
+    <p className="stage-goal">
+      **目標：** 透過將用戶的音訊/文字內容的「指紋」（CID 或 Hash）寫入區塊鏈，來驗證內容的真實性和時間戳。
+    </p>
+    <p className="stage-focus">
+      **核心重點：** 內容不可竄改性。內容檔案儲存在去中心化儲存（如 IPFS），確保內容來源可驗證。
+    </p>
+    <p className="stage-risk">
+      **風險/挑戰：** 混合架構的複雜性、資料同步。
+    </p>
+  </div>
+</div>
+
+{/* Phase 3: 永久透明與治理 */}
+<div className="roadmap-stage" data-phase="3">
+  <div className="stage-title-wrap">
+    <span className="stage-label">Phase 3</span>
+    <h3 className="stage-title">永久透明與治理</h3>
+  </div>
+  <div className="stage-content">
+    <p className="stage-goal">
+      **目標：** 內容實現永久去中心化儲存 (Arweave 等)。建立驗證器供公眾查詢，並讓社群能參與平台決策（治理）。
+    </p>
+    <p className="stage-focus">
+      **核心重點：** 永久保存與社群自治。最大限度地提升平台的透明度和去中心化程度。
+    </p>
+    <p className="stage-risk">
+      **風險/挑戰：** 儲存成本、去中心化治理實施。
+    </p>
+  </div>
+</div>
+
+</div>
+</section>
+  <section className="legal-section">
+          <h2>平台服務與免責聲明</h2>
+          <div className="legal-grid legal-grid--two">
+            {TERMS_SECTIONS.map((section) => (
+              <article key={section.title} className="legal-card">
+                <h3>{section.title}</h3>
+                {section.body ? <p>{section.body}</p> : null}
+                {section.items ? (
+                  <ul>
+                    {section.items.map((item) => (
+                      <li key={item}>{item}</li>
+                    ))}
+                  </ul>
+                ) : null}
               </article>
             ))}
           </div>
         </section>
 
-        <section className="whitepaper-section" id="token">
-          <div className="whitepaper-section__header">
-            <h2>代幣設計概覽 (PCN)</h2>
-            <p>
-              PCN 代幣旨在鼓勵祈禱室生態系的互助與透明治理；所有發行、分配與銷毀資訊將於鏈上公開，並接受第三方審計。
-            </p>
-          </div>
-          <div className="whitepaper-grid whitepaper-grid--three">
-            {TOKEN_SECTIONS.map((section) => (
-              <article key={section.heading} className="whitepaper-card whitepaper-card--outline">
-                <h3>{section.heading}</h3>
-                <ul>
-                  {section.bullets.map((item) => (
-                    <li key={item}>{item}</li>
-                  ))}
-                </ul>
+        <section className="legal-section">
+          <h2>主要風險揭露</h2>
+          <div className="legal-grid legal-grid--four">
+            {RISK_CARDS.map((card) => (
+              <article key={card.heading} className="legal-card legal-card--emphasis">
+                <h3>{card.heading}</h3>
+                <p>{card.description}</p>
               </article>
             ))}
           </div>
         </section>
 
-        <section className="whitepaper-section" id="architecture">
-          <h2>技術與治理架構</h2>
-          <div className="whitepaper-steps">
-            {ARCHITECTURE_LAYERS.map((layer) => (
-              <div key={layer.layer} className="whitepaper-step">
-                <span>{layer.layer}</span>
-                <p>{layer.description}</p>
-              </div>
-            ))}
-          </div>
-        </section>
+        
 
-        <section className="whitepaper-section" id="roadmap">
-          <h2>產品 Roadmap</h2>
-          <div className="whitepaper-roadmap">
-            {ROADMAP_PHASES.map((phase) => (
-              <article key={phase.quarter}>
-                <header>
-                  <span>{phase.quarter}</span>
-                  <h3>{phase.title}</h3>
-                </header>
-                <ul>
-                  {phase.items.map((item) => (
-                    <li key={item}>{item}</li>
-                  ))}
-                </ul>
-              </article>
-            ))}
-          </div>
-        </section>
-
-        <section className="whitepaper-section" id="download">
-          <div className="whitepaper-download">
-            <div>
-              <h2>取得完整白皮書</h2>
-              <p>
-                立即下載 PDF 與概覽簡報，取得代幣經濟、技術規格、治理架構與公開審計計畫的詳細資訊。
-              </p>
-            </div>
-            <div className="whitepaper-download__actions">
-              <a className="button button--primary" href="/legacy/whitepaper.pdf">
-                下載 PDF 版本
-              </a>
-              <a className="button button--ghost" href="mailto:partnership@prayercoin.app">
-                聯絡合作夥伴
-              </a>
-            </div>
-          </div>
-        </section>
       </main>
       <SiteFooter />
     </>

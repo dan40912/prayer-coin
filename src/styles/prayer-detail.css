@@ -133,6 +133,52 @@
   gap: 1.5rem;
 }
 
+.pray-article__content {
+  display: grid;
+  gap: 1.25rem;
+  color: var(--text-primary);
+  line-height: 1.7;
+}
+
+.pray-article__content p {
+  margin: 0;
+}
+
+.pray-article__content h2,
+.pray-article__content h3,
+.pray-article__content h4,
+.pray-article__content h5,
+.pray-article__content h6 {
+  margin: 0;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.pray-article__content ul,
+.pray-article__content ol {
+  margin: 0;
+  padding-left: 1.5rem;
+  display: grid;
+  gap: 0.5rem;
+}
+
+.pray-article__content li {
+  line-height: 1.6;
+}
+
+.pray-article__content blockquote {
+  margin: 0;
+  padding-left: 1rem;
+  border-left: 4px solid var(--border-strong);
+  color: var(--text-secondary);
+}
+
+.pray-article__content img {
+  max-width: 100%;
+  border-radius: 12px;
+  height: auto;
+}
+
 .pray-article__lead {
   margin: 0;
   font-size: 1.05rem;
@@ -842,18 +888,32 @@
 
 .pray-audio-modal__close {
   position: absolute;
-  top: 0.5rem;
-  right: 0.5rem;
+  top: 0.4rem;
+  right: 0.4rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.75rem;
+  height: 2.75rem;
   background: transparent;
   border: none;
-  font-size: 1.5rem;
+  border-radius: 999px;
+  font-size: 2rem;
   line-height: 1;
   cursor: pointer;
   color: var(--text-secondary);
+  transition: transform 0.18s ease, color 0.18s ease, background-color 0.18s ease;
+  z-index: 2;
 }
 
-.pray-audio-modal__close:hover {
+.pray-audio-modal__close:hover,
+.pray-audio-modal__close:focus-visible {
   color: var(--accent);
+  background-color: rgba(37, 99, 235, 0.12);
+}
+
+.pray-audio-modal__close:active {
+  transform: scale(0.92);
 }
 
 .pray-audio-modal__playlist {

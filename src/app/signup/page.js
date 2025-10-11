@@ -4,7 +4,7 @@ import { SiteFooter, SiteHeader } from "@/components/site-chrome";
 import SignupForm from "./SignupForm";
 
 export const metadata = {
-  title: "Prayer Coin | 註冊帳戶",
+  title: "Start Pray | 註冊帳戶",
   description: "把你的聲音分享出去，讓別人聽見並回應，在陪伴中得到力量。"
 };
 
@@ -75,20 +75,20 @@ export default function SignupPage() {
                 ))}
               </div>
 
-              <div className="hero-stats">
+              {/* <div className="hero-stats">
                 {heroStats.map((stat) => (
                   <div key={stat.label} className="hero-stat">
                     <span>{stat.label}</span>
                     <strong>{stat.value}</strong>
                   </div>
                 ))}
-              </div>
+              </div> */}
             </section>
 
             {/* Signup Section */}
             <section className="auth-card">
               <div>
-                <h1>建立 Prayer Coin 帳戶</h1>
+                <h1>建立 Start Pray 帳戶</h1>
                 <p>
                   註冊後你可以立即錄下禱告，讓別人聽見並回應，從陪伴中獲得力量。
                 </p>
@@ -119,7 +119,7 @@ export default function SignupPage() {
             </section>
 
             {/* Side Notes */}
-            <aside className="auth-card">
+            {/* <aside className="auth-card">
               <div className="auth-note">
                 <strong>為什麼需要註冊？</strong>
                 <ul className="auth-meta-list">
@@ -136,7 +136,7 @@ export default function SignupPage() {
                   ))}
                 </ul>
               </div>
-            </aside>
+            </aside> */}
           </div>
         </div>
       </main>

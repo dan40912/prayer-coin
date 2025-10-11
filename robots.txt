@@ -1,0 +1,8 @@
+User-agent: *
+Disallow: /admin
+Disallow: /public
+Disallow: /public/voices
+
+Allow: /
+Allow: /prayfor/
+Allow: /overcomer/
