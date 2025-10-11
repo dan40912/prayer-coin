@@ -66,40 +66,12 @@ export default async function HomePage() {
           </div>
         </section>
 
-        <section className="section home-stats" aria-label="平台統計數據">
-          <div className="home-stats__container">
-            <article className="home-stats__item">
-              <span className="home-stats__icon" aria-hidden="true">🙏</span>
-              <span className="home-stats__label">總禱告事項</span>
-              <strong className="home-stats__value">{totalPrayerCards.toLocaleString("zh-TW")}</strong>
-              <p className="home-stats__hint">匯聚全球迫切需要的代禱焦點</p>
-            </article>
-            <article className="home-stats__item">
-              <span className="home-stats__icon" aria-hidden="true">🫶</span>
-              <span className="home-stats__label">總註冊用戶</span>
-              <strong className="home-stats__value">{totalUsers.toLocaleString("zh-TW")}</strong>
-              <p className="home-stats__hint">一起禱告、陪伴與關心的同行者</p>
-            </article>
-            <article className="home-stats__item">
-              <span className="home-stats__icon" aria-hidden="true">🎧</span>
-              <span className="home-stats__label">總錄音回復</span>
-              <strong className="home-stats__value">{totalVoiceResponses.toLocaleString("zh-TW")}</strong>
-              <p className="home-stats__hint">被聽見、被記錄的祝福與回應</p>
-            </article>
-          </div>
-        </section>
-
-        <HomePrayerExplorer
-          initialCategories={categories}
-          initialCards={topCards}
-        />
-
-  <section className="section bg-light-flow" id="platform-intro">
+         <section className="section bg-light-flow" id="platform-intro">
     <div className="section__container text-center">
     {/* 標題與簡介 */}
-    <h2>Let's Pray</h2>
+    <h2>Start Pray</h2>
     <p className="intro-text">
-      Let's Pray 是一個創新的代禱與影響力平台。我們將傳統的善意與現代科技結合，讓您的每一個行動，都能被量化、被追蹤、並產生真實的社會效益。
+      快點加入一起禱告吧，快速註冊開始幫別人禱告，也讓別人與你的負擔一起禱告! 
     </p>
 
     {/* 三個特色小格 (col-4 / Feature Cards) */}
@@ -129,7 +101,7 @@ export default async function HomePage() {
     {/* 導引按鈕 */}
     <div className="cta-register">
       <Link
-        href="/signup" // 假設您的註冊頁面是 /signup
+        href="/signup" 
         className="button button--large button--primary"
         prefetch={false}
       >
@@ -138,7 +110,36 @@ export default async function HomePage() {
     </div>
   </div>
 </section>
-            <section className="section bg-gradient-power" id="universal-power">
+        <section className="section home-stats" aria-label="平台統計數據">
+          <div className="home-stats__container">
+            <article className="home-stats__item">
+              <span className="home-stats__icon" aria-hidden="true">🙏</span>
+              <span className="home-stats__label">總禱告事項</span>
+              <strong className="home-stats__value">{totalPrayerCards.toLocaleString("zh-TW")}</strong>
+              <p className="home-stats__hint">匯聚全球迫切需要的代禱焦點</p>
+            </article>
+            <article className="home-stats__item">
+              <span className="home-stats__icon" aria-hidden="true">🫶</span>
+              <span className="home-stats__label">總註冊用戶</span>
+              <strong className="home-stats__value">{totalUsers.toLocaleString("zh-TW")}</strong>
+              <p className="home-stats__hint">一起禱告、陪伴與關心的同行者</p>
+            </article>
+            <article className="home-stats__item">
+              <span className="home-stats__icon" aria-hidden="true">🎧</span>
+              <span className="home-stats__label">總錄音回復</span>
+              <strong className="home-stats__value">{totalVoiceResponses.toLocaleString("zh-TW")}</strong>
+              <p className="home-stats__hint">被聽見、被記錄的祝福與回應</p>
+            </article>
+          </div>
+        </section>
+
+        <HomePrayerExplorer
+          initialCategories={categories}
+          initialCards={topCards}
+        />
+
+ 
+  <section className="section bg-gradient-power" id="universal-power">
   <div className="section__container">
     <div className="content-grid-2">
       <div className="content-text">

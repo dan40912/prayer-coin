@@ -15,7 +15,7 @@
 body {
   margin: 0;
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  background: var(--bg);
+  /* background: var(--bg); */
   color: var(--text-primary);
   line-height: 1.5;
 }
@@ -3005,17 +3005,20 @@ textarea.form-control:focus {
   color: #fff;
   background-size: cover;
   background-position: center;
+  align-items: center;
+  justify-content: center;
 }
 
 .hero--full .hero__overlay {
   position: absolute;
   inset: 0;
-  background: linear-gradient(120deg, rgba(18, 24, 78, 0.78), rgba(44, 57, 134, 0.55));
+   background:
+    linear-gradient(rgba(80, 50, 20, 0.6), rgba(120, 70, 40, 0.6) );
 }
 
 .hero--full .hero__content {
   position: relative;
-
+  place-items: center;
   display: grid;
   gap: 1.1rem;
   animation: heroFade 1.2s ease-out forwards;
@@ -6359,12 +6362,18 @@ header .nav-user {
   flex-direction: column;
   gap: 1.25rem;
 }
+.home-card:hover{
+  transform: translateY(-4px);
+  box-shadow: 0 22px 30px -24px rgba(37, 99, 235, 0.45);
+  border-color: rgba(37, 99, 235, 0.4);
+}
 
 .home-cards__header {
   display: flex;
   align-items: baseline;
   justify-content: space-between;
   gap: 1rem;
+  margin-top: 5vh;
 }
 
 .home-cards__header h3 {
