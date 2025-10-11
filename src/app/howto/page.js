@@ -2,7 +2,7 @@
 
 // 調整標題與描述，移除代幣相關字眼
 export const metadata = {
-  title: "Prayer Coin | 使用說明",
+  title: "Start Pray | 使用說明",
   description: "瞭解如何快速發起禱告需求、分享給守望夥伴，並追蹤回應進度與守望成果。"
 };
 
@@ -73,7 +73,7 @@ const imageExamples = [
 
 // 調整 faqCards 移除代幣/虛擬貨幣概念，並加入註冊與重複播放的相關問題
 const faqCards = [
-  { question: "如何開始使用 Prayer Coin？", answer: "您需要**註冊成為會員**才能發起禱告、留言及錄音。註冊程序僅需電子郵件或社群帳號驗證，過程快速簡便。" }, // 增加註冊相關內容
+  { question: "如何開始使用 Start Pray？", answer: "您需要**註冊成為會員**才能發起禱告、留言及錄音。註冊程序僅需電子郵件或社群帳號驗證，過程快速簡便。" }, // 增加註冊相關內容
   { question: "語音多久才算有效守望？", answer: "守望者錄音需超過 **10 秒**，才會被計入有效守望次數並累積影響力點數。未達門檻的音檔仍會儲存，方便您聆聽回顧。" }, // 調整影響力點數
   { question: "我可以刪除或修改禱告內容嗎？", answer: "發佈者可隨時切換「公開 / 私密」，或提交刪除申請。禱告的歷史記錄 (守望次數、影響力點數) 將保留於您的帳戶作為紀錄。" },
   { question: "錄音可以重複播放或修改嗎？", answer: "守望者送出錄音後，發起者與守望者都可**重複播放**。但為保持記錄的真實性，語音一經送出即無法修改或刪除，請謹慎錄製。" } // 增加重複播放與錄音修改的內容
@@ -140,7 +140,7 @@ export default function HowToPage() {
             <span className="badge-soft">使用指南</span>
             <h1>3 個步驟，啟動您的禱告任務與連結</h1>
             <p>
-              Prayer Coin 致力於讓代禱資訊清晰、有序地流動：從發起禱告、邀請守望者、到接收語音回應並看見守望的**實際影響力**。
+              Start Pray 致力於讓代禱資訊清晰、有序地流動：從發起禱告、邀請守望者、到接收語音回應並看見守望的**實際影響力**。
               我們將流程化繁為簡，拆成三個核心步驟，讓您快速掌握。
             </p>
             <ul className="checklist">
@@ -152,7 +152,7 @@ export default function HowToPage() {
           <div className="hero-media">
             <img
               src="https://images.unsplash.com/photo-1522202176988-66273c2fd55f?auto=format&fit=crop&w=1200&q=80"
-              alt="使用 Prayer Coin 的示意圖"
+              alt="使用 Start Pray 的示意圖"
             />
           </div>
         </section>
@@ -194,7 +194,7 @@ export default function HowToPage() {
         <section className="section soft-bg">
           <span className="badge-soft">如果您沒有信仰</span>
           <h2>我希望＿＿＿＿＿</h2>
-          <p>Prayer Coin 是一個支持與關懷的平台，不論您是否具有信仰，都可以用真誠的心來表達您的願望、祝福或給予支持。我們的核心價值是愛與陪伴。</p>
+          <p>Start Pray 是一個支持與關懷的平台，不論您是否具有信仰，都可以用真誠的心來表達您的願望、祝福或給予支持。我們的核心價值是愛與陪伴。</p>
           <div className="layout-grid columns-2" style={{ marginTop: "1.5rem" }}>
             <div className="gradient-card">
                 
@@ -232,7 +232,7 @@ export default function HowToPage() {
         </section>
 
         <section className="section">
-          <h2>Prayer Coin 不只是禱告：擴展你的任務類型</h2>
+          <h2>Start Pray 不只是禱告：擴展你的任務類型</h2>
           <p>除了傳統的信仰代禱，您也可以利用本平台的架構，來發起更廣泛的互助、資源募集或心靈支持任務。</p>
           <div className="icon-step-grid columns-3">
             {otherParticipation.map((item) => (

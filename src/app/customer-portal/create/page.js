@@ -134,7 +134,7 @@ export default function CustomerPortalCreatePage() {
 
     if (!files.length) return;
 
-    const availableSlots = 3 - uploadedImages.length;
+    const availableSlots = 1 - uploadedImages.length;
     if (availableSlots <= 0) {
       setStatus({ type: "error", message: "最多只能上傳三張圖片" });
       return;
@@ -381,7 +381,7 @@ export default function CustomerPortalCreatePage() {
                 accept="image/*"
                 multiple
                 onChange={handleFileChange}
-                disabled={isUploadingImage || uploadedImages.length >= 3}
+                disabled={isUploadingImage || uploadedImages.length >= 1}
               />
               <small className="cp-helper">支援 JPG、PNG、WEBP，單張上限 5MB，僅供封面挑選，不會直接顯示在內容中。</small>
             </label>

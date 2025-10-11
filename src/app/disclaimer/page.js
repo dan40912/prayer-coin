@@ -4,20 +4,20 @@ const TERMS_SECTIONS = [
   {
     title: "服務定位",
     body:
-      "Prayer Coin 為祈禱與影響力連結的數位平台，旨在協助社群組織、教會與公益專案以透明方式呈現需求與成果。平台不提供任何金融投資或保證收益。"
+      "Start Pray 為祈禱與影響力連結的數位平台，旨在協助社群組織、教會與公益專案以透明方式呈現需求與成果。平台不提供任何金融投資或保證收益。"
   },
   {
     title: "使用原則",
     items: [
       "使用者應確保所提交之祈禱、資料與討論符合所在地法律與社群準則。",
       "平台所呈現之影響力數據僅供參考，並非法律、財務或醫療專業建議。",
-      "任何捐款或資源動員行動請依組織內部審核流程辦理，Prayer Coin 不介入資金保管。"
+      "任何捐款或資源動員行動請依組織內部審核流程辦理，Start Pray 不介入資金保管。"
     ]
   },
   {
     title: "責任限制",
     body:
-      "對於使用者於平台上之互動、留言、連結或第三方整合所造成的損失，Prayer Coin 與其合作夥伴不承擔任何直接或間接責任。"
+      "對於使用者於平台上之互動、留言、連結或第三方整合所造成的損失，Start Pray 與其合作夥伴不承擔任何直接或間接責任。"
   }
 ];
 
@@ -40,7 +40,7 @@ const RISK_CARDS = [
   {
     heading: "合作風險",
     description:
-      "與第三方 API、支付、外部社群之連結僅為便利性提供，Prayer Coin 不對其服務品質作任何保證。"
+      "與第三方 API、支付、外部社群之連結僅為便利性提供，Start Pray 不對其服務品質作任何保證。"
   }
 ];
 
@@ -58,7 +58,7 @@ export default function DisclaimerPage() {
         <section className="legal-hero">
           <div>
             <p className="legal-hero__eyebrow">Legal Notice</p>
-            <h1>Prayer Coin 使用者免責聲明</h1>
+            <h1>Start Pray 使用者免責聲明</h1>
             <p>
               為保障祈禱社群與公益夥伴的透明信任，以下條款說明平台服務定位、使用責任與風險揭露。使用本服務即表示您同意並遵循本聲明。
             </p>

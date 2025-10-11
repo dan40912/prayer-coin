@@ -1,4 +1,4 @@
-import prisma from "./prisma";
+﻿import prisma from "./prisma";
 
 const CARD_DEFAULT_INCLUDE = {
   category: true,
@@ -97,12 +97,12 @@ export async function createHomeCard(payload = {}) {
   const cardOwnerId = payload.ownerId; 
 
    if (!cardOwnerId || typeof cardOwnerId !== 'string') {
-      // 根據您的 Prisma Schema，ownerId 是 String?，允許 NULL
-      // 但您的 POST 路由強制要求它必須存在，所以這裡應該是防禦性檢查。
-      // 建議: 如果您信任 sanitizeCreatePayload，這裡可以簡化。
+      // ?寞??函? Prisma Schema嚗wnerId ??String?嚗?閮?NULL
+      // 雿??POST 頝舐撘瑕閬?摰????剁??隞仿ㄐ?府?舫蝳行扳炎?乓?
+      // 撱箄降: 憒??其縑隞?sanitizeCreatePayload嚗ㄐ?臭誑蝪∪???
       console.warn("Owner ID missing or invalid in payload for DB creation.");
-      // 為了修復目前的 ReferenceError，我們將其設為 undefined/null 以匹配 Schema
-      // 但實際上，它應該在 sanitizeCreatePayload 中就已經檢查過。
+      // ?箔?靽桀儔?桀???ReferenceError嚗????嗉身??undefined/null 隞亙??Schema
+      // 雿祕??嚗??府??sanitizeCreatePayload 銝剖停撌脩?瑼Ｘ??
   }
 
   return prisma.homePrayerCard.create({
@@ -115,10 +115,10 @@ export async function createHomeCard(payload = {}) {
       tags: payload.tags || [],
       meta: payload.meta || [],
       detailsHref: payload.detailsHref || "",
-      voiceHref: payload.voiceHref || "", // 確保這裡不再使用 TEMP_VOICE_URL
+      voiceHref: payload.voiceHref || "", // 蝣箔??ㄐ銝?雿輻 TEMP_VOICE_URL
       categoryId: Number(payload.categoryId),
       
-      // ✅ 修正：使用 payload.ownerId，或上面定義的 cardOwnerId 變數
+      // ??靽格迤嚗蝙??payload.ownerId嚗?銝摰儔??cardOwnerId 霈
       ownerId: cardOwnerId, 
     },
     include: CARD_DEFAULT_INCLUDE
@@ -134,3 +134,5 @@ export async function readRelatedHomeCards(id, limit = 3) {
     include: CARD_DEFAULT_INCLUDE
   });
 }
+
+

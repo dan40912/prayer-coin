@@ -23,7 +23,7 @@ const PRIMARY_NAV = [
 
 const FOOTER_COLUMNS = [
   {
-    title: "Prayer Coin",
+    title: "Start Pray",
     links: [
       { href: "/", label: "首頁" },
       { href: "/about", label: "關於我們" },
@@ -113,8 +113,8 @@ export function SiteHeader({ activePath, hideAuthActions = false }) {
     <header>
       <div className="navbar">
         <Link className="brand" href="/" prefetch={false}>
-          <img className="brand-logo" src="/legacy/img/logo.png" alt="Prayer Coin logo" />
-          <span>Prayer Coin</span>
+          <img className="brand-logo" src="/legacy/img/logo.png" alt="Start Pray logo" />
+          <span>Start Pray</span>
         </Link>
         <nav className="nav-links">
           {navItems.map((item) => {
@@ -161,9 +161,9 @@ export function SiteFooter() {
       <div className="footer-inner">
         <div className="footer-top">
           <div className="footer-brand">
-            <img className="footer-logo" src="/legacy/img/logo.png" alt="Prayer Coin logo" />
+            <img className="footer-logo" src="/legacy/img/logo.png" alt="Start Pray logo" />
             <div>
-              <strong>Prayer Coin</strong>
+              <strong>Start Pray</strong>
               <p>以祈禱連結世界，整合代禱、媒體與行動。</p>
             </div>
           </div>
@@ -197,7 +197,7 @@ export function SiteFooter() {
           </div>
         </div>
         <div className="footer-bottom">
-          <span>&copy; 2025 Prayer Coin. All rights reserved.</span>
+          <span>&copy; 2025 Start Pray. All rights reserved.</span>
           <div className="footer-legal">
             <Link href="/whitepaper" prefetch={false}>
               白皮書

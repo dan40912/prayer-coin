@@ -82,7 +82,7 @@ export default function AdminLoginPage() {
         <div className="admin-auth__brand">
           <Image
             src="/legacy/img/logo.png"
-            alt="Prayer Coin"
+            alt="Start Pray"
             width={56}
             height={56}
             className="admin-auth__logo"

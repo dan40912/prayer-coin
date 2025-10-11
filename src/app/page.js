@@ -8,6 +8,13 @@ import { readHomeCards } from "@/lib/homeCards";
 import { readHomeStats } from "@/lib/homeStats";
 export const dynamic = "force-dynamic";
 
+export const metadata = {
+  title: "Start Pray | 開始禱告吧 | 上傳禱告錄音平台",
+  // 優化：強調解決「無聲的呼求」與「不知如何回應」的困境
+  description: "Start Pray 是一個創新的代禱與影響力平台。我們將代禱與現代科技結合，讓您的每一個禱告，都能讓主聽見和你聽見，讓從主來的聲音可以漫溢四處。",
+};
+
+
 export default async function HomePage() {
   const [banner, categories, topCards, stats] = await Promise.all([
     readBanner(),

@@ -131,12 +131,27 @@ export default function SignupForm() {
             </option>
             <option>台灣</option>
             <option>香港</option>
+            <option>中國</option>
             <option>新加坡</option>
             <option>馬來西亞</option>
             <option>美國</option>
-            <option>中國</option>
-            <option>日本</option>
-            <option>韓國</option>
+            <option>澳門</option>
+            <option>印尼</option>
+            <option>泰國</option>
+            <option>越南</option>
+            <option>菲律賓</option>
+            <option>汶萊</option>
+            <option>柬埔寨</option>
+            <option>寮國</option>
+            <option>緬甸</option>
+            <option>加拿大</option>
+            <option>紐西蘭</option>
+            <option>英國</option>
+            <option>法國</option>
+            <option>加拿大</option>
+            <option>南非</option>
+            <option>巴西</option>
+            <option>阿根廷</option>
             <option>其他</option>
           </select>
         </div>
@@ -217,8 +232,7 @@ export default function SignupForm() {
           className="form-label"
           style={{ fontWeight: 400, fontSize: "0.88rem", color: "var(--text-secondary)" }}
         >
-          我已詳閱並同意 <a href="/legacy/disclaimer" target="_blank" rel="noreferrer">免責聲明</a>、
-          <a href="#" target="_blank" rel="noreferrer">使用條款</a> 與 <a href="#" target="_blank" rel="noreferrer">隱私政策</a>。
+          我已詳閱並同意 <a href="/whitepaper" target="_blank" rel="noreferrer">免責聲、白皮書</a>
         </label>
       </div>
 

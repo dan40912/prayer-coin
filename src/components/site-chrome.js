@@ -23,7 +23,7 @@ const PRIMARY_NAV = [
 
 const FOOTER_COLUMNS = [
   {
-    title: "Prayer Coin",
+    title: "Start Pray",
     links: [
       { href: "/", label: "首頁" },
       { href: "/about", label: "關於我們" },
@@ -34,8 +34,8 @@ const FOOTER_COLUMNS = [
   {
     title: "資源",
     links: [
-      { href: "/whitepaper", label: "白皮書" },
-      { href: "/disclaimer", label: "免責聲明" },
+      { href: "/whitepaper", label: "白皮書&免責聲明" },
+      // { href: "/disclaimer", label: "免責聲明" },
       { href: "/legacy/prayfor/details", label: "祈禱牆" }
     ]
   },
@@ -44,7 +44,7 @@ const FOOTER_COLUMNS = [
     links: [
       { href: "/login", label: "登入" },
       { href: "/signup", label: "註冊" },
-      { href: "mailto:", label: "聯絡我們" }
+      { href: "mailto:startpraynow@gmail.com", label: "聯絡我們" }
     ]
   }
 ];
@@ -117,8 +117,8 @@ export function SiteHeader({ activePath, hideAuthActions = false }) {
     <header>
       <div className="navbar">
         <Link className="brand" href="/" prefetch={false}>
-          <img className="brand-logo" src="/legacy/img/logo.png" alt="Prayer Coin logo" />
-          <span>Pray For U</span>
+          <img className="brand-logo" src="/legacy/img/logo.png" alt="Start Pray logo" />
+          <span>Start Pray</span>
         </Link>
 
         <button
@@ -185,9 +185,9 @@ export function SiteFooter() {
       <div className="footer-inner">
         <div className="footer-top">
           <div className="footer-brand">
-            <img className="footer-logo" src="/legacy/img/logo.png" alt="Prayer Coin logo" />
+            <img className="footer-logo" src="/legacy/img/logo.png" alt="Start Pray logo" />
             <div>
-              <strong>Prayer Coin</strong>
+              <strong>Start Pray</strong>
               <p>以祈禱連結世界，整合代禱、媒體與行動。</p>
             </div>
           </div>
@@ -209,7 +209,7 @@ export function SiteFooter() {
               </div>
             ))}
           </div>
-          <div className="footer-social">
+          {/* <div className="footer-social">
             <span className="footer-title">社群</span>
             <div className="footer-social-links">
               {SOCIAL_LINKS.map((social) => (
@@ -218,17 +218,17 @@ export function SiteFooter() {
                 </a>
               ))}
             </div>
-          </div>
+          </div> */}
         </div>
         <div className="footer-bottom">
-          <span>&copy; 2025 Prayer Coin. All rights reserved.</span>
+          <span>&copy; 2025 Start Pray. All rights reserved.</span>
           <div className="footer-legal">
             <Link href="/whitepaper" prefetch={false}>
-              白皮書
+              白皮書&免責聲明
             </Link>
-            <Link href="/disclaimer" prefetch={false}>
+            {/* <Link href="/disclaimer" prefetch={false}>
               免責聲明
-            </Link>
+            </Link> */}
           </div>
         </div>
       </div>

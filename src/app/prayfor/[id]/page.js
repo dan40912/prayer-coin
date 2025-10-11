@@ -58,7 +58,7 @@ export async function generateMetadata({ params }) {
   const combinedMeta = metaItems.join(" • ");
   const description = descriptionText || combinedMeta;
   return {
-    title: `${card.title} ｜ Prayer Coin`,
+    title: `${card.title} ｜ Start Pray`,
     description: description || "邀請一起為這份需要代禱。",
     openGraph: {
       title: card.title,

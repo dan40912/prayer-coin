@@ -7,6 +7,11 @@ import ResponseReportButton from "@/components/ResponseReportButton";
 import { buildOvercomerCardPath, buildOvercomerResponsePath, readOvercomerProfile } from "@/lib/overcomer-server";
 import { buildOvercomerSlug, parseOvercomerSlug } from "@/lib/overcomer";
 
+export const metadata = {
+  title: "Start Pray | 得勝者 ",
+  description: "登入 Start Pray 管理禱告內容、追蹤互動數據並查看代幣紀錄。"
+};
+
 const DEFAULT_AVATAR = "https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&w=320&q=80";
 
 function formatDateTime(value) {

@@ -30,12 +30,56 @@ export default function SettingsPage() {
   const [formSubmitting, setFormSubmitting] = useState(false);
   const [sessionRole, setSessionRole] = useState(null);
   const [sessionChecked, setSessionChecked] = useState(false);
+  const [siteSettings, setSiteSettings] = useState(null);
+  const [settingsLoading, setSettingsLoading] = useState(true);
+  const [settingsError, setSettingsError] = useState("");
+  const [settingsSubmitting, setSettingsSubmitting] = useState(false);
 
   useEffect(() => {
     const role = readSessionRole();
     setSessionRole(role);
     setSessionChecked(true);
   }, []);
+
+  const loadSiteSettings = useCallback(async () => {
+    if (!sessionRole) {
+      setSettingsLoading(false);
+      return;
+    }
+
+    if (sessionRole !== "SUPER" && sessionRole !== "ADMIN") {
+      setSettingsError("僅限管理員存取系統設定");
+      setSettingsLoading(false);
+      setSiteSettings(null);
+      return;
+    }
+
+    try {
+      setSettingsLoading(true);
+      setSettingsError("");
+
+      const response = await fetch("/api/admin/site-settings", {
+        cache: "no-store",
+        headers: {
+          "x-admin-role": sessionRole ?? "",
+        },
+      });
+
+      if (!response.ok) {
+        const data = await response.json().catch(() => ({}));
+        throw new Error(data.message || "無法載入系統設定");
+      }
+
+      const data = await response.json();
+      setSiteSettings(data);
+    } catch (err) {
+      console.error("載入系統設定時發生錯誤:", err);
+      setSettingsError(err.message || "無法載入系統設定");
+      setSiteSettings(null);
+    } finally {
+      setSettingsLoading(false);
+    }
+  }, [sessionRole]);
 
   const loadAccounts = useCallback(async () => {
     if (sessionRole !== "SUPER") {
@@ -75,8 +119,49 @@ export default function SettingsPage() {
 
   useEffect(() => {
     if (!sessionChecked) return;
+    loadSiteSettings();
     loadAccounts();
-  }, [sessionChecked, loadAccounts]);
+  }, [sessionChecked, loadSiteSettings, loadAccounts]);
+
+  const handleToggleMaintenance = async () => {
+    if (!siteSettings || settingsSubmitting) {
+      return;
+    }
+
+    if (sessionRole !== "SUPER" && sessionRole !== "ADMIN") {
+      setSettingsError("沒有權限更新系統設定");
+      return;
+    }
+
+    try {
+      setSettingsSubmitting(true);
+      setSettingsError("");
+
+      const response = await fetch("/api/admin/site-settings", {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          "x-admin-role": sessionRole ?? "",
+        },
+        body: JSON.stringify({
+          maintenanceMode: !siteSettings.maintenanceMode,
+        }),
+      });
+
+      if (!response.ok) {
+        const data = await response.json().catch(() => ({}));
+        throw new Error(data.message || "更新維護模式失敗");
+      }
+
+      const data = await response.json();
+      setSiteSettings(data);
+    } catch (err) {
+      console.error("切換維護模式錯誤:", err);
+      setSettingsError(err.message || "更新維護模式失敗");
+    } finally {
+      setSettingsSubmitting(false);
+    }
+  };
 
   const handleFormChange = (field, value) => {
     setForm((prev) => ({ ...prev, [field]: value }));
@@ -191,6 +276,51 @@ export default function SettingsPage() {
           <p>管理可以登入系統後台的管理員帳號與權限角色。</p>
         </div>
       </header>
+
+      <section className="admin-section__card">
+        <header className="admin-section__card-header">
+          <div>
+            <h2>Maintenance Mode</h2>
+            <p>Toggle to display a maintenance 500 page for public visitors.</p>
+          </div>
+        </header>
+
+        {settingsLoading ? (
+          <p>Loading settings...</p>
+        ) : settingsError ? (
+          <p className="error">{settingsError}</p>
+        ) : siteSettings ? (
+          <div className="admin-maintenance">
+            <div className="admin-maintenance__status">
+              <p>
+                Current status:{" "}
+                <strong>{siteSettings.maintenanceMode ? "Maintenance" : "Online"}</strong>
+              </p>
+              {siteSettings.updatedAt ? (
+                <p className="admin-maintenance__meta">
+                  Last updated: {new Date(siteSettings.updatedAt).toLocaleString()}
+                </p>
+              ) : null}
+            </div>
+            <div className="admin-maintenance__actions">
+              <button
+                type="button"
+                className="button button--primary"
+                onClick={handleToggleMaintenance}
+                disabled={settingsSubmitting}
+              >
+                {settingsSubmitting
+                  ? "Applying..."
+                  : siteSettings.maintenanceMode
+                    ? "Disable maintenance"
+                    : "Enable maintenance"}
+              </button>
+            </div>
+          </div>
+        ) : (
+          <p className="error">Unable to load settings.</p>
+        )}
+      </section>
 
       <section className="admin-section__card">
         <header className="admin-section__card-header">

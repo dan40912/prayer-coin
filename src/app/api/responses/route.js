@@ -1,7 +1,9 @@
-import prisma from "@/lib/prisma";
-import { NextResponse } from "next/server";
-import fs from "fs";
+﻿import fs from "fs";
 import path from "path";
+
+import prisma from "@/lib/prisma";
+import { readTokenRewardRule } from "@/lib/tokenRewards";
+import { NextResponse } from "next/server";
 
 function resolveVoiceFolder(requestId) {
   const normalized = typeof requestId === "string" ? requestId.trim() : "";
@@ -32,11 +34,18 @@ export async function POST(req) {
       const folderPath = path.join(process.cwd(), "public", "voices", folderName);
       const filePath = path.join(folderPath, filename);
 
-      // Ensure the destination folder exists
       fs.mkdirSync(folderPath, { recursive: true });
       fs.writeFileSync(filePath, bytes);
 
-      voiceUrl = `/voices/${folderName}/${filename}`; // URL stored in the database
+      voiceUrl = `/voices/${folderName}/${filename}`;
+    }
+
+    let rewardEligibleAt = null;
+    if (responderId) {
+      const rule = await readTokenRewardRule();
+      const observationDays = Number(rule?.observationDays ?? 0);
+      const offsetMs = observationDays > 0 ? observationDays * 24 * 60 * 60 * 1000 : 0;
+      rewardEligibleAt = new Date(Date.now() + offsetMs);
     }
 
     const response = await prisma.prayerResponse.create({
@@ -46,9 +55,10 @@ export async function POST(req) {
         isAnonymous,
         responderId: isAnonymous ? null : responderId,
         homeCardId: Number(requestId),
+        rewardEligibleAt,
       },
       include: {
-        responder: true, // include responder for immediate list refresh
+        responder: true,
       },
     });
 

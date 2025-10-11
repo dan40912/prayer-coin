@@ -1,9 +1,9 @@
 ﻿import { SiteFooter, SiteHeader } from "@/components/site-chrome";
 
 export const metadata = {
-  title: "Prayer Coin | 關於我們",
+  title: "Start Pray | 關於我們 | 禱告幣",
   // 優化：強調解決「無聲的呼求」與「不知如何回應」的困境
-  description: "認識 Prayer Coin 的使命、核心價值與團隊故事。我們正在將無聲的禱告，轉化為可被看見、被回應的溫暖行動。"
+  description: "認識 Start Pray 的使命、核心價值與團隊故事。我們正在將無聲的禱告，轉化為可被看見、被回應的溫暖行動。"
 };
 
 const coreValues = [
@@ -34,8 +34,13 @@ const imageHighlights = [
 
 const milestones = [
   { title: "2025 09 · Private Beta", description: "因為大失眠和禱告後的感覺，完成第一版禱告牆、語音禱告功能" },
-  { title: "2025 10 · Global Rollout", description: "準備推送至Github開源" },
-  { title: "2025 11 · Let's Pray for Everyone", description: "徵求管理和維運人才" }
+  { title: "2025 10 · Global Rollout", description: "10 開發基礎功能 和社群測試" },
+  { title: "2025 11 · 上GCP和購買正式URL", description: "徵求有意願參加的行銷或開發人員" },
+  { title: "2025 12 · 預備英文網站", description: "徵求翻譯 或 管理員" },
+  { title: "2026 01 · 上Github 開源", description: "提供非錢包版本給大家使用" },
+  { title: "2026 02 · 上鏈 ! 準備發送代幣", description: "上Binance Alpha" },
+  { title: "2026 05 · 銷毀代幣", description: "持有數量減少" },
+  { title: "2026 07 · 預備區塊鏈代禱事項蒐尋器", description: "環境搭建預計五個月" },
 ];
 
 // 創建新的資訊結構，取代舊的 teamFocuses
@@ -43,7 +48,7 @@ const engagementPoints = [
     {
         icon: "💖", // 捐款與支持圖標
         title: "非營利模式與透明捐贈",
-        description: "Prayer Coin **不收取任何費用**。若您願意支持平臺運行，我們接受 **USDT** 或 Email 聯繫直接捐贈。您將收到平臺運營的**透明帳目報告**。"
+        description: "Start Pray **不收取任何費用**。若您願意支持平臺運行，我們接受 **USDT** 或 Email 聯繫直接捐贈。您將收到平臺運營的**透明帳目報告**。"
     },
     {
         icon: "🤝", // 合作與管理圖標
@@ -100,7 +105,7 @@ export default function AboutPage() {
         </section>
         {/* <section className="section">
           <h2>我們的核心價值</h2>
-          <p>從禱告到行動，我們以四個關鍵價值推動 Prayer Coin 的產品發展與社群文化。我們深知**真誠的陪伴**是解決冷漠的最佳良藥。</p>
+          <p>從禱告到行動，我們以四個關鍵價值推動 Start Pray 的產品發展與社群文化。我們深知**真誠的陪伴**是解決冷漠的最佳良藥。</p>
           <div className="layout-grid columns-2" style={{ marginTop: "1.5rem" }}>
             {coreValues.map((value) => (
               <div key={value.title} className="gradient-card">
@@ -145,7 +150,7 @@ export default function AboutPage() {
         {/* --- 新增區塊：參與方式與透明承諾 (取代舊的團隊焦點) --- */}
         <section className="section section-large"> {/* section-large 讓這個重要區塊上下留白更多 */}
             <h2 className="text-center">參與方式與透明承諾</h2>
-            <p className="text-center lead-text">Prayer Coin 是一個以奉獻為基礎的平臺。我們不收費，但邀請您以不同方式成為這個使命的一部分。</p>
+            <p className="text-center lead-text">Start Pray 是一個以奉獻為基礎的平臺。我們不收費，但邀請您以不同方式成為這個使命的一部分。</p>
             <div className="icon-grid columns-3" style={{ marginTop: "2.5rem" }}> {/* 替換為 icon-grid，讓圖標和文字更集中 */}
                 {engagementPoints.map((point) => (
                     <div key={point.title} className="card-icon-top card-shadow-hover"> {/* 增加 card-shadow-hover 增加互動性 */}

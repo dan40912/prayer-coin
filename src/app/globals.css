@@ -6522,3 +6522,177 @@ header .nav-user {
     color: white!important;
 }
 }
+/* PRAY COIN 技術路線圖樣式 */
+
+:root {
+    --color-primary: #1e3a8a; /* 深靛藍 */
+    --color-highlight: #fbbf24; /* 琥珀黃 */
+    --color-text: #374151; /* 深灰色文本 */
+    --color-light-bg: #f9fafb; /* 淺灰色背景 */
+    --color-card-bg: #ffffff;
+}
+
+#tech-roadmap {
+    font-family: 'Inter', sans-serif;
+    padding: 60px 20px;
+    background-color: var(--color-light-bg);
+    color: var(--color-text);
+}
+
+.roadmap-header {
+    text-align: center;
+    margin-bottom: 50px;
+}
+
+.roadmap-header h2 {
+    font-size: 2.5rem;
+    font-weight: 800;
+    color: var(--color-primary);
+    margin-bottom: 10px;
+}
+
+.roadmap-header p {
+    font-size: 1.15rem;
+    max-width: 800px;
+    margin: 0 auto 20px auto;
+}
+
+/* 突出顯示當前階段標籤 */
+.current-status-tag {
+    display: inline-block;
+    padding: 8px 20px;
+    background-color: var(--color-highlight);
+    color: var(--color-primary);
+    font-weight: 700;
+    border-radius: 9999px;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
+    /* 增加脈衝動畫以吸引注意力 */
+    animation: pulse-ring 2s infinite; 
+}
+
+/* 路線圖容器：四欄網格 */
+.roadmap-stages-container {
+    display: grid;
+    gap: 30px;
+    max-width: 1200px;
+    margin: 0 auto;
+    grid-template-columns: repeat(4, 1fr);
+}
+
+/* 手機版：垂直堆疊 */
+@media (max-width: 1024px) {
+    .roadmap-stages-container {
+        grid-template-columns: 1fr;
+    }
+}
+
+
+/* 單獨階段卡片樣式 */
+.roadmap-stage {
+    background-color: var(--color-card-bg);
+    border-radius: 12px;
+    padding: 25px;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s, box-shadow 0.3s;
+    height: 100%;
+    border: 1px solid #e5e7eb;
+}
+
+.roadmap-stage:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+}
+
+.stage-title-wrap {
+    margin-bottom: 15px;
+    padding-bottom: 10px;
+    border-bottom: 2px solid #e5e7eb;
+}
+
+.stage-label {
+    display: block;
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--color-primary);
+    margin-bottom: 5px;
+}
+
+.stage-title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #1f2937;
+}
+
+/* 內容細節 */
+.stage-content p {
+    margin-bottom: 15px;
+    font-size: 0.95rem;
+    line-height: 1.5;
+    padding: 8px 0;
+    border-left: 3px solid transparent;
+    padding-left: 10px;
+}
+
+.stage-content p strong {
+    font-weight: 700;
+    color: #1f2937;
+}
+
+
+/* --- 針對特定階段的樣式 --- */
+
+/* CURRENT Phase 0: 突出顯示當前階段 */
+.current-stage {
+    border-color: var(--color-highlight);
+    background-color: #fffbeb; /* 淺琥珀色背景 */
+    /* 增加一個外部陰影來強調 */
+    box-shadow: 0 0 0 3px var(--color-highlight), 0 10px 15px -3px rgba(0, 0, 0, 0.2); 
+}
+
+.current-stage .stage-label,
+.current-stage .stage-title {
+    color: #92400e; /* 深琥珀色文本 */
+}
+
+.current-stage .stage-focus {
+    background-color: #fef3c7; /* 更淺的琥珀色用於焦點內容 */
+    border-left-color: var(--color-highlight);
+}
+
+
+/* NEXT Phase 1: 標記下一步 */
+.next-stage {
+    border-top: 5px solid var(--color-primary);
+}
+
+.next-stage .stage-label {
+    color: var(--color-primary);
+}
+
+.next-stage .stage-focus {
+    border-left-color: var(--color-primary);
+}
+
+/* 風險/挑戰樣式 */
+.stage-risk {
+    color: #b91c1c; /* 紅色用於風險 */
+    border: 1px dashed #fecaca;
+    background-color: #fef2f2;
+    border-radius: 6px;
+    padding: 10px;
+    margin-top: 20px;
+    font-size: 0.9rem;
+}
+
+/* 脈衝動畫定義 */
+@keyframes pulse-ring {
+    0% {
+        box-shadow: 0 0 0 0 var(--color-highlight), 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    }
+    70% {
+        box-shadow: 0 0 0 10px rgba(251, 191, 36, 0), 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    }
+    100% {
+        box-shadow: 0 0 0 0 rgba(251, 191, 36, 0), 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    }
+}

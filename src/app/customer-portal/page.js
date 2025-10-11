@@ -28,7 +28,11 @@ const MAX_BIO_LENGTH = 360;
 
 const MAX_AVATAR_BYTES = 5 * 1024 * 1024;
 
-
+const REWARD_STATUS_LABELS = {
+  PENDING: "審核中",
+  BLOCKED: "已封鎖",
+  REWARDED: "已發放",
+};
 
 function normalizeGender(value) {
 
@@ -379,7 +383,14 @@ export default function CustomerPortalPage() {
         throw new Error(data?.message || "無法載入個人回應。");
       }
 
-      setResponses(Array.isArray(data) ? data : []);
+      if (Array.isArray(data)) {
+        setResponses(data);
+      } else {
+        setResponses(Array.isArray(data?.responses) ? data.responses : []);
+        if (typeof data?.walletBalance === "number" && Number.isFinite(data.walletBalance)) {
+          setProfile((prev) => (prev ? { ...prev, walletBalance: data.walletBalance } : prev));
+        }
+      }
     } catch (error) {
       console.error("載入個人回應發生錯誤:", error);
       setResponsesError(error.message || "無法載入個人回應。");
@@ -402,6 +413,9 @@ export default function CustomerPortalPage() {
 
   const resolvedName = profile?.name ?? authUser?.name ?? "未命名使用者";
   const resolvedEmail = profile?.email ?? authUser?.email ?? "尚未提供電子郵件";
+  const walletBalance = Number(profile?.walletBalance ?? 0);
+  const formattedWalletBalance = walletBalance.toLocaleString("zh-TW", { minimumFractionDigits: 0, maximumFractionDigits: 2 });
+  const walletDisplayValue = profileLoading ? "載入中..." : profileError ? "—" : formattedWalletBalance;
 
   const handleOpenProfileModal = () => {
     setProfileStatus(null);
@@ -931,6 +945,10 @@ export default function CustomerPortalPage() {
                 <div className="cp-reply__meta">
                   <span>發佈時間：{publishedAt}</span>
                   <span>檢舉數：{reportCount}</span>
+                  <span>獎勵狀態：{REWARD_STATUS_LABELS[reply.rewardStatus] ?? "審核中"}</span>
+                  {reply.rewardStatus === "REWARDED" ? (
+                    <span>累計獎勵：{formatTokenValue(reply.tokensAwarded)} 代幣</span>
+                  ) : null}
                 </div>
                 <div className="cp-reply__actions">
                   <button
@@ -976,6 +994,8 @@ export default function CustomerPortalPage() {
 
     return { totalCards, totalResponses, totalReports };
   }, [cards]);
+
+  const formatTokenValue = (value) => Number(value ?? 0).toLocaleString("zh-TW", { minimumFractionDigits: 0, maximumFractionDigits: 2 });
 
   const renderUserStatValue = (value) => {
     if (cardsError) {
@@ -1050,6 +1070,7 @@ export default function CustomerPortalPage() {
                 <div className="cp-profile__meta">
                   <h1>{resolvedName}</h1>
                   <span>{resolvedEmail}</span>
+                  <span>可用代幣：{walletDisplayValue}</span>
                 </div>
 
                 <div className="cp-profile__bio">
@@ -1093,6 +1114,13 @@ export default function CustomerPortalPage() {
                   <strong className="home-stats__value">{resolvedName}</strong>
                   <p className="home-stats__hint">{resolvedEmail}</p>
                 </article> */}
+                <article className="home-stats__item">
+                  <span className="home-stats__icon" aria-hidden="true">💰</span>
+                  <span className="home-stats__label">可用代幣</span>
+                  <strong className="home-stats__value">{walletDisplayValue}</strong>
+                  <p className="home-stats__hint">Start Pray 代幣可用餘額</p>
+                </article>
+
                 <article className="home-stats__item">
                   <span className="home-stats__icon" aria-hidden="true">🙏</span>
                   <span className="home-stats__label">代禱事項</span>

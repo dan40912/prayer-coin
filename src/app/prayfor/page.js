@@ -7,6 +7,13 @@ import { readActiveCategories } from "@/lib/homeCategories";
 import { readHomeCards } from "@/lib/homeCards";
 export const dynamic = "force-dynamic";
 
+export const metadata = {
+  title: "Start Pray | 禱告中心 | 禱告幣",
+  // 優化：強調解決「無聲的呼求」與「不知如何回應」的困境
+  description: "探索祈禱與影響力，上傳錄音，聲歷其境，循環撥放，獲得代幣，追蹤影響力。",
+};
+
+
 const heroChecklist = [
   "即時掌握祈禱需求與回應進度",
   "將禱告行動轉換為可追蹤的社會影響",

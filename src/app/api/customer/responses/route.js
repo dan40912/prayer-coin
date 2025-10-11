@@ -1,6 +1,7 @@
-import { NextResponse } from "next/server";
+﻿import { NextResponse } from "next/server";
 
 import prisma from "@/lib/prisma";
+import { processPendingResponseRewardsForUser } from "@/lib/tokenRewards";
 import { requireSessionUser } from "@/lib/server-session";
 
 const RESPONSE_SELECT = {
@@ -9,6 +10,10 @@ const RESPONSE_SELECT = {
   voiceUrl: true,
   isBlocked: true,
   reportCount: true,
+  rewardStatus: true,
+  rewardEligibleAt: true,
+  rewardEvaluatedAt: true,
+  tokensAwarded: true,
   createdAt: true,
   homeCard: {
     select: {
@@ -26,6 +31,8 @@ export async function GET() {
   try {
     const session = requireSessionUser();
 
+    await processPendingResponseRewardsForUser(session.id);
+
     const responses = await prisma.prayerResponse.findMany({
       where: {
         responderId: session.id,
@@ -35,7 +42,15 @@ export async function GET() {
       select: RESPONSE_SELECT,
     });
 
-    return NextResponse.json(responses);
+    const wallet = await prisma.user.findUnique({
+      where: { id: session.id },
+      select: { walletBalance: true },
+    });
+
+    return NextResponse.json({
+      responses,
+      walletBalance: Number(wallet?.walletBalance ?? 0),
+    });
   } catch (error) {
     if (error?.code === "UNAUTHENTICATED") {
       return NextResponse.json({ message: "Please sign in." }, { status: 401 });
@@ -48,4 +63,3 @@ export async function GET() {
     );
   }
 }
-

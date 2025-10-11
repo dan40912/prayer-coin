@@ -5,8 +5,8 @@ import { SiteFooter, SiteHeader } from "@/components/site-chrome";
 import LoginForm from "./LoginForm";
 
 export const metadata = {
-  title: "Prayer Coin | 登入",
-  description: "登入 Prayer Coin 管理禱告內容、追蹤互動數據並查看代幣紀錄。"
+  title: "Start Pray | 登入",
+  description: "登入 Start Pray 管理禱告內容、追蹤互動數據並查看代幣紀錄。"
 };
 
 const securityTips = [
@@ -50,12 +50,12 @@ export default function LoginPage() {
 
               <div className="auth-footer">
                 <span>
-                  還沒有帳號？前往 <Link href="/signup">註冊 Prayer Coin</Link>。
+                  還沒有帳號？前往 <Link href="/signup">註冊 Start Pray</Link>。
                 </span>
               </div>
             </section>
 
-            <aside className="auth-card">
+            {/* <aside className="auth-card">
               <div className="auth-note">
                 <strong>登入安全提醒</strong>
                 <ul className="auth-meta-list">
@@ -72,7 +72,7 @@ export default function LoginPage() {
                   ))}
                 </ul>
               </div>
-            </aside>
+            </aside> */}
           </div>
         </div>
       </main>

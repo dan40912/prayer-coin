@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+﻿import { NextResponse } from "next/server";
 
 import prisma from "@/lib/prisma";
 import { readSessionUser, requireSessionUser } from "@/lib/server-session";
@@ -13,6 +13,7 @@ function buildSelectFields() {
     username: true,
     bio: true,
     avatarUrl: true,
+    walletBalance: true,
     isBlocked: true,
     createdAt: true,
     updatedAt: true,
@@ -21,7 +22,7 @@ function buildSelectFields() {
 
 function sanitizeProfilePayload(body) {
   if (!body || typeof body !== "object") {
-    throw new Error("請提供有效的更新內容");
+    throw new Error("Please provide the fields to update.");
   }
 
   const result = {};
@@ -32,11 +33,11 @@ function sanitizeProfilePayload(body) {
     } else if (typeof body.bio === "string") {
       const trimmed = body.bio.trim();
       if (trimmed.length > MAX_BIO_LENGTH) {
-        throw new Error(`個人簡介不可超過 ${MAX_BIO_LENGTH} 個字`);
+        throw new Error(`Bio must be shorter than ${MAX_BIO_LENGTH} characters.`);
       }
       result.bio = trimmed || null;
     } else {
-      throw new Error("個人簡介格式不正確");
+      throw new Error("Bio must be a string value.");
     }
   }
 
@@ -50,10 +51,10 @@ function sanitizeProfilePayload(body) {
       } else if (/^https?:\/\//i.test(trimmed) || trimmed.startsWith("/")) {
         result.avatarUrl = trimmed;
       } else {
-        throw new Error("請提供有效的圖片網址");
+        throw new Error("Avatar URL must be an absolute URL or start with '/'.");
       }
     } else {
-      throw new Error("圖片網址格式不正確");
+      throw new Error("Avatar URL must be a string value.");
     }
   }
 
@@ -63,12 +64,12 @@ function sanitizeProfilePayload(body) {
     } else if (typeof body.name === "string") {
       result.name = body.name.trim() || null;
     } else {
-      throw new Error("名稱格式不正確");
+      throw new Error("Name must be a string value.");
     }
   }
 
   if (Object.keys(result).length === 0) {
-    throw new Error("沒有可以更新的欄位");
+    throw new Error("Nothing to update.");
   }
 
   return result;
@@ -102,22 +103,19 @@ export async function GET() {
   try {
     const session = readSessionUser();
     if (!session?.id && !session?.email) {
-      return NextResponse.json({ message: "請先登入" }, { status: 401 });
+      return NextResponse.json({ message: "Please sign in." }, { status: 401 });
     }
 
     const user = await findUserForSession(session);
 
     if (!user) {
-      return NextResponse.json({ message: "找不到對應的使用者" }, { status: 404 });
+      return NextResponse.json({ message: "User not found." }, { status: 404 });
     }
 
     return NextResponse.json(user);
   } catch (error) {
-    console.error("GET /api/customer/profile 發生錯誤:", error);
-    return NextResponse.json(
-      { message: "載入個人檔案時發生錯誤" },
-      { status: 500 }
-    );
+    console.error("GET /api/customer/profile error:", error);
+    return NextResponse.json({ message: "Failed to load profile." }, { status: 500 });
   }
 }
 
@@ -129,7 +127,7 @@ export async function PATCH(request) {
 
     const targetUser = await findUserForSession(session);
     if (!targetUser) {
-      return NextResponse.json({ message: "找不到對應的使用者" }, { status: 404 });
+      return NextResponse.json({ message: "User not found." }, { status: 404 });
     }
 
     const updated = await prisma.user.update({
@@ -141,13 +139,13 @@ export async function PATCH(request) {
     return NextResponse.json(updated);
   } catch (error) {
     if (error?.code === "UNAUTHENTICATED") {
-      return NextResponse.json({ message: "請先登入" }, { status: 401 });
+      return NextResponse.json({ message: "Please sign in." }, { status: 401 });
     }
 
-    const message = error instanceof Error ? error.message : "更新個人檔案時發生錯誤";
-    const status = /格式|內容/.test(message) ? 400 : 500;
+    const message = error instanceof Error ? error.message : "Failed to update profile.";
+    const status = /provide|string|shorter|Nothing/.test(message) ? 400 : 500;
 
-    console.error("PATCH /api/customer/profile 發生錯誤:", error);
+    console.error("PATCH /api/customer/profile error:", error);
     return NextResponse.json({ message }, { status });
   }
 }
