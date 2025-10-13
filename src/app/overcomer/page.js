@@ -1,1 +1,1 @@
-﻿export default function OvercomerIndexPage() {\n  return null;\n}\n
+﻿export default function OvercomerIndexPage() {return null;}
