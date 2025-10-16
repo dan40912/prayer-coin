@@ -17,3 +17,5 @@ out/
 
 # Prisma 產生檔
 /src/generated/prisma
+logs/
+public/uploads/
