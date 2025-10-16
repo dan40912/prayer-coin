@@ -37,12 +37,19 @@ export default function SignupForm() {
   const handleSubmit = async (event) => {
     event.preventDefault();
     setStatus({ state: "loading", message: "" });
+    
+  const normalizedUsername = String(form.username)
+    .trim()
+    .normalize("NFKC") // 轉全形→半形
+    .replace(/\s+/g, "") // 移除所有空白
+    .toLowerCase();
 
+	  const formToSend = { ...form, username: normalizedUsername };
     try {
       const response = await fetch("/api/auth/signup", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form)
+        body: JSON.stringify(formToSend)
       });
 
       const data = await response.json();
