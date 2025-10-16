@@ -312,7 +312,7 @@ export default function CustomerPortalCreatePage() {
           <div className="customer-create__hero-visual" aria-hidden="true">
             <div className="customer-create__hero-glow" />
             <div className="customer-create__hero-bubble" />
-            <div className="customer-create__hero-bubble customer-create__hero-bubble--alt" />
+            <div className="customer-create__hero-bubble customer-create__hero-bubble--sm" />
           </div>
         </section>
 
@@ -548,16 +548,54 @@ export default function CustomerPortalCreatePage() {
       ) : null}
 
       <style jsx>{`
+        .customer-create__editor {
+          width: 100%;
+          min-width: 0;
+        }
+
+        .customer-create__editor :global(.ck-editor) {
+          width: 100%;
+        }
+
+        .customer-create__editor :global(.ck-editor__main) {
+          width: 100%;
+        }
+
         .customer-create__editor :global(.ck-editor__editable) {
           min-height: 240px;
           border-radius: 12px;
+          word-break: break-word;
+          overflow-wrap: break-word;
+        }
+
+        @media (max-width: 640px) {
+          .customer-create__editor :global(.ck-editor__editable) {
+            min-height: 200px;
+          }
         }
 
         .customer-create__gallery {
           display: grid;
           gap: 12px;
           margin-top: 12px;
-          grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+          grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+        }
+
+        @media (max-width: 640px) {
+          .customer-create__gallery {
+            gap: 10px;
+          }
+        }
+
+        @media (max-width: 480px) {
+          .customer-create__gallery {
+            grid-auto-flow: column;
+            grid-auto-columns: minmax(160px, 1fr);
+            overflow-x: auto;
+            padding-bottom: 6px;
+            scroll-snap-type: x proximity;
+            -webkit-overflow-scrolling: touch;
+          }
         }
 
         .customer-create__gallery-item {
@@ -597,6 +635,16 @@ export default function CustomerPortalCreatePage() {
           font-size: 12px;
         }
 
+        @media (max-width: 480px) {
+          .customer-create__gallery-item {
+            scroll-snap-align: start;
+          }
+
+          .customer-create__gallery-item figcaption {
+            font-size: 11px;
+          }
+        }
+
         .customer-create__gallery-item figcaption button {
           all: unset;
           cursor: pointer;
@@ -607,7 +655,7 @@ export default function CustomerPortalCreatePage() {
           overflow: hidden;
           text-overflow: ellipsis;
           white-space: nowrap;
-          max-width: 120px;
+          max-width: 100%;
         }
 
         .customer-create__file-label input[type='file'] {

@@ -37,6 +37,8 @@ model User {
   homePrayerCards  HomePrayerCard[]
   resetToken       String?   @db.VarChar(255)
   resetTokenExpiry DateTime?
+
+  @@map("user")
 }
 
 model PrayerRequest {
@@ -52,6 +54,8 @@ model PrayerRequest {
   owner       User?           @relation(fields: [ownerId], references: [id])
 
   responses   PrayerResponse[]
+
+  @@map("prayerrequest")
 }
 
 model PrayerResponse {
@@ -78,6 +82,8 @@ model PrayerResponse {
   responder   User? @relation(fields: [responderId], references: [id])
   tokenTransactions TokenTransaction[] @relation("PrayerResponseTransactions")
   reports        PrayerResponseReport[]
+
+  @@map("prayerresponse")
 }
 
 model HomePrayerCardReport {
@@ -252,6 +258,8 @@ model AdminAccount {
   lastLoginAt  DateTime?
   createdAt    DateTime  @default(now())
   updatedAt    DateTime  @updatedAt
+
+  @@map("adminaccount")
 }
 
 model TokenTransaction {
