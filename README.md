@@ -1,104 +1,78 @@
-﻿# 📌 HomePrayerCard API 說明文件
+# Prayer Coin 平台說明
 
-本文件說明了 `/api/home-cards` 相關 API 的使用方式、資料結構與權限規則。
+> 以禱告連結世界，讓信仰帶來真實行動。  
+> 官方網站： [https://startpray.online](https://startpray.online)
+
+---
+簡報
+https://gamma.app/docs/Start-Pray-jwhsvo1j6dpto87
+
+
+## 平台願景與核心價值
+
+- **Faith Community**：打造跨宗派的禱告社群，讓每個需求都有人聆聽、有人回應。  
+- **Hope & Action**：把祝福化為具體行動，提供回應者所需的工具、資源與激勵。  
+- **Transparency & Trust**：以公開透明的流程與安全機制，建立互信、保障使用者資料。  
+- **Rewarding Service**：透過代幣與獎勵系統，肯定每一位願意付出的代禱勇士。
 
 ---
 
-## 1. 資料結構
+## 技術架構與平台分析
 
-`home_prayer_card` 資料表主要欄位：
+- **前端框架**：Next.js 14（App Router），搭配 React 18 Server/Client Components 提升互動體驗。  
+- **資料層**：Prisma + MySQL，模型支援祈禱卡、回應、報告、代幣交易等完整業務流程。  
+- **認證與安全**：
+  - 自建註冊／登入／忘記密碼流程，近期加入郵件驗證與重設密碼信件。
+  - 管理後台提供多層角色權限、偵錯與封鎖機制。
+- **媒合與內容**：
+  - 祈禱卡分類、音訊回應播放器（含多媒體回放與計分機制）。
+  - 使用者回報機制與審核流程，確保內容健康。
+- **營運工具**：
+  - PM2 + Docker 部署於 GCP VM。
+  - 排程腳本（`npm run rewards:process`）自動處理代幣獎勵。
 
-- `id`: 主鍵，自動遞增
-- `title`: 標題
-- `description`: 描述
-- `image`: 圖片 URL
-- `alt`: 圖片描述
-- `categoryId`: 分類 ID（對應 `home_prayer_category`）
-- `ownerId`: 建立者 ID
-- `isBlocked`: 是否被封鎖（違規或管理員隱藏）
-- `tags`: 標籤（陣列）
-- `meta`: 額外資訊（陣列）
-- `detailsHref`: 詳細連結
-- `voiceHref`: 音訊連結
-- `createdAt` / `updatedAt`: 建立與更新時間
+**優勢分析**
+
+- 聚焦禱告需求，擁有清晰的產品定位與社群價值。
+- 以代幣機制鼓勵回應者參與，創造正向循環。
+- 後台工具完整，便於營運人員管理、審核、分析。
+
+**挑戰與機會**
+
+- 郵件、推播等通知體系尚在優化，需要更穩定的寄送服務。  
+- 代幣經濟尚處驗證階段，需持續觀察使用者參與率與獎勵配比。  
+- 未來可導入多語系、跨國祈禱需求，擴大使用族群。
 
 ---
 
-## 2. API 路由
+## 目前進度
 
-### **(A) `GET /api/home-cards`**
-取得祈禱卡列表。
+- ✅ 完成核心祈禱卡上架、回應、獎勵流程。  
+- ✅ 管理後台可進行審核、封鎖、報告與支付管理。  
+- ✅ 忘記密碼／註冊歡迎信已整合 SMTP，待配置正式郵件服務。  
+- 🚧 進行中：
+  - 上線後的內容審核標準化流程。
+  - 擴充行動版體驗與行銷漏斗追蹤。
+  - 社群功能（分組、聊天室、實體活動）規劃中。
 
-#### Query 參數：
-- `sort`：
-  - `latest`（預設）→ 依建立時間排序
-  - `responses` → 依回應數排序
-- `limit`: 限制回傳筆數，預設 `6`
-- `category`: 分類 slug，例如 `gospel`、`personal`
+---
 
-#### 權限行為：
-- **User** → 只能看到 `isBlocked = false`
-- **Owner** → 可以看到自己的卡，即使被封鎖
-- **Admin** → 可以看到所有卡片
+## 人才募集
 
-#### 範例回應：
-```json
-[
-  {
-    "id": 12,
-    "title": "為世界和平禱告",
-    "description": "求主賜下平安",
-    "image": "/img/sample.jpg",
-    "isBlocked": false,
-    "category": { "id": 5, "name": "世界", "slug": "world" }
-  }
-]
-(B) GET /api/home-cards/:id
+我們正在尋找願意與我們一起「讓禱告成為行動」的夥伴：
 
-取得單一卡片內容。
+- **全端 / 前端工程師**：熟悉 Next.js、React、TypeScript 或 UI/UX 優化。  
+- **後端工程師**：擅長 Node.js、Prisma、資料庫與 API 設計。  
+- **產品 / 專案經理**：具備社群產品經驗，協助需求訪談、產品規劃。  
+- **行銷營運**：熱衷信仰社群推廣，協助內容策略、品牌合作。  
 
-權限行為：
+歡迎寄信到 `team@startpray.online` 或於官網聯絡表單留下訊息，讓我們一起推動更多祝福。
 
-User → 只能看到 isBlocked = false
+---
 
-Owner → 可以看到自己的卡
+## 加入我們的旅程
 
-Admin → 可以看到所有卡
+無論你是代禱者、求助者，或是願意付出才能的夥伴，Prayer Coin 誠摯邀請你一起參與。  
+這裡每一份禱告都很重要，每一次回應都能改變故事。  
 
-(C) POST /api/home-cards
-
-建立新祈禱卡。
-
-Body 範例：
-{
-  "title": "為家人健康禱告",
-  "description": "家人最近身體狀況需要代禱",
-  "categoryId": 2,
-  "image": "/img/family.jpg",
-  "tags": ["家庭", "健康"],
-  "meta": ["由小組提供"]
-}
-
-權限行為：
-
-User 可建立（會綁定 ownerId 為自己）
-
-Admin 可建立
-
-(D) GET /api/home-cards/related?id=:id&limit=3
-
-取得相關卡片（排除當前卡片）。
-
-權限行為：
-
-User → 只能看到 isBlocked = false
-
-Owner → 可看到自己的卡
-
-Admin → 全部都能看到
-
-3. 權限規則
-角色	能看到的卡片	CRUD 權限
-User	只能看到 isBlocked = false	只能新增/編輯自己的卡
-Owner	isBlocked = false + 自己的卡	可新增/編輯/刪除自己的卡
-Admin	全部（包含 isBlocked = true）	可管理所有卡片
+> 「禱告不是最後的選擇，而是我們的第一行動。」 — Prayer Coin 團隊
