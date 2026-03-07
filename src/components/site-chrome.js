@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
@@ -114,26 +114,24 @@ export function SiteHeader({ activePath, hideAuthActions = false }) {
   }, [closeMenu, router]);
 
   return (
-    <header>
-      <div className="navbar">
-        <Link className="brand" href="/" prefetch={false}>
-          <img className="brand-logo" src="/legacy/img/logo.png" alt="Start Pray logo" />
-          <span>Start Pray</span>
+    <header className="site-header">
+      <div className="container" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
+        <Link className="logo" href="/" prefetch={false}>
+          <img className="logo-img" src="/legacy/img/logo.png" alt="Start Pray logo" style={{ height: '32px', width: 'auto' }} />
+          Start Pray
         </Link>
 
+        {/* mobile menu toggle placeholder if needed */}
         <button
           type="button"
           className={`menu-toggle${menuOpen ? " is-open" : ""}`}
           onClick={() => setMenuOpen((prev) => !prev)}
+          style={{ display: "none" }} /* Hidden in new theme by default unless explicitly styled */
           aria-label="切換導覽選單"
-          aria-expanded={menuOpen}
         >
           <span className="menu-toggle__icon" aria-hidden="true">
-            <span />
-            <span />
-            <span />
+            <span /><span /><span />
           </span>
-          <span className="sr-only">{menuOpen ? "關閉選單" : "開啟選單"}</span>
         </button>
 
         <nav className={`nav-links ${menuOpen ? "open" : ""}`}>
@@ -153,21 +151,24 @@ export function SiteHeader({ activePath, hideAuthActions = false }) {
           })}
 
           {!hideAuthActions ? (
-            <div className="nav-actions">
+            <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
               {isAuthenticated ? (
                 <>
-                  {authUser?.name ? <span className="nav-user">Hi, {authUser.name}</span> : null}
-                  <button type="button" className="nav-link nav-link--button" onClick={handleLogout}>
+                  <Link href="/customer-portal/create" prefetch={false} className="btn btn-primary" onClick={closeMenu}>
+                    + 發布禱告
+                  </Link>
+                  {authUser?.name ? <span style={{ color: 'var(--text-light)', fontSize: '0.9rem' }}>Hi, {authUser.name}</span> : null}
+                  <button type="button" className="btn btn-glass" onClick={handleLogout}>
                     登出
                   </button>
                 </>
               ) : (
                 <>
-                  <Link href="/signup" prefetch={false} className="nav-link nav-link--primary signup-white" onClick={closeMenu} >
-                    註冊
-                  </Link>
-                  <Link href="/login" prefetch={false} className="nav-link nav-link--button" onClick={closeMenu}>
+                  <Link href="/login" prefetch={false} className="btn btn-glass" onClick={closeMenu}>
                     登入
+                  </Link>
+                  <Link href="/signup" prefetch={false} className="btn btn-primary" onClick={closeMenu}>
+                    註冊
                   </Link>
                 </>
               )}

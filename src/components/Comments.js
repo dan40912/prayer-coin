@@ -797,32 +797,37 @@ export default function Comments({ requestId, ownerId = null }) {
               {!recording && !hasAudio ? (
                 <button
                   type="button"
-                  className="cp-button"
+                  className="btn btn-record"
                   onClick={async () => {
                     resetRecording();
                     await openRecorder();
                   }}
+                  style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '12px 24px', borderRadius: '50px' }}
                 >
-                  開始錄音
+                  <i className="fa-solid fa-microphone"></i>
+                  錄音祝福
                 </button>
               ) : null}
 
               {hasAudio ? (
-                <div className="audio-preview">
-                  <p>語音預覽</p>
-                  <audio src={audioUrl} controls preload="metadata" />
-                  <div className="audio-preview__actions">
-                    <button type="button" className="cp-button cp-button--ghost" onClick={resetRecording}>
-                      重錄
+                <div className="audio-preview glass-panel" style={{ padding: '10px', marginTop: '10px' }}>
+                  <p style={{ margin: '0 0 10px 0', fontSize: '0.9rem', color: 'var(--text-light)' }}>已錄製的語音預覽：</p>
+                  <audio src={audioUrl} controls preload="metadata" style={{ width: '100%' }} />
+                  <div className="audio-preview__actions" style={{ display: 'flex', gap: '10px', marginTop: '10px' }}>
+                    <button type="button" className="btn btn-glass" onClick={resetRecording}>
+                      <i className="fa-solid fa-rotate-right"></i> 重新錄製
+                    </button>
+                    <button type="submit" className="btn btn-primary" disabled={recording}>
+                      <i className="fa-solid fa-paper-plane"></i> 送出回應
                     </button>
                   </div>
                 </div>
-              ) : null}
+              ) : (
+                <button type="submit" className="btn btn-primary" disabled={recording} style={{ marginTop: '10px' }}>
+                   純文字送出
+                </button>
+              )}
             </div>
-
-            <button type="submit" className="cp-button" disabled={recording}>
-              送出回應
-            </button>
           </form>
         </>
       ) : null}
