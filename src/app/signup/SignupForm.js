@@ -73,17 +73,18 @@ export default function SignupForm() {
       <div className="form-grid columns-2">
         <div className="form-group">
           <label className="form-label" htmlFor="full-name">
-            姓名 <span className="required-badge">必填</span>
+            暱稱 <span className="required-badge">必填</span>
           </label>
           <input
             className="form-control"
             type="text"
             id="full-name"
-            placeholder="中文或英文姓名"
+            placeholder="例如：喜樂小羊（請勿填寫真實姓名）"
             value={form.fullName}
             onChange={updateField("fullName")}
             required
           />
+          <span className="form-helper">此欄位為公開暱稱，不是法律姓名。</span>
         </div>
         <div className="form-group">
           <label className="form-label" htmlFor="username">
@@ -237,7 +238,7 @@ export default function SignupForm() {
         <label
           htmlFor="terms"
           className="form-label"
-          style={{ fontWeight: 400, fontSize: "0.88rem", color: "var(--text-secondary)" }}
+          style={{ fontWeight: 500, fontSize: "0.9rem", color: "var(--text-primary)" }}
         >
           我已詳閱並同意 <a href="/whitepaper" target="_blank" rel="noreferrer">免責聲、白皮書</a>
         </label>

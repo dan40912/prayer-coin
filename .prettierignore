@@ -1,0 +1,10 @@
+node_modules
+.next
+new-frontend-template
+public
+admin
+css
+js
+tools
+package-lock.json
+

@@ -76,12 +76,7 @@ export default function LoginForm() {
           onChange={updateField("password")}
           required
         />
-        <span className="form-helper">若忘記密碼，可透過註冊 email 申請重設。</span>
-        <p style={{ marginTop: "0.5rem", textAlign: "right" }}>
-        <a href="/forgot-password" style={{ color: "#2563eb", fontSize: "0.9rem" }}>
-          忘記密碼？
-        </a>
-      </p>
+        <span className="form-helper">忘記密碼功能暫停中，請聯繫管理員協助。</span>
       </div>
       {status.message && (
         <div
