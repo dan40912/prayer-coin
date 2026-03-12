@@ -2,7 +2,6 @@
 import path from "path";
 
 import prisma from "@/lib/prisma";
-import { readTokenRewardRule } from "@/lib/tokenRewards";
 import { NextResponse } from "next/server";
 
 function resolveVoiceFolder(requestId) {
@@ -21,7 +20,11 @@ export async function POST(req) {
     const requestId = form.get("requestId");
     const message = form.get("message");
     const isAnonymous = form.get("isAnonymous") === "true";
-    const responderId = form.get("responderId") || null;
+    const responderRaw = form.get("responderId");
+    const responderId =
+      typeof responderRaw === "string" && responderRaw.trim() && responderRaw.trim() !== "null" && responderRaw.trim() !== "undefined"
+        ? responderRaw.trim()
+        : null;
 
     let voiceUrl = null;
     const audio = form.get("audio");
@@ -40,23 +43,24 @@ export async function POST(req) {
       voiceUrl = `/voices/${folderName}/${filename}`;
     }
 
-    let rewardEligibleAt = null;
-    if (responderId) {
-      const rule = await readTokenRewardRule();
-      const observationDays = Number(rule?.observationDays ?? 0);
-      const offsetMs = observationDays > 0 ? observationDays * 24 * 60 * 60 * 1000 : 0;
-      rewardEligibleAt = new Date(Date.now() + offsetMs);
+    const homeCardId = Number(requestId);
+    if (!Number.isInteger(homeCardId)) {
+      return NextResponse.json({ error: "Invalid requestId" }, { status: 400 });
     }
 
+    const createData = {
+      message,
+      voiceUrl,
+      isAnonymous,
+    };
+
+    if (!isAnonymous && responderId) {
+      createData.responder = { connect: { id: responderId } };
+    }
+    createData.homeCard = { connect: { id: homeCardId } };
+
     const response = await prisma.prayerResponse.create({
-      data: {
-        message,
-        voiceUrl,
-        isAnonymous,
-        responderId: isAnonymous ? null : responderId,
-        homeCardId: Number(requestId),
-        rewardEligibleAt,
-      },
+      data: createData,
       include: {
         responder: true,
       },

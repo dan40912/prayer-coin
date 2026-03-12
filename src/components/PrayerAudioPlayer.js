@@ -1,13 +1,16 @@
 "use client";
 
-import { useEffect, useMemo } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useAudio } from "@/context/AudioContext";
 import { PRAYER_AUDIO_START_EVENT } from "@/lib/events";
 
 const FALLBACK_SPEAKER = "Prayer Partner";
 
-export default function PrayerAudioPlayer({ requestId, initialTrack = null }) {
+export default function PrayerAudioPlayer({ requestId, initialTrack = null, prayerTitle = "" }) {
   const { playTrack, setQueue } = useAudio();
+  const [loading, setLoading] = useState(false);
+  const [feedback, setFeedback] = useState("");
+  const loadingRef = useRef(false);
 
   const primaryTrack = useMemo(() => {
     if (!initialTrack || !initialTrack.voiceUrl) return null;
@@ -18,59 +21,69 @@ export default function PrayerAudioPlayer({ requestId, initialTrack = null }) {
       message: initialTrack.message?.trim() || "",
       avatarUrl: initialTrack.avatarUrl?.trim() || "",
       responderId: initialTrack.responderId ?? null,
+      requestTitle: initialTrack.requestTitle || prayerTitle || "社群禱告",
     };
-  }, [initialTrack]);
+  }, [initialTrack, prayerTitle]);
 
-  // Fetch all tracks for this request to build a queue
-  // We can do this when the user clicks play, or pre-fetch.
-  // For simplicity, let's fetch when play is triggered or just play the primary track first.
-
-  const handlePlay = async () => {
-    if (primaryTrack) {
-      // Start with primary track
-      playTrack(primaryTrack);
-
-      // Optionally fetch others and update queue
-      try {
-        const res = await fetch(`/api/responses/${requestId}`);
-        if (res.ok) {
-          const data = await res.json();
-          const responseTracks = data
-            .filter((item) => item?.voiceUrl)
-            .map((item, index) => ({
-              id: item.id ?? `response-${index}`,
-              voiceUrl: item.voiceUrl,
-              speaker: item.isAnonymous
-                ? "Anonymous"
-                : item.responder?.name || item.responder?.email || FALLBACK_SPEAKER,
-              message: item.message?.trim() || "",
-              avatarUrl: item.responder?.avatarUrl?.trim() || "",
-              responderId: item.responderId ?? null,
-            }));
-
-          // Combine primary + responses
-          const fullQueue = [primaryTrack, ...responseTracks];
-          // Dedupe
-          const deduped = [];
-          const seen = new Set();
-          for (const t of fullQueue) {
-            if (!seen.has(t.voiceUrl)) {
-              seen.add(t.voiceUrl);
-              deduped.push(t);
-            }
-          }
-
-          setQueue(deduped, 0);
-        }
-      } catch (e) {
-        console.error("Failed to load queue", e);
-      }
+  const fetchResponseTracks = useCallback(async () => {
+    const res = await fetch(`/api/responses/${requestId}`, { cache: "no-store" });
+    if (!res.ok) {
+      throw new Error("無法載入語音清單");
     }
-  };
+    const data = await res.json();
+    return data
+      .filter((item) => item?.voiceUrl)
+      .map((item, index) => ({
+        id: item.id ?? `response-${index}`,
+        voiceUrl: item.voiceUrl,
+        speaker: item.isAnonymous
+          ? "匿名代禱者"
+          : item.responder?.name || item.responder?.email || FALLBACK_SPEAKER,
+        message: item.message?.trim() || "",
+        avatarUrl: item.responder?.avatarUrl?.trim() || "",
+        responderId: item.responderId ?? null,
+        requestTitle: prayerTitle || item.card?.title || "社群禱告",
+      }));
+  }, [requestId, prayerTitle]);
+
+  const handlePlay = useCallback(async () => {
+    if (loadingRef.current) return;
+    loadingRef.current = true;
+    setLoading(true);
+    setFeedback("");
+
+    try {
+      const queue = [];
+      if (primaryTrack) {
+        queue.push(primaryTrack);
+        playTrack(primaryTrack);
+      }
+
+      const responseTracks = await fetchResponseTracks();
+      for (const track of responseTracks) {
+        if (!queue.find((item) => item.voiceUrl === track.voiceUrl)) {
+          queue.push(track);
+        }
+      }
+
+      if (!queue.length) {
+        setFeedback("目前沒有可播放的語音，歡迎率先錄製祝福。");
+        return;
+      }
+
+      setQueue(queue, 0);
+    } catch (error) {
+      console.error("Failed to load prayer audio queue", error);
+      setFeedback("播放失敗，請稍後再試");
+    } finally {
+      loadingRef.current = false;
+      setLoading(false);
+    }
+  }, [fetchResponseTracks, playTrack, primaryTrack, setQueue]);
 
   // Listen for external events (like from Hero "Listen Now" button)
   useEffect(() => {
-    if (typeof window === "undefined") return;
+    if (typeof window === "undefined") return undefined;
     const handleExternalStart = (event) => {
       const targetId = String(event?.detail?.requestId ?? "");
       if (targetId === String(requestId)) {
@@ -79,7 +92,7 @@ export default function PrayerAudioPlayer({ requestId, initialTrack = null }) {
     };
     window.addEventListener(PRAYER_AUDIO_START_EVENT, handleExternalStart);
     return () => window.removeEventListener(PRAYER_AUDIO_START_EVENT, handleExternalStart);
-  }, [requestId, primaryTrack]);
+  }, [requestId, handlePlay]);
 
   return (
     <div className="pray-audio-trigger-wrapper">
@@ -87,11 +100,14 @@ export default function PrayerAudioPlayer({ requestId, initialTrack = null }) {
         type="button"
         className="btn btn-primary btn-record"
         onClick={handlePlay}
-        style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '12px 24px' }}
+        aria-busy={loading}
+        disabled={loading}
+        style={{ display: "inline-flex", alignItems: "center", gap: "8px", padding: "12px 24px" }}
       >
-        <i className="fa-solid fa-play"></i> 
-        <span>播放祈禱錄音</span>
+        <i className={`fa-solid ${loading ? "fa-spinner fa-spin" : "fa-play"}`} aria-hidden="true"></i>
+        <span>{loading ? "載入語音…" : "播放祈禱錄音"}</span>
       </button>
+      {feedback ? <p className="player-hint">{feedback}</p> : null}
     </div>
   );
 }

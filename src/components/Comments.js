@@ -284,11 +284,12 @@ export default function Comments({ requestId, ownerId = null }) {
   const recordingFormatRef = useRef(resolveRecordingFormat());
 
   const [isRecorderModalOpen, setIsRecorderModalOpen] = useState(false);
-  const [recorderStep, setRecorderStep] = useState("idle"); // idle | countdown | recording
+  const [recorderStep, setRecorderStep] = useState("idle"); // idle | countdown | recording | review
   const [countdownValue, setCountdownValue] = useState(null);
   const [recording, setRecording] = useState(false);
   const [recordSeconds, setRecordSeconds] = useState(0);
   const [recordError, setRecordError] = useState("");
+  const [submittingResponse, setSubmittingResponse] = useState(false);
 
   // 媒體資源
   const mediaRecorderRef = useRef(null);
@@ -296,6 +297,7 @@ export default function Comments({ requestId, ownerId = null }) {
   const audioContextRef = useRef(null);
   const recordChunksRef = useRef([]);
   const recordTimerRef = useRef(null);
+  const discardRecordingOnStopRef = useRef(false);
 
   // 讀取回應列表
   useEffect(() => {
@@ -424,6 +426,8 @@ export default function Comments({ requestId, ownerId = null }) {
   // 開啟錄音（要求麥克風權限→倒數）
   const openRecorder = async () => {
     setRecordError("");
+    setCountdownValue(null);
+    discardRecordingOnStopRef.current = false;
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
         audio: {
@@ -449,10 +453,13 @@ export default function Comments({ requestId, ownerId = null }) {
 
   // 手動關閉 Modal（取消/錯誤）
   const closeRecorderModal = () => {
+    if (recorderStep === "countdown" || recorderStep === "recording") {
+      discardRecordingOnStopRef.current = true;
+      cleanupRecording();
+    }
     setIsRecorderModalOpen(false);
     setRecorderStep("idle");
     setCountdownValue(null);
-    cleanupRecording();
   };
 
   // 開始錄音
@@ -502,18 +509,29 @@ export default function Comments({ requestId, ownerId = null }) {
       });
 
       recorder.addEventListener("stop", () => {
+        if (discardRecordingOnStopRef.current) {
+          discardRecordingOnStopRef.current = false;
+          cleanupRecording(true);
+          setRecorderStep("idle");
+          setIsRecorderModalOpen(false);
+          return;
+        }
+
         const selectedFormat = recordingFormatRef.current || {};
         const mimeType = selectedFormat.mimeType || options?.mimeType || "audio/webm";
         const blob = new Blob(recordChunksRef.current, { type: mimeType });
 
-        if (audioUrl) URL.revokeObjectURL(audioUrl);
         audioBlobRef.current = blob;
-        setAudioUrl(URL.createObjectURL(blob));
+        setAudioUrl((prev) => {
+          if (prev) URL.revokeObjectURL(prev);
+          return URL.createObjectURL(blob);
+        });
 
-        // 這裡屬於錄音正常結束 → 清資源、關 Modal（維持第一版 UI 體驗）
         cleanupRecording(true);
-        setRecorderStep("idle");
-        setIsRecorderModalOpen(false);
+        setCountdownValue(null);
+        setRecordError("");
+        setRecorderStep("review");
+        setIsRecorderModalOpen(true);
       });
 
       mediaRecorderRef.current = recorder;
@@ -535,106 +553,153 @@ export default function Comments({ requestId, ownerId = null }) {
   const stopRecording = () => {
     const recorder = mediaRecorderRef.current;
     if (recorder && recorder.state === "recording") {
+      discardRecordingOnStopRef.current = false;
       recorder.stop();
     } else {
-      // 如果 recorder 已不在 recording 狀態，就直接關閉
       closeRecorderModal();
     }
   };
 
-  // 清除預覽音檔（表單中的「重錄」）
   const resetRecording = () => {
-    if (audioUrl) URL.revokeObjectURL(audioUrl);
+    discardRecordingOnStopRef.current = false;
+    setAudioUrl((prev) => {
+      if (prev) URL.revokeObjectURL(prev);
+      return null;
+    });
     audioBlobRef.current = null;
-    setAudioUrl(null);
     setRecorderStep("idle");
     setRecordSeconds(0);
     setRecording(false);
+    setCountdownValue(null);
   };
 
   // 送出表單
+  const useRecordedAudio = () => {
+    setIsRecorderModalOpen(false);
+    setRecorderStep("idle");
+    setRecordError("");
+  };
+
+  const rerecordAudio = async () => {
+    resetRecording();
+    await openRecorder();
+  };
+
+  const submitResponse = async () => {
+    if (recording || submittingResponse) return false;
+    if (!text.trim() && !audioBlobRef.current) return false;
+
+    setSubmittingResponse(true);
+
+    const formData = new FormData();
+    formData.append("requestId", String(requestId));
+    formData.append("message", text.trim());
+    formData.append("isAnonymous", String(isAnonymous));
+    formData.append("responderId", authUser?.id || "");
+
+    if (audioBlobRef.current) {
+      const format = recordingFormatRef.current || {};
+      const type =
+        audioBlobRef.current.type ||
+        format.mimeType ||
+        resolveRecordingFormat().mimeType ||
+        "audio/webm";
+      const extension = format.extension || getExtensionFromMime(type);
+      formData.append(
+        "audio",
+        new File([audioBlobRef.current], `prayer-recording.${extension}`, { type })
+      );
+    }
+
+    try {
+      const res = await fetch("/api/responses", { method: "POST", body: formData });
+      if (!res.ok) {
+        throw new Error("Failed to submit response. Please try again.");
+      }
+
+      const saved = await res.json();
+      setResponses((prev) => [saved, ...prev]);
+      if (typeof window !== "undefined") {
+        window.dispatchEvent(new CustomEvent(PRAYER_RESPONSE_CREATED, { detail: saved }));
+      }
+      setText("");
+      setIsAnonymous(false);
+      resetRecording();
+      setIsRecorderModalOpen(false);
+      setRecorderStep("idle");
+      return true;
+    } catch (err) {
+      setActionNotice(err?.message || "Failed to submit response.");
+      setActionNoticeType("error");
+      return false;
+    } finally {
+      setSubmittingResponse(false);
+    }
+  };
+
   const handleSubmit = async (event) => {
-  event.preventDefault();
-  if (recording) return;
-  if (!text.trim() && !audioBlobRef.current) return;
+    event.preventDefault();
+    await submitResponse();
+  };
 
-  console.log("handleSubmit -> authUser:", authUser);
+  const submitFromRecorderModal = async () => {
+    const success = await submitResponse();
+    if (success) {
+      setIsRecorderModalOpen(false);
+      setRecorderStep("idle");
+    }
+  };
 
-  const formData = new FormData();
-  formData.append("requestId", String(requestId));
-  formData.append("message", text.trim());
-  formData.append("isAnonymous", String(isAnonymous));
-  formData.append("responderId", authUser?.id || "");
-
-  if (audioBlobRef.current) {
-    const format = recordingFormatRef.current || {};
-    const type =
-      audioBlobRef.current.type ||
-      format.mimeType ||
-      resolveRecordingFormat().mimeType ||
-      "audio/webm";
-    const extension = format.extension || getExtensionFromMime(type);
-    formData.append(
-      "audio",
-      new File([audioBlobRef.current], `prayer-recording.${extension}`, { type })
-    );
-  }
-
-  for (const [key, value] of formData.entries()) {
-    console.log("FormData entry:", key, value);
-  }
-
-  const res = await fetch("/api/responses", { method: "POST", body: formData });
-  if (!res.ok) {
-    console.error("submit response failed");
-    return;
-  }
-
-  const saved = await res.json();
-  console.log("API saved response:", saved);
-
-  setResponses((prev) => [saved, ...prev]);
-  if (typeof window !== "undefined") {
-    window.dispatchEvent(new CustomEvent(PRAYER_RESPONSE_CREATED, { detail: saved }));
-  }
-  setText("");
-  setIsAnonymous(false);
-  resetRecording();
-};
-
-  // Modal（保留第一版 UI 的 class 命名）
+  // Recorder modal
   const renderRecorderModal = () => {
     if (!isRecorderModalOpen) return null;
 
     return (
-      <div className="record-modal" role="dialog" aria-modal="true">
+      <div className="record-modal" role="dialog" aria-modal="true" aria-label="Recorder">
         <div className="record-modal__backdrop" onClick={closeRecorderModal} />
         <div className="record-modal__card">
           {recordError ? (
             <>
-              <h4>錄音錯誤</h4>
+              <h4>Recording Error</h4>
               <p className="cp-alert cp-alert--error">{recordError}</p>
               <button type="button" className="cp-button cp-button--ghost" onClick={closeRecorderModal}>
-                關閉
+                Close
               </button>
             </>
           ) : recorderStep === "countdown" ? (
             <>
-              <h4>準備開始錄音</h4>
-              <p>請在安靜環境下對著麥克風說話。</p>
+              <h4>Get Ready</h4>
+              <p>Recording starts after countdown.</p>
               <div className="record-modal__count">{countdownValue}</div>
               <button type="button" className="cp-button cp-button--ghost" onClick={closeRecorderModal}>
-                取消
+                Cancel
               </button>
             </>
           ) : recorderStep === "recording" ? (
             <>
-              <h4>正在錄音</h4>
-              <p>錄音時間上限 {MAX_RECORD_SECONDS} 秒。</p>
+              <h4>Recording</h4>
+              <p>Maximum {MAX_RECORD_SECONDS} seconds.</p>
               <div className="record-modal__timer">{formatSeconds(recordSeconds)}</div>
               <div className="record-modal__actions">
                 <button type="button" className="cp-button cp-button--danger" onClick={stopRecording}>
-                  停止錄音
+                  Stop Recording
+                </button>
+              </div>
+            </>
+          ) : recorderStep === "review" && audioUrl ? (
+            <>
+              <h4>Review Recording</h4>
+              <p>Upload now, or record again.</p>
+              <audio src={audioUrl} controls preload="metadata" className="record-modal__audio" />
+              <div className="record-modal__actions record-modal__actions--review">
+                <button type="button" className="cp-button cp-button--ghost" onClick={rerecordAudio} disabled={submittingResponse}>
+                  Re-record
+                </button>
+                <button type="button" className="cp-button cp-button--ghost" onClick={useRecordedAudio} disabled={submittingResponse}>
+                  Keep and Close
+                </button>
+                <button type="button" className="cp-button" onClick={submitFromRecorderModal} disabled={submittingResponse}>
+                  {submittingResponse ? "Uploading..." : "Upload Now"}
                 </button>
               </div>
             </>
@@ -792,7 +857,6 @@ export default function Comments({ requestId, ownerId = null }) {
               placeholder="和他們說說話，或分享你的代禱內容。"
               rows={4}
             />
-
             <div className="record-toolbar">
               {!recording && !hasAudio ? (
                 <button
@@ -802,29 +866,31 @@ export default function Comments({ requestId, ownerId = null }) {
                     resetRecording();
                     await openRecorder();
                   }}
-                  style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '12px 24px', borderRadius: '50px' }}
+                  style={{ display: "inline-flex", alignItems: "center", gap: "8px", padding: "12px 24px", borderRadius: "50px" }}
                 >
                   <i className="fa-solid fa-microphone"></i>
-                  錄音祝福
+                  Record Audio
                 </button>
               ) : null}
 
               {hasAudio ? (
-                <div className="audio-preview glass-panel" style={{ padding: '10px', marginTop: '10px' }}>
-                  <p style={{ margin: '0 0 10px 0', fontSize: '0.9rem', color: 'var(--text-light)' }}>已錄製的語音預覽：</p>
-                  <audio src={audioUrl} controls preload="metadata" style={{ width: '100%' }} />
-                  <div className="audio-preview__actions" style={{ display: 'flex', gap: '10px', marginTop: '10px' }}>
+                <div className="audio-preview glass-panel" style={{ padding: "10px", marginTop: "10px" }}>
+                  <p style={{ margin: "0 0 10px 0", fontSize: "0.9rem", color: "var(--text-light)" }}>
+                    Audio ready. Re-record or submit your response.
+                  </p>
+                  <audio src={audioUrl} controls preload="metadata" style={{ width: "100%" }} />
+                  <div className="audio-preview__actions" style={{ display: "flex", gap: "10px", marginTop: "10px" }}>
                     <button type="button" className="btn btn-glass" onClick={resetRecording}>
-                      <i className="fa-solid fa-rotate-right"></i> 重新錄製
+                      <i className="fa-solid fa-rotate-right"></i> Re-record
                     </button>
-                    <button type="submit" className="btn btn-primary" disabled={recording}>
-                      <i className="fa-solid fa-paper-plane"></i> 送出回應
+                    <button type="submit" className="btn btn-primary" disabled={recording || submittingResponse}>
+                      <i className="fa-solid fa-paper-plane"></i> {submittingResponse ? "Sending..." : "Send Response"}
                     </button>
                   </div>
                 </div>
               ) : (
-                <button type="submit" className="btn btn-primary" disabled={recording} style={{ marginTop: '10px' }}>
-                   純文字送出
+                <button type="submit" className="btn btn-primary" disabled={recording || submittingResponse} style={{ marginTop: "10px" }}>
+                  {submittingResponse ? "Sending..." : "Send Response"}
                 </button>
               )}
             </div>

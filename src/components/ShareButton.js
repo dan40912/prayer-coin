@@ -2,27 +2,74 @@
 
 import { useState } from "react";
 
-export default function ShareButton({ canonical }) {
+function resolveShareUrl(canonical = "") {
+  if (typeof window === "undefined") {
+    return canonical;
+  }
+  if (!canonical) {
+    return window.location.href;
+  }
+  if (canonical.startsWith("http")) {
+    return canonical;
+  }
+  if (canonical.startsWith("/")) {
+    return `${window.location.origin}${canonical}`;
+  }
+  return canonical;
+}
+
+export default function ShareButton({ canonical = "", variant = "default" }) {
   const [copied, setCopied] = useState(false);
 
   const handleShare = async () => {
     try {
-      await navigator.clipboard.writeText(canonical);
+      const shareUrl = resolveShareUrl(canonical);
+      if (navigator.share) {
+        await navigator.share({
+          title: document.title,
+          url: shareUrl,
+        });
+        return;
+      }
+      if (navigator.clipboard) {
+        await navigator.clipboard.writeText(shareUrl);
+      } else {
+        const textarea = document.createElement("textarea");
+        textarea.value = shareUrl;
+        textarea.setAttribute("readonly", "");
+        textarea.style.position = "absolute";
+        textarea.style.left = "-9999px";
+        document.body.appendChild(textarea);
+        textarea.select();
+        document.execCommand("copy");
+        document.body.removeChild(textarea);
+      }
       setCopied(true);
-      setTimeout(() => setCopied(false), 2000); // 2 秒後消失
+      setTimeout(() => setCopied(false), 2000);
     } catch (err) {
-      console.error("❌ 複製失敗:", err);
+      console.error("❌ 分享失敗:", err);
     }
   };
 
+  const isIconVariant = variant === "icon";
+
   return (
-    <div className="share-wrapper">
+    <div className={`share-wrapper${isIconVariant ? " share-wrapper--icon" : ""}`}>
       <button
         type="button"
-        className="button button--primary"
+        className={isIconVariant ? "btn-icon" : "button button--primary"}
         onClick={handleShare}
+        aria-label="分享這則禱告"
+        title={isIconVariant ? "分享這則禱告" : undefined}
       >
-        🔗 分享
+        {isIconVariant ? (
+          <>
+            <i className="fa-solid fa-share-nodes" aria-hidden="true"></i>
+            <span className="sr-only">分享</span>
+          </>
+        ) : (
+          "🔗 分享"
+        )}
       </button>
       {copied && (
         <div className="toast">

@@ -1,23 +1,19 @@
-import Link from "next/link";
+﻿import Link from "next/link";
 import { notFound } from "next/navigation";
-import { readHomeCard, readRelatedHomeCards } from "@/lib/homeCards";
-import { sanitizeHtmlForDisplay, sanitizeHtmlToPlainText } from "@/lib/htmlSanitizer";
-import PrayerAudioPlayer from "@/components/PrayerAudioPlayer";
-import Comments from "@/components/Comments";
-import ShareButton from "@/components/ShareButton";
-import PrayerRequestActions from "@/components/PrayerRequestActions";
-import { SiteHeader, SiteFooter } from "@/components/site-chrome";
 
-// Import new styles
+import Comments from "@/components/Comments";
+import DetailAudioQueueBootstrap from "@/components/prayer-detail/DetailAudioQueueBootstrap";
+import { SiteFooter, SiteHeader } from "@/components/site-chrome";
+import {
+  readAdjacentHomeCards,
+  readHomeCard,
+  readRelatedHomeCards,
+} from "@/lib/homeCards";
+import { sanitizeHtmlForDisplay, sanitizeHtmlToPlainText } from "@/lib/htmlSanitizer";
+
 import "@/styles/theme-detail.css";
 
 export const dynamic = "force-dynamic";
-
-const FALLBACK_GALLERY_IMAGES = [
-  "https://images.unsplash.com/photo-1520854221050-0f4caff449fb?auto=format&fit=crop&w=1200&q=80",
-  "https://images.unsplash.com/photo-1525182008055-f88b95ff7980?auto=format&fit=crop&w=1200&q=80",
-  "https://images.unsplash.com/photo-1469474968028-56623f02e42e?auto=format&fit=crop&w=1200&q=80"
-];
 
 function parseId(paramValue) {
   const raw = typeof paramValue === "string" ? paramValue.trim() : "";
@@ -30,8 +26,16 @@ function parseId(paramValue) {
   return id;
 }
 
-function formatMeta(meta = []) {
-  return Array.isArray(meta) ? meta.filter(Boolean) : [];
+function formatResponseCount(count) {
+  const safe = Number(count) || 0;
+  if (safe >= 1000) {
+    return `${(safe / 1000).toFixed(1).replace(/\.0$/, "")}k`;
+  }
+  return String(safe);
+}
+
+function getAuthorName(card) {
+  return card?.owner?.name?.trim?.() || "匿名使用者";
 }
 
 export async function generateMetadata({ params }) {
@@ -49,84 +53,169 @@ export default async function PrayerDetailPage({ params }) {
   const id = parseId(params?.id);
   if (!id) return notFound();
 
-  const card = await readHomeCard(id);
+  const [card, relatedCards, adjacentCards] = await Promise.all([
+    readHomeCard(id),
+    readRelatedHomeCards(id, 4),
+    readAdjacentHomeCards(id),
+  ]);
+
   if (!card) return notFound();
 
-  const relatedCards = (await readRelatedHomeCards(card.id, 6)).filter(
-    (item) => item && Number(item.id) !== Number(card.id)
-  );
-
-  const canonical = `/prayfor/${card.id}`;
-  const metaItems = formatMeta(card.meta);
-  const descriptionHtml = sanitizeHtmlForDisplay(card.description);
   const owner = card.owner ?? null;
-  const ownerName = owner?.name?.trim() || "Prayer Host";
-  const ownerAvatar = owner?.avatarUrl?.trim() || "";
-  const bgImage = card.image || FALLBACK_GALLERY_IMAGES[0];
+  const ownerName = getAuthorName(card);
+  const ownerAvatar = owner?.avatarUrl?.trim?.() || "";
+  const updatedDisplay = card.updatedAt
+    ? new Date(card.updatedAt).toLocaleDateString("zh-TW", {
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+      })
+    : "未更新";
+  const createdDisplay = card.createdAt
+    ? new Date(card.createdAt).toLocaleDateString("zh-TW", {
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+      })
+    : updatedDisplay;
+
+  const detailImage = card.image || "/img/categories/popular.jpg";
+  const descriptionHtml = sanitizeHtmlForDisplay(card.description || "<p>目前尚無詳細內容</p>");
+  const responseCount = Number(card?._count?.responses || 0);
+  const initialTrack = card.voiceHref
+    ? {
+        id: `primary-${card.id}`,
+        voiceUrl: card.voiceHref,
+        speaker: ownerName,
+        message: card.title,
+        avatarUrl: ownerAvatar,
+        requestTitle: card.title,
+      }
+    : null;
+
+  const previousCard = adjacentCards?.prev || null;
+  const nextCard = adjacentCards?.next || null;
 
   return (
     <>
       <SiteHeader activePath="/prayfor" />
-      <main className="detail-page" style={{ paddingTop: 0 }}>
-        <div id="swipe-container">
-          <section
-            className="prayer-slide active"
-            style={{
-              backgroundImage: `linear-gradient(to bottom, rgba(7, 11, 20, 0.8), rgba(7, 11, 20, 1)), url(${bgImage})`,
-              backgroundSize: "cover",
-              backgroundPosition: "center",
-            }}
-          >
-            <div className="ambient-glow"></div>
-            <div className="slide-content-wrapper">
-              
-              <article className="prayer-main-content">
-                <div className="author-row">
-                  {ownerAvatar ? (
-                    <img src={ownerAvatar} alt={ownerName} className="card-avatar large" />
-                  ) : (
-                    <div className="card-avatar large">{ownerName[0]}</div>
-                  )}
-                  <div className="author-info">
-                    <h2>{ownerName}</h2>
-                    <span>{new Date(card.createdAt).toLocaleDateString()}</span>
-                  </div>
-                  <button className="btn-follow">追蹤</button>
-                </div>
 
-                <div className="prayer-tags">
-                  {metaItems.map(tag => (
-                    <span key={tag} className="tag">{tag}</span>
-                  ))}
-                </div>
+      <main className="pdv2-page">
+        {previousCard ? (
+          <Link href={`/prayfor/${previousCard.id}`} prefetch={false} className="pdv2-nav-arrow pdv2-nav-arrow--prev" aria-label={`上一則：${previousCard.title}`}>
+            <i className="fa-solid fa-chevron-left" aria-hidden="true" />
+          </Link>
+        ) : (
+          <span className="pdv2-nav-arrow pdv2-nav-arrow--prev is-disabled" aria-hidden="true">
+            <i className="fa-solid fa-chevron-left" aria-hidden="true" />
+          </span>
+        )}
 
-                <h1 className="prayer-title">{card.title}</h1>
-                
-                <div className="prayer-body legacy-body-text" dangerouslySetInnerHTML={{ __html: descriptionHtml }}>
-                </div>
-                
-                <div style={{ marginTop: '20px' }}>
-                    <PrayerAudioPlayer
-                      requestId={String(card.id)}
-                      initialTrack={card.voiceHref ? { voiceUrl: card.voiceHref, speaker: card.title } : null}
-                    />
-                </div>
-              </article>
+        {nextCard ? (
+          <Link href={`/prayfor/${nextCard.id}`} prefetch={false} className="pdv2-nav-arrow pdv2-nav-arrow--next" aria-label={`下一則：${nextCard.title}`}>
+            <i className="fa-solid fa-chevron-right" aria-hidden="true" />
+          </Link>
+        ) : (
+          <span className="pdv2-nav-arrow pdv2-nav-arrow--next is-disabled" aria-hidden="true">
+            <i className="fa-solid fa-chevron-right" aria-hidden="true" />
+          </span>
+        )}
 
-              <div className="responses-area glass-panel">
-                <div className="responses-header">
-                  <h3>來自遠方的聲音祝福</h3>
-                </div>
-                
-                <div className="comments-wrapper">
-                  <Comments requestId={String(card.id)} ownerId={owner?.id} />
-                </div>
+        <div className="pdv2-shell">
+          <Link href="/prayfor" prefetch={false} className="pdv2-back-link">
+            <i className="fa-solid fa-chevron-left" aria-hidden="true" />
+            返回禱告牆
+          </Link>
+
+          <article className="pdv2-hero-card">
+            <div className="pdv2-hero-image-wrap">
+              <img src={detailImage} alt={card.title} loading="lazy" />
+            </div>
+
+            <div className="pdv2-hero-body">
+              <div className="pdv2-title-row">
+                <h1>{card.title}</h1>
+                <button type="button" className="pdv2-follow-btn">
+                  關注
+                </button>
               </div>
 
+              <div className="pdv2-meta-row">
+                <span>更新日期：{updatedDisplay}</span>
+                <span>建立日期：{createdDisplay}</span>
+                <span>上傳者：{ownerName}</span>
+                <span>回應數：{responseCount}</span>
+              </div>
             </div>
+          </article>
+
+          <article className="pdv2-content-card">
+            <div className="pdv2-content-body" dangerouslySetInnerHTML={{ __html: descriptionHtml }} />
+          </article>
+
+          <section className="pdv2-comments-card" id="responses-panel">
+            <div className="pdv2-comments-head">
+              <h2>留言與代禱回應</h2>
+            </div>
+            <Comments requestId={String(card.id)} ownerId={owner?.id} prayerTitle={card.title} />
           </section>
+
+          {relatedCards?.length ? (
+            <section className="pdv2-related-section" aria-label="其他代禱事項">
+              <div className="pdv2-related-head">
+                <h2>其他代禱事項</h2>
+                <Link href="/prayfor" prefetch={false}>
+                  查看更多
+                </Link>
+              </div>
+
+              <div className="home-card-grid pdv2-home-card-grid">
+                {relatedCards.map((item) => {
+                  const relatedAuthor = getAuthorName(item);
+                  const relatedCount = item?._count?.responses ?? item?.responsesCount ?? 0;
+                  return (
+                    <article key={item.id} className="home-card">
+                      <Link
+                        href={`/prayfor/${item.id}`}
+                        prefetch={false}
+                        className="home-card__cover-link"
+                        aria-label={`前往 ${item.title}`}
+                      />
+
+                      <div
+                        className="home-card__bg"
+                        style={item.image ? { backgroundImage: `url(${item.image})` } : undefined}
+                        aria-hidden="true"
+                      />
+
+                      <div className="home-card__content">
+                        <h4 className="home-card__title">{item.title}</h4>
+                        <div className="home-card__tag-row">
+                          <span className="home-card__category">{item.category?.name || "代禱"}</span>
+                        </div>
+                        <div className="home-card__meta home-card__meta--bottom">
+                          <span className="home-card__author" title={`作者：${relatedAuthor}`}>
+                            作者：{relatedAuthor}
+                          </span>
+                          <span className="home-card__responses">{formatResponseCount(relatedCount)} 則</span>
+                        </div>
+                      </div>
+                    </article>
+                  );
+                })}
+              </div>
+            </section>
+          ) : null}
         </div>
       </main>
+
+      <DetailAudioQueueBootstrap
+        requestId={String(card.id)}
+        prayerTitle={card.title}
+        initialTrack={initialTrack}
+      />
+
+      <SiteFooter />
     </>
   );
 }

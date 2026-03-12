@@ -2,11 +2,13 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
+import { useAudio } from "@/context/AudioContext";
 
 const POPULAR_SLUG = "popular";
-const DEFAULT_LIMIT = 6;
+const DEFAULT_LIMIT = 12;
 const SUGGESTION_LIMIT = 6;
 const SEARCH_DEBOUNCE = 2000;
+const QUICK_SEARCH_TAGS = ["福音", "醫治", "家庭", "工作", "個人", "世界"];
 
 function buildQuery(params = {}) {
   const query = new URLSearchParams();
@@ -19,7 +21,10 @@ function buildQuery(params = {}) {
 }
 
 async function fetchCards(params = {}, { signal } = {}) {
-  const response = await fetch(`/api/home-cards${buildQuery(params)}`, { cache: "no-store", signal });
+  const response = await fetch(`/api/home-cards${buildQuery(params)}`, {
+    cache: "no-store",
+    signal,
+  });
   if (!response.ok) {
     throw new Error(`Failed to load cards (${response.status})`);
   }
@@ -39,11 +44,60 @@ function formatResponseCount(count) {
   return `${safe}`;
 }
 
+function getAuthorName(card) {
+  return card?.owner?.name?.trim?.() || "匿名";
+}
+
+function buildPrimaryTrack(card) {
+  if (!card?.voiceHref) return null;
+  return {
+    id: `card-${card.id}-primary`,
+    voiceUrl: card.voiceHref,
+    speaker: getAuthorName(card),
+    message: card.title || "",
+    avatarUrl: card?.owner?.avatarUrl?.trim?.() || "",
+    requestTitle: card.title || "禱告錄音",
+  };
+}
+
+function buildResponseTrack(response, card, index) {
+  if (!response?.voiceUrl) return null;
+  const speaker = response.isAnonymous
+    ? "匿名代禱者"
+    : response.responder?.name || response.responder?.email || `回應者 ${index + 1}`;
+
+  return {
+    id: `card-${card?.id}-response-${response.id ?? index}`,
+    voiceUrl: response.voiceUrl,
+    speaker,
+    message: response.message?.trim() || "",
+    avatarUrl: response.responder?.avatarUrl?.trim?.() || "",
+    requestTitle: card?.title || "禱告錄音",
+  };
+}
+
+function dedupeTracks(tracks) {
+  const source = Array.isArray(tracks) ? tracks : [];
+  const seen = new Set();
+  const result = [];
+
+  for (const track of source) {
+    if (!track?.voiceUrl) continue;
+    const key = track.voiceUrl;
+    if (seen.has(key)) continue;
+    seen.add(key);
+    result.push(track);
+  }
+  return result;
+}
+
 export default function HomePrayerExplorer({
   initialCategories = [],
   initialCards = [],
-  initialActiveSlug = POPULAR_SLUG
+  initialActiveSlug = POPULAR_SLUG,
 }) {
+  const { setQueue } = useAudio();
+
   const [categories] = useState(initialCategories);
   const [activeCategory, setActiveCategory] = useState(initialActiveSlug);
   const [cards, setCards] = useState(initialCards);
@@ -65,45 +119,40 @@ export default function HomePrayerExplorer({
     return [
       {
         slug: POPULAR_SLUG,
-        name: "熱門祈禱",
+        name: "熱門禱告",
         description: "回應最多的禱告需求",
-        background: "/img/categories/popular.jpg"
+        background: "/img/categories/popular.jpg",
       },
       ...topCategories.map((item) => ({
         ...item,
-        background: getCategoryBackground(item.slug)
-      }))
+        background: getCategoryBackground(item.slug),
+      })),
     ];
   }, [topCategories]);
 
   const trimmedQuery = searchQuery.trim();
 
-  const runSearch = useCallback(
-    async (query, { signal } = {}) => {
-      if (!query) return;
+  const runSearch = useCallback(async (query, { signal } = {}) => {
+    if (!query) return;
 
-      setIsSearchLoading(true);
-      setSearchError(null);
-      try {
-        const results = await fetchCards(
-          { search: query, limit: DEFAULT_LIMIT * 2, sort: "responses" },
-          { signal }
-        );
-        setSearchResults(results);
-        setHasSearched(true);
-      } catch (error) {
-        if (error.name === "AbortError") {
-          return;
-        }
-        console.warn("[HomePrayerExplorer] search failed", error);
-        setSearchError("搜尋發生錯誤，請稍後再試");
-        setHasSearched(true);
-      } finally {
-        setIsSearchLoading(false);
-      }
-    },
-    []
-  );
+    setIsSearchLoading(true);
+    setSearchError(null);
+    try {
+      const results = await fetchCards(
+        { search: query, limit: DEFAULT_LIMIT * 2, sort: "responses" },
+        { signal }
+      );
+      setSearchResults(results);
+      setHasSearched(true);
+    } catch (error) {
+      if (error.name === "AbortError") return;
+      console.warn("[HomePrayerExplorer] search failed", error);
+      setSearchError("搜尋發生錯誤，請稍後再試。");
+      setHasSearched(true);
+    } finally {
+      setIsSearchLoading(false);
+    }
+  }, []);
 
   useEffect(() => {
     if (debounceTimeoutRef.current) {
@@ -154,12 +203,21 @@ export default function HomePrayerExplorer({
   const showSuggestions = Boolean(
     trimmedQuery && (isSearchLoading || searchError || suggestions.length > 0 || hasSearched)
   );
+  const queueCards = useMemo(
+    () => (Array.isArray(displayCards) ? displayCards.slice(0, DEFAULT_LIMIT) : []),
+    [displayCards]
+  );
+  const queueSignature = useMemo(
+    () =>
+      queueCards
+        .map((card) => `${card?.id ?? ""}:${card?.voiceHref ?? ""}:${card?._count?.responses ?? 0}`)
+        .join("|"),
+    [queueCards]
+  );
 
   const handleCategorySelect = async (slug) => {
     if (!slug) return;
-    if (slug === activeCategory && !isShowingSearchResults) {
-      return;
-    }
+    if (slug === activeCategory && !isShowingSearchResults) return;
 
     setActiveCategory(slug);
     setSearchQuery("");
@@ -181,7 +239,7 @@ export default function HomePrayerExplorer({
       setCards(nextCards);
     } catch (error) {
       console.warn("[HomePrayerExplorer] load failed", error);
-      setLoadError("無法載入內容，請稍後再試");
+      setLoadError("無法載入內容，請稍後再試。");
     } finally {
       setIsLoading(false);
     }
@@ -203,6 +261,7 @@ export default function HomePrayerExplorer({
   const handleSearchSubmit = () => {
     const query = trimmedQuery;
     if (!query) return;
+    setActiveCategory(null);
 
     if (debounceTimeoutRef.current) {
       clearTimeout(debounceTimeoutRef.current);
@@ -222,35 +281,118 @@ export default function HomePrayerExplorer({
     });
   };
 
+  const handleQuickTagSearch = (keyword) => {
+    const query = (keyword || "").trim();
+    if (!query) return;
+    setSearchQuery(query);
+    setHasSearched(false);
+    setActiveCategory(null);
+
+    if (debounceTimeoutRef.current) {
+      clearTimeout(debounceTimeoutRef.current);
+      debounceTimeoutRef.current = null;
+    }
+    if (searchControllerRef.current) {
+      searchControllerRef.current.abort();
+      searchControllerRef.current = null;
+    }
+
+    const controller = new AbortController();
+    searchControllerRef.current = controller;
+    runSearch(query, { signal: controller.signal }).finally(() => {
+      if (searchControllerRef.current === controller) {
+        searchControllerRef.current = null;
+      }
+    });
+  };
+
+  useEffect(() => {
+    if (displayIsLoading && !queueCards.length) return undefined;
+
+    let cancelled = false;
+    const controller = new AbortController();
+
+    const buildQueueFromCards = async () => {
+      if (!queueCards.length) {
+        setQueue([], -1);
+        return;
+      }
+
+      const tracks = queueCards.map(buildPrimaryTrack).filter(Boolean);
+      const responseTracksByCard = await Promise.all(
+        queueCards.map(async (card) => {
+          if (!card?.id) return [];
+          try {
+            const response = await fetch(`/api/responses/${card.id}`, {
+              cache: "no-store",
+              signal: controller.signal,
+            });
+            if (!response.ok) return [];
+            const data = await response.json();
+            if (!Array.isArray(data)) return [];
+            return data
+              .map((item, index) => buildResponseTrack(item, card, index))
+              .filter(Boolean);
+          } catch (error) {
+            if (error?.name === "AbortError") throw error;
+            console.warn("[HomePrayerExplorer] preload responses failed", card?.id, error);
+            return [];
+          }
+        })
+      );
+
+      if (cancelled) return;
+      const merged = dedupeTracks([...tracks, ...responseTracksByCard.flat()]);
+      setQueue(merged, -1);
+    };
+
+    buildQueueFromCards().catch((error) => {
+      if (error?.name === "AbortError") return;
+      console.warn("[HomePrayerExplorer] preload queue failed", error);
+    });
+
+    return () => {
+      cancelled = true;
+      controller.abort();
+    };
+  }, [displayIsLoading, queueCards, queueSignature, setQueue]);
+
   const headingText = isShowingSearchResults
-    ? `搜尋結果：「${searchQuery.trim()}」`
+    ? `搜尋結果：「${trimmedQuery}」`
     : activeCategory === POPULAR_SLUG
-    ? "熱門祈禱"
-    : "祈禱卡片";
+      ? "熱門禱告牆"
+      : "禱告卡片牆";
 
   return (
     <section className="section home-explorer">
       <div className="home-explorer__header">
-        <div>
-          <span className="badge-soft">PRAYER DISCOVERY</span>
-          <h2>{"探索祈禱與影響力"}</h2>
-          <p className="muted">
-            {"精選內容，幫助你快速找到可以代祈的主題。"}
-          </p>
+        <div className="home-explorer__intro">
+          <span className="badge-soft home-explorer__badge">PRAYER DISCOVERY</span>
+          <p className="home-explorer__intro-text">先搜尋，再快速找到你願意代禱的主題。</p>
         </div>
         <div className="home-explorer__search-card">
+          <div className="home-explorer__search-head">
+            <p className="home-explorer__search-title">搜尋禱告主題</p>
+            <p className="home-explorer__search-helper">輸入關鍵字，或點選下方快速標籤</p>
+          </div>
           <div className="home-explorer__search">
             <label htmlFor="home-explorer-search" className="sr-only">
-              {"搜尋祈禱需求與影響力專案"}
+              搜尋禱告主題
             </label>
             <input
               id="home-explorer-search"
               type="search"
-              placeholder="輸入關鍵字，例如：福音、個人、世界局勢、政治、健康..."
+              placeholder="輸入關鍵字，例如：福音、醫治、家庭、工作..."
               value={searchQuery}
               onChange={handleSearchChange}
               className="home-explorer__search-input"
               autoComplete="off"
+              onKeyDown={(event) => {
+                if (event.key === "Enter") {
+                  event.preventDefault();
+                  handleSearchSubmit();
+                }
+              }}
             />
             <button
               type="button"
@@ -258,13 +400,13 @@ export default function HomePrayerExplorer({
               onClick={handleSearchSubmit}
               disabled={!trimmedQuery || isSearchLoading}
             >
-              {isSearchLoading ? "搜尋中..." : "搜尋"}
+              {isSearchLoading ? "搜尋中..." : "立即搜尋"}
             </button>
             {showSuggestions ? (
               <div className="home-explorer__suggestions" role="listbox" aria-label="搜尋建議">
                 {isSearchLoading ? (
                   <div className="home-explorer__suggestion home-explorer__suggestion--status">
-                    {"搜尋中…"}
+                    搜尋中...
                   </div>
                 ) : null}
                 {searchError ? (
@@ -274,7 +416,7 @@ export default function HomePrayerExplorer({
                 ) : null}
                 {!isSearchLoading && !searchError && hasSearched && suggestions.length === 0 ? (
                   <div className="home-explorer__suggestion home-explorer__suggestion--status muted">
-                    {"沒有找到相關的主題"}
+                    沒有找到相關結果
                   </div>
                 ) : null}
                 {suggestions.map((item) => {
@@ -289,13 +431,28 @@ export default function HomePrayerExplorer({
                     >
                       <span className="home-explorer__suggestion-title">{item.title}</span>
                       <span className="home-explorer__suggestion-meta">
-                        {item.category?.name || "禱告主題"}
+                        {item.category?.name || "禱告"}
                       </span>
                     </Link>
                   );
                 })}
               </div>
             ) : null}
+          </div>
+          <div className="home-explorer__quick-tags" role="group" aria-label="快速搜尋標籤">
+            {QUICK_SEARCH_TAGS.map((tag) => {
+              const isActiveTag = trimmedQuery === tag;
+              return (
+                <button
+                  key={tag}
+                  type="button"
+                  className={`home-explorer__quick-tag${isActiveTag ? " is-active" : ""}`}
+                  onClick={() => handleQuickTagSearch(tag)}
+                >
+                  {tag}
+                </button>
+              );
+            })}
           </div>
         </div>
       </div>
@@ -317,9 +474,7 @@ export default function HomePrayerExplorer({
               />
               <span className="home-category-card__content">
                 <span className="home-category-card__name">{category.name}</span>
-                <span className="home-category-card__description">
-                  {category.description || "沒有描述"}
-                </span>
+                <span className="home-category-card__description">{category.description || "沒有描述"}</span>
               </span>
             </button>
           );
@@ -329,9 +484,7 @@ export default function HomePrayerExplorer({
       <div className="home-cards">
         <div className="home-cards__header">
           <h3>{headingText}</h3>
-          {displayIsLoading ? (
-            <span className="home-cards__status">{"載入中..."}</span>
-          ) : null}
+          {displayIsLoading ? <span className="home-cards__status">載入中...</span> : null}
           {displayError ? <span className="home-cards__status error">{displayError}</span> : null}
         </div>
 
@@ -339,33 +492,39 @@ export default function HomePrayerExplorer({
           {displayCards.map((card) => {
             const responseCount = card?._count?.responses ?? card?.responsesCount ?? 0;
             const detailHref = `/prayfor/${card.id}`;
+            const authorName = getAuthorName(card);
+
             return (
               <article key={card.id} className="home-card">
+                <Link
+                  href={detailHref}
+                  className="home-card__cover-link"
+                  aria-label={`Open ${card.title}`}
+                  prefetch={false}
+                />
                 <div
-                  className="home-card__media"
+                  className="home-card__bg"
                   style={card.image ? { backgroundImage: `url(${card.image})` } : undefined}
-                >
-                  <span className="home-card__category">{card.category?.name || "未分類"}</span>
-                </div>
-                <div className="home-card__body">
-                  <h4>{card.title}</h4>
-                  <p>{card.description}</p>
-                </div>
-                <div className="home-card__footer">
-                  <span className="home-card__responses">
-                    {formatResponseCount(responseCount)}{"個回應"}
-                  </span>
-                  <Link href={detailHref} className="home-card__link" prefetch={false}>
-                    {"查看詳情"}
-                  </Link>
+                  aria-hidden="true"
+                />
+                <div className="home-card__content">
+                  <h4 className="home-card__title">{card.title}</h4>
+                  <div className="home-card__tag-row">
+                    <span className="home-card__category">{card.category?.name || "禱告"}</span>
+                  </div>
+                  <div className="home-card__meta home-card__meta--bottom">
+                    <span className="home-card__author" title={`作者 ${authorName}`}>
+                      作者 {authorName}
+                    </span>
+                    <span className="home-card__responses">{formatResponseCount(responseCount)} 則</span>
+                  </div>
                 </div>
               </article>
             );
           })}
+
           {!displayIsLoading && !displayError && displayCards.length === 0 ? (
-            <p className="home-card__empty">
-              {"目前沒有符合條件的祈禱卡片"}
-            </p>
+            <p className="home-card__empty">目前沒有符合條件的禱告卡片。</p>
           ) : null}
         </div>
       </div>

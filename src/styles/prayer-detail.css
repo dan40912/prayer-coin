@@ -1,5 +1,6 @@
 ﻿body.fullpage-scroll {
-  height: 100%;
+  min-height: 100vh;
+  min-height: 100dvh;
   overflow: hidden;
   background:
     radial-gradient(120% 120% at 80% 10%, rgba(90, 117, 255, 0.16), rgba(12, 19, 34, 0.08) 52%, rgba(7, 11, 22, 0.75) 100%),
@@ -8,14 +9,19 @@
 
 body.fullpage-scroll .pray-detail {
   height: calc(100vh - var(--header-height));
+  height: min(calc(100dvh - var(--header-height)), calc(100vh - var(--header-height)));
+  min-height: calc(100vh - var(--header-height));
+  min-height: calc(100dvh - var(--header-height));
   margin-top: var(--header-height);
   overflow-y: auto;
+  overflow-x: hidden;
   scroll-snap-type: y mandatory;
   scroll-padding-top: 0;
 }
 
 body.fullpage-scroll .pray-detail > [data-screen] {
   min-height: calc(100vh - var(--header-height));
+  min-height: calc(100dvh - var(--header-height));
   scroll-snap-align: start;
   scroll-snap-stop: always;
   display: flex;
@@ -60,6 +66,7 @@ body.fullpage-scroll .pray-detail > [data-screen]:not([data-screen='hero']):not(
 
 @media (max-width: 768px) {
   body.fullpage-scroll .pray-detail > [data-screen] {
+    justify-content: flex-start;
     padding: clamp(1.25rem, 6vw, 1.8rem) 0;
   }
 
@@ -68,15 +75,40 @@ body.fullpage-scroll .pray-detail > [data-screen]:not([data-screen='hero']):not(
   }
 
   #pray-hero-section {
+    justify-content: flex-start;
     padding-inline: clamp(1rem, 6vw, 1.3rem);
   }
 
   .pray-hero {
-    padding: clamp(1.5rem, 6vw, 2rem) 0;
+    padding: clamp(1.2rem, 5vw, 1.8rem) 0;
+  }
+
+  .pray-hero__header {
+    align-items: flex-start;
+    gap: 0.75rem;
   }
 
   .pray-hero__track {
     padding: 0 clamp(1rem, 6vw, 1.3rem);
+  }
+
+  .pray-hero__slide {
+    min-height: auto;
+    padding: clamp(1.25rem, 6vw, 1.8rem);
+    gap: clamp(1rem, 4vw, 1.4rem);
+  }
+
+  .pray-hero__gallery {
+    display: none;
+  }
+
+  .pray-hero__actions {
+    width: 100%;
+    flex-direction: column;
+  }
+
+  .pray-hero__button {
+    width: 100%;
   }
 
   .pray-container {
@@ -94,11 +126,6 @@ body.fullpage-scroll .pray-detail > [data-screen]:not([data-screen='hero']):not(
 
   .pray-comments {
     padding: clamp(1.8rem, 6vw, 2.3rem) clamp(1rem, 6vw, 1.4rem);
-  }
-
-  .pray-comments__list {
-    max-height: calc(100vh - var(--header-height) - 200px);
-    overflow-y: auto;
   }
 
   .pray-related {
@@ -240,7 +267,8 @@ body.fullpage-scroll .pray-detail > [data-screen]:not([data-screen='hero']):not(
   }
 
   .pray-comments__list {
-    max-height: calc(100vh - var(--header-height) - 210px);
+    max-height: calc(100vh - var(--header-height) - 200px);
+    max-height: calc(100dvh - var(--header-height) - 200px);
     overflow-y: auto;
     padding-right: 0.5rem;
     margin-right: -0.5rem;
@@ -1307,6 +1335,779 @@ body.fullpage-scroll .pray-detail > [data-screen='footer'] {
 
   .pray-footer footer {
     padding: clamp(2rem, 7vw, 2.5rem) 1.5rem;
+  }
+}
+
+/* -------------------------------------------------- */
+/* Legacy prayfor experience (wireframe parity)       */
+/* -------------------------------------------------- */
+
+body.legacy-prayer {
+  font-family: "Segoe UI", "Inter", "PingFang TC", "Microsoft JhengHei", sans-serif;
+  background:
+    radial-gradient(120% 120% at 80% 10%, rgba(90, 117, 255, 0.16), rgba(12, 19, 34, 0.08) 52%, rgba(7, 11, 22, 0.75) 100%),
+    var(--bg);
+  color: var(--text);
+}
+
+body.legacy-prayer a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.legacy-shell {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.legacy-header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 20;
+  background: rgba(255, 255, 255, 0.78);
+  backdrop-filter: blur(18px);
+  border-bottom: 1px solid rgba(37, 99, 235, 0.1);
+}
+
+.legacy-navbar {
+  max-width: 1040px;
+  margin: 0 auto;
+  padding: 1rem clamp(1.25rem, 5vw, 1.75rem);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.5rem;
+}
+
+.legacy-brand {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text);
+}
+
+.legacy-brand__logo {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 12px 28px -16px rgba(37, 99, 235, 0.55);
+}
+
+.legacy-brand__logo img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.legacy-nav-links {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  font-size: 0.95rem;
+}
+
+.legacy-nav-links a {
+  padding: 0.45rem 0.85rem;
+  border-radius: 0.65rem;
+  color: var(--muted);
+  transition: background 0.2s ease, color 0.2s ease;
+}
+
+.legacy-nav-links a:hover,
+.legacy-nav-links a.active {
+  background: var(--accent-soft);
+  color: var(--accent-strong);
+}
+
+.legacy-nav-actions {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+}
+
+.legacy-nav-link {
+  padding: 0.5rem 0.95rem;
+  border-radius: 999px;
+  border: 1px solid transparent;
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.legacy-nav-link--primary {
+  background: linear-gradient(135deg, #2563eb 0%, #38bdf8 100%);
+  color: #ffffff;
+  box-shadow: 0 16px 32px -18px rgba(37, 99, 235, 0.5);
+}
+
+.legacy-nav-link--ghost {
+  border-color: rgba(37, 99, 235, 0.22);
+  color: var(--accent-strong);
+  background: rgba(255, 255, 255, 0.85);
+}
+
+.legacy-main {
+  flex: 1;
+  margin-top: 84px;
+  height: calc(100vh - 84px);
+  overflow: hidden;
+  position: relative;
+  padding-bottom: clamp(7rem, 10vw, 9rem);
+}
+
+.legacy-fullpage {
+  height: 100%;
+  overflow-y: auto;
+  scroll-snap-type: y mandatory;
+  scroll-behavior: smooth;
+}
+
+.legacy-fp-section {
+  scroll-snap-align: start;
+  min-height: calc(100vh - 84px);
+  padding: clamp(2.75rem, 8vw, 3.5rem) clamp(1.25rem, 6vw, 2rem);
+  display: flex;
+  justify-content: center;
+}
+
+.legacy-section__inner {
+  width: min(640px, 100%);
+  display: grid;
+  gap: clamp(1.6rem, 5vw, 2.2rem);
+}
+
+.legacy-section__inner--player {
+  width: min(720px, 100%);
+}
+
+.legacy-hero-card {
+  --hero-image: url("https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=1200&q=80");
+  position: relative;
+  border-radius: 28px;
+  overflow: hidden;
+  background: linear-gradient(165deg, rgba(33, 53, 112, 0.92) 0%, rgba(11, 15, 34, 0.9) 70%);
+  padding: clamp(2.7rem, 8vw, 3.2rem);
+  display: grid;
+  gap: clamp(1.2rem, 4vw, 1.6rem);
+  color: #f8fbff;
+  box-shadow: var(--shadow);
+}
+
+.legacy-hero-card__content {
+  display: grid;
+  gap: 1.1rem;
+}
+
+.legacy-hero-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: var(--hero-image) center/cover no-repeat;
+  opacity: 0.42;
+}
+
+.legacy-hero-card::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(8, 12, 25, 0.12), rgba(8, 12, 25, 0.78));
+}
+
+.legacy-hero-card > * {
+  position: relative;
+  z-index: 1;
+}
+
+.legacy-hero-slider-nav {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 clamp(0.6rem, 3vw, 1rem);
+  pointer-events: none;
+}
+
+.legacy-hero-slider-nav__btn {
+  pointer-events: auto;
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.45);
+  background: rgba(13, 18, 33, 0.55);
+  color: #eff4ff;
+  font-size: 1.25rem;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  transition: transform 0.2s ease, background 0.2s ease;
+}
+
+.legacy-hero-slider-nav__btn:hover {
+  transform: scale(1.05);
+  background: rgba(37, 99, 235, 0.6);
+}
+
+.legacy-hero-media {
+  border-radius: 18px;
+  overflow: hidden;
+  height: clamp(220px, 40vw, 260px);
+  background: var(--hero-image) center/cover no-repeat;
+}
+
+.legacy-pill {
+  justify-self: flex-start;
+  padding: 0.35rem 0.85rem;
+  border-radius: 999px;
+  letter-spacing: 0.18em;
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  background: rgba(255, 255, 255, 0.18);
+}
+
+.legacy-hero-summary {
+  margin: 0;
+  font-size: 1rem;
+  line-height: 1.68;
+  color: rgba(230, 236, 255, 0.86);
+}
+
+.legacy-meta-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+}
+
+.legacy-meta-list li {
+  padding: 0.35rem 0.75rem;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.2);
+  font-size: 0.8rem;
+  letter-spacing: 0.05em;
+}
+
+.legacy-hero-actions {
+  display: grid;
+  gap: 0.65rem;
+}
+
+.legacy-btn {
+  border: none;
+  border-radius: 999px;
+  padding: 0.95rem 1.15rem;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  color: #ffffff;
+  background: linear-gradient(135deg, #2563eb 0%, #38bdf8 100%);
+  box-shadow: 0 20px 38px -18px rgba(56, 189, 248, 0.56);
+  text-align: center;
+}
+
+.legacy-btn--ghost {
+  background: rgba(13, 19, 32, 0.6);
+  border: 1px solid rgba(165, 192, 240, 0.35);
+  color: #f8fbff;
+  box-shadow: none;
+}
+
+.legacy-hero-gallery {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.legacy-hero-gallery__track {
+  display: flex;
+  gap: 0.75rem;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  padding-bottom: 0.25rem;
+}
+
+.legacy-hero-gallery__track::-webkit-scrollbar {
+  display: none;
+}
+
+.legacy-hero-gallery__item {
+  min-width: 160px;
+  height: 120px;
+  border-radius: 16px;
+  overflow: hidden;
+  background-size: cover;
+  background-position: center;
+  scroll-snap-align: center;
+}
+
+.legacy-hero-gallery__controls {
+  display: flex;
+  justify-content: center;
+  gap: 0.6rem;
+}
+
+.legacy-hero-gallery__controls button {
+  width: 32px;
+  height: 32px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  background: rgba(15, 20, 32, 0.55);
+  color: #f0f4ff;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  transition: transform 0.2s ease, background 0.2s ease;
+}
+
+.legacy-card {
+  background: rgba(255, 255, 255, 0.78);
+  border-radius: 24px;
+  padding: clamp(1.8rem, 5vw, 2.35rem);
+  display: grid;
+  gap: clamp(1.2rem, 4vw, 1.6rem);
+  box-shadow: var(--shadow);
+  backdrop-filter: blur(24px);
+}
+
+.legacy-card--dark {
+  background: var(--surface-dark);
+  color: rgba(239, 245, 255, 0.92);
+}
+
+.legacy-section__title {
+  display: grid;
+  gap: 0.4rem;
+}
+
+.legacy-section__title span {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  color: var(--muted);
+}
+
+.legacy-card--dark .legacy-section__title span {
+  color: rgba(194, 210, 255, 0.62);
+}
+
+.legacy-section__title h2 {
+  margin: 0;
+  font-size: clamp(1.45rem, 4vw, 1.85rem);
+  color: var(--text);
+}
+
+.legacy-card--dark .legacy-section__title h2 {
+  color: #f4f7ff;
+}
+
+.legacy-body-text {
+  margin: 0;
+  line-height: 1.75;
+  color: var(--text-soft);
+  font-size: 1rem;
+}
+
+.legacy-card--dark .legacy-body-text {
+  color: rgba(216, 229, 255, 0.78);
+}
+
+.legacy-highlight {
+  border-radius: 18px;
+  padding: 1.1rem;
+  background: rgba(37, 99, 235, 0.14);
+  display: grid;
+  gap: 0.75rem;
+}
+
+.legacy-highlight h3 {
+  margin: 0;
+  font-size: 1rem;
+  color: var(--accent-strong);
+}
+
+.legacy-highlight ul {
+  margin: 0;
+  padding-left: 1.1rem;
+  display: grid;
+  gap: 0.4rem;
+  color: var(--text-soft);
+}
+
+.legacy-card--dark .legacy-highlight {
+  background: rgba(59, 130, 246, 0.24);
+}
+
+.legacy-owner-card {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 1rem;
+  align-items: center;
+}
+
+.legacy-owner-card__avatar {
+  width: 58px;
+  height: 58px;
+  border-radius: 16px;
+  background: rgba(37, 99, 235, 0.18);
+  display: grid;
+  place-items: center;
+  font-weight: 700;
+  font-size: 1.25rem;
+  color: var(--accent-strong);
+  overflow: hidden;
+}
+
+.legacy-owner-card__avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.legacy-owner-card__details p {
+  margin: 0.25rem 0 0;
+  color: var(--text-soft);
+}
+
+.legacy-story-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.legacy-story-actions__buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.legacy-comments.pray-comments {
+  max-width: none;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  gap: 1.5rem;
+}
+
+.legacy-comments.pray-comments .pray-comments__lead span {
+  color: rgba(148, 163, 184, 0.85);
+}
+
+.legacy-comments.pray-comments .pray-comments__lead h3 {
+  margin: 0;
+}
+
+.legacy-comments.pray-comments .comments {
+  box-shadow: 0 42px 72px -44px rgba(15, 23, 42, 0.55);
+}
+
+.legacy-carousel {
+  display: grid;
+  gap: 1rem;
+}
+
+.legacy-carousel__track {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(68%, 1fr);
+  gap: 1rem;
+  overflow-x: auto;
+  padding-bottom: 0.45rem;
+  scroll-snap-type: x mandatory;
+}
+
+.legacy-carousel__card {
+  border-radius: 22px;
+  padding: 1.25rem;
+  display: grid;
+  gap: 0.9rem;
+  min-height: 210px;
+  scroll-snap-align: start;
+  background: rgba(255, 255, 255, 0.55);
+  border: 1px solid rgba(37, 99, 235, 0.12);
+  backdrop-filter: blur(18px);
+}
+
+.legacy-card--dark .legacy-carousel__card {
+  background: rgba(18, 26, 46, 0.82);
+  border: 1px solid rgba(138, 168, 232, 0.2);
+}
+
+.legacy-carousel__art {
+  width: 100%;
+  aspect-ratio: 1;
+  border-radius: 16px;
+  background-size: cover;
+  background-position: center;
+}
+
+.legacy-carousel__meta {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.legacy-carousel__meta strong {
+  font-size: 1.05rem;
+  color: var(--text);
+}
+
+.legacy-card--dark .legacy-carousel__meta strong {
+  color: #f4f7ff;
+}
+
+.legacy-carousel__meta span {
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+
+.legacy-card--dark .legacy-carousel__meta span {
+  color: rgba(190, 205, 248, 0.7);
+}
+
+.legacy-mini-player {
+  grid-template-columns: auto 1fr auto;
+  gap: 1rem;
+  align-items: center;
+}
+
+.legacy-mini-player__art {
+  width: 54px;
+  height: 54px;
+  border-radius: 16px;
+  background-size: cover;
+  background-position: center;
+}
+
+.legacy-mini-player__info {
+  display: grid;
+  gap: 0.3rem;
+  min-width: 0;
+}
+
+.legacy-mini-player__info span {
+  font-size: 0.85rem;
+  color: rgba(190, 205, 248, 0.72);
+}
+
+.legacy-mini-player__actions {
+  display: flex;
+  gap: 0.45rem;
+}
+
+.legacy-icon-button {
+  border-radius: 999px;
+  padding: 0.6rem 0.95rem;
+  border: 1px solid rgba(149, 176, 238, 0.35);
+  background: rgba(241, 245, 255, 0.78);
+  color: var(--text);
+  letter-spacing: 0.12em;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  cursor: pointer;
+  text-align: center;
+}
+
+.legacy-icon-button--primary {
+  background: linear-gradient(135deg, #2563eb 0%, #38bdf8 100%);
+  color: #ffffff;
+  border-color: transparent;
+  box-shadow: 0 18px 32px -20px rgba(37, 99, 235, 0.55);
+}
+
+.legacy-audio-panel {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.legacy-fp-nav {
+  position: fixed;
+  top: 50%;
+  right: clamp(1rem, 4vw, 2rem);
+  transform: translateY(-50%);
+  display: grid;
+  gap: 0.8rem;
+  z-index: 15;
+}
+
+.legacy-fp-nav button {
+  width: 12px;
+  height: 12px;
+  border-radius: 999px;
+  border: 1px solid rgba(37, 99, 235, 0.4);
+  background: rgba(255, 255, 255, 0.72);
+  padding: 0;
+  cursor: pointer;
+  transition: transform 0.2s ease, background 0.2s ease, border 0.2s ease;
+}
+
+.legacy-fp-nav button.is-active {
+  transform: scale(1.2);
+  background: linear-gradient(135deg, #2563eb 0%, #38bdf8 100%);
+  border-color: transparent;
+}
+
+.legacy-footer {
+  background: rgba(10, 16, 30, 0.92);
+  color: rgba(230, 236, 255, 0.85);
+  border-top: 1px solid rgba(74, 98, 168, 0.4);
+  margin-top: 0;
+  padding: 0;
+}
+
+.legacy-footer-inner {
+  max-width: 1040px;
+  margin: 0 auto;
+  padding: clamp(2.8rem, 8vw, 3.5rem) clamp(1.5rem, 5vw, 2rem);
+  display: grid;
+  gap: clamp(2.5rem, 7vw, 3rem);
+}
+
+.legacy-footer-top {
+  display: grid;
+  gap: clamp(1.8rem, 5vw, 2.5rem);
+}
+
+.legacy-footer-brand {
+  display: flex;
+  align-items: center;
+  gap: 1.1rem;
+}
+
+.legacy-footer-brand img {
+  width: 48px;
+  height: 48px;
+  border-radius: 14px;
+  object-fit: cover;
+  box-shadow: 0 12px 28px -18px rgba(37, 99, 235, 0.55);
+}
+
+.legacy-footer-brand strong {
+  font-size: 1.05rem;
+  letter-spacing: 0.08em;
+}
+
+.legacy-footer-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 1.5rem;
+}
+
+.legacy-footer-title {
+  display: block;
+  margin-bottom: 0.65rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  font-size: 0.78rem;
+  color: rgba(189, 205, 255, 0.8);
+}
+
+.legacy-footer-column a {
+  display: block;
+  color: rgba(229, 234, 255, 0.72);
+  margin-bottom: 0.4rem;
+  font-size: 0.9rem;
+  transition: color 0.2s ease;
+}
+
+.legacy-footer-column a:hover {
+  color: #ffffff;
+}
+
+.legacy-footer-bottom {
+  border-top: 1px solid rgba(79, 99, 156, 0.38);
+  padding-top: 1.35rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  justify-content: space-between;
+  font-size: 0.85rem;
+  color: rgba(199, 210, 255, 0.65);
+}
+
+.legacy-footer-legal {
+  display: flex;
+  gap: 0.35rem;
+}
+
+body.legacy-prayer .pray-audio__trigger {
+  display: none;
+}
+
+body.legacy-prayer .pray-audio-bar {
+  position: fixed;
+  left: 50%;
+  bottom: clamp(1rem, 5vw, 1.8rem);
+  transform: translateX(-50%);
+  width: min(960px, calc(100% - 2rem));
+  z-index: 80;
+}
+
+body.legacy-prayer .pray-audio-bar.is-expanded {
+  bottom: clamp(2rem, 6vw, 2.8rem);
+}
+
+@media (max-width: 768px) {
+  body.legacy-prayer .legacy-header {
+    position: static;
+  }
+
+  body.legacy-prayer .legacy-main {
+    margin-top: 0;
+    height: 100vh;
+  }
+
+  .legacy-fullpage {
+    padding: 0;
+  }
+
+  .legacy-fp-section {
+    min-height: 100vh;
+    padding: clamp(2rem, 8vw, 2.5rem) clamp(1rem, 6vw, 1.3rem);
+  }
+
+  .legacy-section__inner {
+    width: 100%;
+  }
+
+  .legacy-hero-card,
+  .legacy-card,
+  .legacy-mini-player {
+    border-radius: 0;
+    box-shadow: none;
+  }
+
+  .legacy-nav-links,
+  .legacy-nav-actions,
+  .legacy-fp-nav {
+    display: none;
+  }
+
+  .legacy-mini-player {
+    grid-template-columns: 1fr;
+    text-align: center;
+  }
+
+  .legacy-mini-player__actions {
+    justify-content: center;
+  }
+
+  .legacy-footer-inner {
+    padding-left: clamp(1rem, 5vw, 1.5rem);
+    padding-right: clamp(1rem, 5vw, 1.5rem);
+  }
+
+  .legacy-footer-brand {
+    flex-direction: column;
+    align-items: flex-start;
   }
 }
 

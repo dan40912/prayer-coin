@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 
+import "@/styles/theme-customer.css";
+
 import { SiteFooter, SiteHeader } from "@/components/site-chrome";
 import OvercomerReportButton from "@/components/OvercomerReportButton";
 import ResponseReportButton from "@/components/ResponseReportButton";
@@ -63,7 +65,7 @@ export default async function OvercomerProfilePage({ params }) {
   return (
     <>
       <SiteHeader activePath="/overcomer" />
-      <main className="cp-main">
+      <main className="cp-main cp-main--overcomer">
         <section className="cp-profile">
           <div className="cp-profile__avatar">
             <img src={avatarUrl} alt={`${profile.name || "使用者"} 大頭貼`} loading="lazy" />

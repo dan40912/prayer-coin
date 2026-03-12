@@ -1,0 +1,563 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>人生的奧秘</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@300;500;700&display=swap');
+
+        :root {
+            --bg-color: #ffffff;
+            --text-color: #1e293b;
+            --accent-color: #0ea5e9;
+            --circle-body: #e2e8f0;
+            --circle-soul: #cbd5e1;
+            --circle-spirit: #94a3b8;
+            --polluted-color: #475569;
+            --polluted-spot: #000;
+            --god-light: #fbbf24;
+            --god-glow: rgba(251, 191, 36, 0.6);
+            --line-color: #64748b;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            font-family: 'Noto Serif TC', serif;
+            overflow: hidden;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .container {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .slide {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 1s ease-in-out;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+            text-align: center;
+        }
+
+        .slide.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        /* Slide 1 Specifics */
+        .main-title {
+            font-size: 2.5rem;
+            margin-bottom: 4rem;
+            font-weight: 700;
+            opacity: 0;
+            transform: translateY(-20px);
+            transition: all 1s ease 0.5s;
+            z-index: 10;
+        }
+
+        .slide.active .main-title {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* Circles Visualization */
+        .circles-wrapper {
+            position: relative;
+            width: 600px;
+            height: 400px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .circles-container {
+            position: relative;
+            width: 300px;
+            height: 300px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .circle {
+            border-radius: 50%;
+            position: absolute;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Reset transition for hover interactions */
+        .pointer-group.is-active {
+            opacity: 1 !important;
+            transition: none;
+        }
+
+        .circles-container.has-hover~.pointer-group:not(.is-active) {
+            opacity: 0.2;
+        }
+
+        .pointer-line {
+            height: 1px;
+            background-color: var(--line-color);
+            width: 50px;
+            margin: 0 10px;
+            transition: width 0.3s ease, background-color 0.3s ease;
+        }
+
+        .pointer-label {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: var(--text-color);
+            background: rgba(255, 255, 255, 0.9);
+            padding: 0.5rem 1rem;
+            border-radius: 99px;
+            border: 1px solid var(--line-color);
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+
+        /* Active State for Pointers */
+        .pointer-group.is-active .pointer-label {
+            background: var(--accent-color);
+            color: white;
+            transform: scale(1.1);
+            border-color: var(--accent-color);
+            box-shadow: 0 4px 12px rgba(14, 165, 233, 0.3);
+        }
+
+        .pointer-group.is-active .pointer-line {
+            width: 80px;
+            background-color: var(--accent-color);
+            height: 2px;
+        }
+
+        /* Positioning Pointers */
+        .pg-body {
+            top: 50%;
+            right: -100px;
+            transform: translateY(-50%);
+            flex-direction: row-reverse;
+        }
+
+        .pg-soul {
+            top: 15%;
+            right: -80px;
+            flex-direction: row-reverse;
+        }
+
+        .pg-spirit {
+            top: 50%;
+            left: -100px;
+            transform: translateY(-50%);
+        }
+
+        /* Expanded Explanations */
+        .explanation-box {
+            position: absolute;
+            bottom: -140px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100%;
+            max-width: 500px;
+            text-align: center;
+            opacity: 0;
+            transform: translateX(-50%) translateY(10px);
+            transition: all 0.3s ease;
+            pointer-events: none;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 1.5rem;
+            border-radius: 1rem;
+            border: 1px solid rgba(0, 0, 0, 0.05);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+        }
+
+        .pointer-group.is-active .explanation-box {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+        }
+
+        .exp-title {
+            font-size: 1.2rem;
+            font-weight: bold;
+            margin-bottom: 0.5rem;
+            color: var(--accent-color);
+        }
+
+        .exp-text {
+            font-size: 1rem;
+            line-height: 1.6;
+            color: #475569;
+        }
+
+        /* Slide 2: Pollution */
+        .slide[data-step="2"] .circle-body {
+            background: #94a3b8;
+            border-color: #64748b;
+            cursor: default;
+        }
+
+        .slide[data-step="2"] .circle-soul {
+            background: #64748b;
+            border-color: #475569;
+            cursor: default;
+        }
+
+        .slide[data-step="2"] .circle-spirit {
+            background: #475569;
+            border-color: #334155;
+            cursor: default;
+        }
+
+        .pollution-overlay {
+            position: absolute;
+            inset: 0;
+            background-image: url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.15'/%3E%3C/svg%3E");
+            border-radius: 50%;
+            opacity: 0;
+            transition: opacity 2s ease;
+            mix-blend-mode: multiply;
+        }
+
+        .slide[data-step="2"] .pollution-overlay {
+            opacity: 1;
+        }
+
+        /* Slide 3: God's Filling */
+        .god-light {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 0;
+            height: 0;
+            border-radius: 50%;
+            background: radial-gradient(circle, #fff, var(--god-light));
+            box-shadow: 0 0 50px var(--god-glow);
+            opacity: 0;
+            transition: width 3s ease-out, height 3s ease-out, opacity 1s ease;
+            z-index: 4;
+        }
+
+        .slide[data-step="3"] .god-light {
+            width: 320px;
+            height: 320px;
+            opacity: 0.9;
+        }
+
+        /* Slide 4: Christian Definition */
+        .christian-def {
+            font-size: 1.5rem;
+            line-height: 2;
+            max-width: 700px;
+        }
+
+        .highlight {
+            color: #d97706;
+            /* Darker gold for white bg */
+            font-weight: bold;
+        }
+
+        /* Slide 5: Prayer */
+        .prayer-text {
+            font-size: 1.2rem;
+            line-height: 2;
+            max-width: 600px;
+            text-align: left;
+            background: rgba(0, 0, 0, 0.03);
+            padding: 2rem;
+            border-radius: 1rem;
+            border: 1px solid rgba(0, 0, 0, 0.1);
+        }
+
+        /* Controls */
+        .controls {
+            position: fixed;
+            bottom: 2rem;
+            display: flex;
+            gap: 1rem;
+            z-index: 100;
+        }
+
+        button {
+            background: transparent;
+            border: 1px solid rgba(0, 0, 0, 0.2);
+            color: var(--text-color);
+            padding: 0.8rem 2rem;
+            border-radius: 2rem;
+            cursor: pointer;
+            font-family: inherit;
+            transition: all 0.3s ease;
+        }
+
+        button:hover {
+            background: rgba(0, 0, 0, 0.05);
+            border-color: var(--text-color);
+        }
+
+        button:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+        }
+
+        .progress {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            height: 4px;
+            background: var(--accent-color);
+            width: 0%;
+            transition: width 0.5s ease;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="progress" id="progressBar"></div>
+
+    <div class="container">
+        <!-- Slide 1: Three Circles -->
+        <div class="slide active" id="slide1" data-step="1">
+            <h1 class="main-title">你知道嗎?<br>人生的奧秘是什麼?</h1>
+
+            <div class="circles-wrapper">
+
+                <div class="pointer-group pg-spirit" id="pg-spirit" data-target="spirit">
+                    <div class="pointer-label">靈</div>
+                    <div class="pointer-line"></div>
+                    <div class="explanation-box">
+                        <div class="exp-title">靈 (Spirit)</div>
+                        <div class="exp-text">接觸神的事物，是最深處的部分。<br>神是靈，所以人必須用靈才能接觸神。</div>
+                    </div>
+                </div>
+
+                <div class="pointer-group pg-soul" id="pg-soul" data-target="soul">
+                    <div class="pointer-label">魂</div>
+                    <div class="pointer-line"></div>
+                    <div class="explanation-box">
+                        <div class="exp-title">魂 (Soul)</div>
+                        <div class="exp-text">接觸精神界事物，是較深奧的。<br>包括心思、情感、意志。</div>
+                    </div>
+                </div>
+
+                <div class="pointer-group pg-body" id="pg-body" data-target="body">
+                    <div class="pointer-label">體</div>
+                    <div class="pointer-line"></div>
+                    <div class="explanation-box">
+                        <div class="exp-title">體 (Body)</div>
+                        <div class="exp-text">接觸物質界事物，是最淺顯的。<br>身體有毛病可找醫生。</div>
+                    </div>
+                </div>
+
+                <div class="circles-container" id="circlesContainer">
+                    <div class="circle circle-body" data-target="body"></div>
+                    <div class="circle circle-soul" data-target="soul"></div>
+                    <div class="circle circle-spirit" data-target="spirit"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 2: Pollution -->
+        <div class="slide" id="slide2" data-step="2">
+            <div class="circles-container" style="margin-bottom: 2rem;">
+                <div class="circle circle-body">
+                    <div class="pollution-overlay"></div>
+                    <span style="position: absolute; top: 20px; font-weight: bold; opacity: 0.5;">體</span>
+                </div>
+                <div class="circle circle-soul">
+                    <div class="pollution-overlay"></div>
+                    <span style="position: absolute; top: 45px; font-weight: bold; opacity: 0.5;">魂</span>
+                </div>
+                <div class="circle circle-spirit">
+                    <div class="pollution-overlay"></div>
+                    <span style="position: absolute; font-weight: bold; color: white; opacity: 0.5;">靈</span>
+                </div>
+            </div>
+            <div class="definitions">
+                <h2>人的墮落</h2>
+                <p style="margin-top: 1rem; color: var(--polluted-color);">
+                    罪進入人裡面，叫人墮落。<br>
+                    靈死亡，與神隔絕。<br>
+                    魂背叛，心思為敵。<br>
+                    體犯罪，順從私慾。
+                </p>
+            </div>
+        </div>
+
+        <!-- Slide 3: God's Plan -->
+        <div class="slide" id="slide3" data-step="3">
+            <div class="circles-container" style="margin-bottom: 2rem;">
+                <div class="god-light"></div>
+                <div class="circle circle-body" style="border-color: var(--god-light);">
+                    <span style="position: absolute; top: 20px; font-weight: bold; opacity: 0.5;">體</span>
+                </div>
+                <div class="circle circle-soul" style="border-color: var(--god-light);">
+                    <span style="position: absolute; top: 45px; font-weight: bold; opacity: 0.5;">魂</span>
+                </div>
+                <div class="circle circle-spirit" style="border-color: var(--god-light);">
+                    <span style="position: absolute; font-weight: bold; opacity: 0.5;">靈</span>
+                </div>
+            </div>
+            <div class="definitions">
+                <h2>神的計劃</h2>
+                <p style="margin-top: 1rem; font-size: 1.2rem;">
+                    告訴你一個好消息！<br>
+                    神有一個計劃，要把自己裝到你的裡面。<br>
+                    <span class="highlight">充滿</span>你的靈，<span class="highlight">擴展</span>到魂，<span
+                        class="highlight">浸透</span>身體。
+                </p>
+            </div>
+        </div>
+
+        <!-- Slide 4: Christian Definition -->
+        <div class="slide" id="slide4">
+            <div class="christian-def">
+                <h2 style="margin-bottom: 2rem; font-size: 2.5rem;">基督徒</h2>
+                <p>
+                    基督徒不是什麼特別的人，<br>
+                    只是<span class="highlight">接受神分賜</span>的人。
+                </p>
+            </div>
+        </div>
+
+        <!-- Slide 5: Prayer -->
+        <div class="slide" id="slide5">
+            <h2 style="margin-bottom: 2rem;">現在請你禱告</h2>
+            <div class="prayer-text">
+                “主耶穌啊！我是一個罪人，我需要你。<br>
+                求你進到我的靈裡，除去我的罪，充滿我，<br>
+                叫我得有神的生命。<br>
+                我現在接受你作我的救主和生命。<br>
+                我把自己奉獻給你。<br>
+                奉主的名求，阿門！”
+            </div>
+        </div>
+    </div>
+
+    <div class="controls">
+        <button id="prevBtn" onclick="changeSlide(-1)" disabled>上一頁</button>
+        <button id="nextBtn" onclick="changeSlide(1)">下一頁</button>
+    </div>
+
+    <script>
+        let currentSlide = 0;
+        const slides = document.querySelectorAll('.slide');
+        const totalSlides = slides.length;
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
+        const progressBar = document.getElementById('progressBar');
+
+        // Hover Logic for Slide 1
+        const circlesContainer = document.getElementById('circlesContainer');
+        const circles = document.querySelectorAll('#slide1 .circle');
+        const pointers = document.querySelectorAll('#slide1 .pointer-group');
+
+        function handleHover(targetName, isEnter) {
+            // Only active on Slide 1
+            if (currentSlide !== 0) return;
+
+            if (isEnter) {
+                circlesContainer.classList.add('has-hover');
+            } else {
+                circlesContainer.classList.remove('has-hover');
+            }
+
+            // Update Circles
+            circles.forEach(circle => {
+                if (circle.dataset.target === targetName && isEnter) {
+                    circle.classList.add('is-hovered');
+                } else {
+                    circle.classList.remove('is-hovered');
+                }
+            });
+
+            // Update Pointers
+            pointers.forEach(pointer => {
+                if (pointer.dataset.target === targetName && isEnter) {
+                    pointer.classList.add('is-active');
+                } else {
+                    pointer.classList.remove('is-active');
+                }
+            });
+        }
+
+        // Add listeners to circles
+        circles.forEach(circle => {
+            circle.addEventListener('mouseenter', () => handleHover(circle.dataset.target, true));
+            circle.addEventListener('mouseleave', () => handleHover(circle.dataset.target, false));
+        });
+
+        // Add listeners to pointers
+        pointers.forEach(pointer => {
+            pointer.addEventListener('mouseenter', () => handleHover(pointer.dataset.target, true));
+            pointer.addEventListener('mouseleave', () => handleHover(pointer.dataset.target, false));
+        });
+
+
+        function updateControls() {
+            prevBtn.disabled = currentSlide === 0;
+            nextBtn.textContent = currentSlide === totalSlides - 1 ? '重新開始' : '下一頁';
+
+            // Update progress bar
+            const progress = ((currentSlide + 1) / totalSlides) * 100;
+            progressBar.style.width = `${progress}%`;
+        }
+
+        function changeSlide(direction) {
+            slides[currentSlide].classList.remove('active');
+
+            currentSlide += direction;
+
+            if (currentSlide >= totalSlides) {
+                currentSlide = 0; // Loop back to start or handle end
+            } else if (currentSlide < 0) {
+                currentSlide = 0;
+            }
+
+            slides[currentSlide].classList.add('active');
+            updateControls();
+        }
+
+        // Keyboard navigation
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowRight' || e.key === 'Space') {
+                if (currentSlide < totalSlides - 1) changeSlide(1);
+            } else if (e.key === 'ArrowLeft') {
+                if (currentSlide > 0) changeSlide(-1);
+            }
+        });
+
+        // Initialize
+        updateControls();
+    </script>
+</body>
+
+</html>

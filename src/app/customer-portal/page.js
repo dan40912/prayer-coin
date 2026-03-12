@@ -1,6 +1,6 @@
 "use client";
 
-
+import "@/styles/theme-customer.css";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
@@ -1152,9 +1152,9 @@ export default function CustomerPortalPage() {
 
                 <div>
 
-                  <h2>我的代禱事項</h2>
+                  <h2>我的禱告</h2>
 
-                  <p>編輯、分享、隱藏代禱事項，掌握你的禱告旅程。</p>
+                  <p>管理所有禱告需求，為每一則內容新增 1–3 張相簿圖片，這些照片會出現在詳情頁的「代禱相簿」。</p>
 
                 </div>
 
@@ -1168,7 +1168,7 @@ export default function CustomerPortalPage() {
 
                 >
 
-                  + 建立祈禱卡片
+                  + 建立禱告
 
                 </Link>
 
@@ -1183,8 +1183,8 @@ export default function CustomerPortalPage() {
             <section className="cp-section cp-section--replies">
               <div className="cp-section__head">
                 <div>
-                  <h2>我的個人回應</h2>
-                  <p>檢視並管理您曾為代禱事項留下的文字與音訊回應。</p>
+                  <h2>收到的留言與錄音</h2>
+                  <p>隨時追蹤大家的代禱聲音，必要時可檢舉、分享或隱藏不合適的內容。</p>
                 </div>
               </div>
 

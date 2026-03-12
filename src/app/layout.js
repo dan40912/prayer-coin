@@ -1,4 +1,5 @@
-﻿import "./globals.css";
+import "./globals.css";
+import "@/styles/theme-modern.css"; // Newly added base theme
 import "@/styles/admin.css";
 import { headers } from "next/headers";
 import { Open_Sans, Raleway, Poppins } from "next/font/google";
@@ -58,15 +59,29 @@ function shouldBypassMaintenance(pathname) {
   );
 }
 
+import { AudioProvider } from "@/context/AudioContext";
+import GlobalPlayer from "@/components/GlobalPlayer";
+
 export default async function RootLayout({ children }) {
   const requestHeaders = headers();
   const requestPath = extractPathFromHeaders(requestHeaders);
+  const hideGlobalPlayer =
+    requestPath === "/" ||
+    requestPath.startsWith("/prayfor/") ||
+    requestPath.startsWith("/customer-portal/create");
 
   if (!shouldBypassMaintenance(requestPath)) {
     const settings = await readSiteSettings();
     if (settings?.maintenanceMode) {
       return (
         <html lang="zh-Hant" className={`${openSans.variable} ${raleway.variable} ${poppins.variable}`}>
+          <head>
+            <link
+              rel="stylesheet"
+              href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
+              referrerPolicy="no-referrer"
+            />
+          </head>
           <body className="admin-layout">
             <SiteHeader />
             <div
@@ -139,7 +154,19 @@ export default async function RootLayout({ children }) {
 
   return (
     <html lang="zh-Hant" className={`${openSans.variable} ${raleway.variable} ${poppins.variable}`}>
-      <body className="admin-layout">{children}</body>
+      <head>
+        <link
+          rel="stylesheet"
+          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
+          referrerPolicy="no-referrer"
+        />
+      </head>
+      <body className="admin-layout">
+        <AudioProvider>
+          {children}
+          {!hideGlobalPlayer ? <GlobalPlayer /> : null}
+        </AudioProvider>
+      </body>
     </html>
   );
 }

@@ -1,15 +1,26 @@
 ﻿:root {
   --bg: #f3f4f6;
   --surface: #ffffff;
+  --surface-dark: rgba(17, 24, 39, 0.82);
   --border: #d1d5db;
   --border-soft: rgba(17, 24, 39, 0.08);
   --accent: #2563eb;
   --accent-soft: rgba(37, 99, 235, 0.12);
   --accent-dark: #1d4ed8;
+  --accent-strong: #1d4ed8;
   --text-primary: #111827;
   --text-secondary: #4b5563;
   --text-muted: #9ca3af;
+  --text: var(--text-primary);
+  --text-soft: rgba(17, 24, 39, 0.76);
+  --muted: rgba(55, 65, 81, 0.6);
   --shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
+  --header-height: 80px;
+}
+@media (max-width: 768px) {
+  :root {
+    --header-height: 64px;
+  }
 }
 * { box-sizing: border-box; }
 body {
@@ -18,6 +29,36 @@ body {
   /* background: var(--bg); */
   color: var(--text-primary);
   line-height: 1.5;
+  padding-top: var(--header-height);
+}
+html.fullpage-scroll,
+body.fullpage-scroll {
+  scroll-behavior: smooth;
+  background: var(--bg);
+}
+html.fullpage-scroll {
+  scroll-snap-type: y mandatory;
+}
+body.fullpage-scroll {
+  scroll-snap-type: y mandatory;
+  scroll-padding-top: var(--header-height);
+  padding-top: 0;
+}
+body.fullpage-scroll main.pray-detail {
+  max-width: none;
+  padding: 0;
+}
+body.fullpage-scroll main.pray-detail .pray-section {
+  scroll-snap-align: start;
+  scroll-snap-stop: always;
+  min-height: calc(100vh - var(--header-height));
+  min-height: calc(100dvh - var(--header-height));
+}
+@media (max-width: 768px) {
+  body.fullpage-scroll main.pray-detail .pray-section {
+    min-height: calc(100vh - var(--header-height));
+    min-height: calc(100dvh - var(--header-height));
+  }
 }
 a {
   color: var(--accent);
@@ -28,9 +69,12 @@ a:hover { color: var(--accent-dark); }
 header {
   background: var(--surface);
   border-bottom: 1px solid var(--border);
-  position: sticky;
+  position: fixed;
   top: 0;
-  z-index: 10;
+  left: 0;
+  right: 0;
+  width: 100%;
+  z-index: 50;
 }
 .navbar {
   max-width: 1100px;
@@ -812,7 +856,7 @@ footer {
   grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
 }
 .auth-card {
-  background: var(--surface);
+  background: rgba(255, 255, 255, 0.98);
   border: 1px solid var(--border-soft);
   border-radius: 1.35rem;
   box-shadow: var(--shadow);
@@ -823,10 +867,12 @@ footer {
 .auth-card h1 {
   margin: 0;
   font-size: 1.85rem;
+  color: #0b1220;
 }
 .auth-card p {
   margin: 0;
-  color: var(--text-secondary);
+  color: #334155;
+  font-weight: 500;
 }
 .auth-form {
   display: grid;
@@ -837,9 +883,9 @@ footer {
   gap: 0.55rem;
 }
 .form-label {
-  font-size: 0.9rem;
-  font-weight: 600;
-  color: var(--text-primary);
+  font-size: 0.94rem;
+  font-weight: 700;
+  color: #0f172a;
   display: flex;
   align-items: center;
   gap: 0.5rem;
@@ -853,22 +899,30 @@ textarea.form-control {
   width: 100%;
   padding: 0.8rem 1rem;
   border-radius: 0.85rem;
-  border: 1px solid var(--border);
-  background: rgba(255, 255, 255, 0.95);
+  border: 1px solid #94a3b8;
+  background: #ffffff;
   font-size: 0.95rem;
-  color: var(--text-primary);
+  font-weight: 600;
+  color: #0f172a;
   transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+.form-control::placeholder,
+.form-select::placeholder,
+textarea.form-control::placeholder {
+  color: #64748b;
+  font-weight: 600;
 }
 .form-control:focus,
 .form-select:focus,
 textarea.form-control:focus {
   outline: none;
-  border-color: var(--accent);
-  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.22);
 }
 .form-helper {
-  font-size: 0.82rem;
-  color: var(--text-muted);
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: #475569;
 }
 .form-grid {
   display: grid;
@@ -923,10 +977,13 @@ textarea.form-control:focus {
   display: grid;
   gap: 0.6rem;
   font-size: 0.9rem;
-  color: var(--text-secondary);
+  color: #334155;
 }
 .auth-footer a {
-  color: var(--accent);
+  color: #1d4ed8;
+  font-weight: 700;
+  text-decoration: underline;
+  text-underline-offset: 2px;
 }
 .auth-note {
   padding: 1.25rem;
@@ -951,7 +1008,7 @@ textarea.form-control:focus {
   color: var(--accent);
 }
 .auth-hero {
-  background: linear-gradient(135deg, rgba(37, 99, 235, 0.92), rgba(14, 165, 233, 0.9));
+  background: linear-gradient(135deg, rgba(30, 64, 175, 0.95), rgba(3, 105, 161, 0.94));
   color: #f8fafc;
   position: relative;
   overflow: hidden;
@@ -972,7 +1029,8 @@ textarea.form-control:focus {
   font-size: 2rem;
 }
 .auth-hero p {
-  color: rgba(241, 245, 249, 0.9);
+  color: rgba(248, 250, 252, 0.98);
+  text-shadow: 0 2px 12px rgba(2, 8, 23, 0.42);
 }
 .stepper {
   display: grid;
@@ -1003,7 +1061,7 @@ textarea.form-control:focus {
 .step-body p {
   margin: 0.35rem 0 0;
   font-size: 0.9rem;
-  color: rgba(241, 245, 249, 0.9);
+  color: rgba(248, 250, 252, 0.97);
 }
 .hero-stats {
   margin-top: 1.75rem;
@@ -1026,13 +1084,16 @@ textarea.form-control:focus {
 .badge-mini {
   padding: 0.2rem 0.6rem;
   border-radius: 999px;
-  background: rgba(15, 23, 42, 0.35);
+  background: rgba(15, 23, 42, 0.52);
+  color: #f8fafc;
+  font-weight: 700;
   font-size: 0.75rem;
   letter-spacing: 0.08em;
 }
 .form-section-title {
   font-size: 1.15rem;
-  font-weight: 600;
+  font-weight: 700;
+  color: #0f172a;
   margin: 1.5rem 0 0.25rem;
 }
 .inline-field {
@@ -1168,7 +1229,7 @@ textarea.form-control:focus {
   font-size: 0.95rem;
 }
 .checklist li::before {
-  content: "✓";
+  content: "?";
   position: absolute;
   left: 0;
   top: 0.05rem;
@@ -2374,7 +2435,7 @@ textarea.form-control:focus {
   box-shadow: 0 0 0 6px rgba(116, 128, 255, 0.15);
 }
 
-.admin-timeline__marker[data-priority="高"] {
+.admin-timeline__marker[data-priority="��"] {
   background: #f0625d;
   box-shadow: 0 0 0 6px rgba(240, 98, 93, 0.2);
 }
@@ -3496,6 +3557,16 @@ textarea.form-control:focus {
     linear-gradient(180deg, #f5f7ff 0%, #ffffff 100%);
 }
 
+.customer-create.customer-create--editor-only {
+  width: 100%;
+  max-width: none;
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.customer-create.customer-create--editor-only .customer-create__hero {
+  display: none;
+}
+
 .customer-create__hero,
 .customer-create__form {
   min-width: 0;
@@ -3772,6 +3843,10 @@ textarea.form-control:focus {
   .customer-create {
     grid-template-columns: minmax(0, 0.92fr) minmax(0, 1.08fr);
     gap: clamp(2.2rem, 3vw, 3.4rem);
+  }
+
+  .customer-create.customer-create--editor-only {
+    grid-template-columns: minmax(0, 1fr);
   }
 }
 
@@ -4214,7 +4289,7 @@ textarea.form-control:focus {
   .video-thumb img { max-width: 100%; }
   .video-actions { flex-direction: column; }
 }
-/* Detail 主體卡片 */
+/* Detail �D���d�� */
 .prayer-detail-card {
   background: #fff;
   border-radius: 12px;
@@ -4230,7 +4305,7 @@ textarea.form-control:focus {
   margin-bottom: 16px;
 }
 
-/* 標題層次 */
+/* ���D�h�� */
 .prayer-detail-card h2,
 .prayer-detail-card h3 {
   margin-top: 20px;
@@ -4252,7 +4327,7 @@ textarea.form-control:focus {
   color: #444;
 }
 
-/* 側邊欄卡片 */
+/* �������d�� */
 .prayer-sidebar .card {
   background: #fff;
   border-radius: 10px;
@@ -4261,7 +4336,7 @@ textarea.form-control:focus {
   margin-bottom: 20px;
 }
 
-/* 留言區 */
+/* �d���� */
 .comments-section {
   margin-top: 40px;
 }
@@ -4284,7 +4359,7 @@ textarea.form-control:focus {
   display: block;
   margin-bottom: 4px;
 }
-/* 留言區容器 */
+/* �d���Ϯe�� */
 .comments {
   margin: 2rem auto;
   padding: 1.5rem;
@@ -4294,7 +4369,7 @@ textarea.form-control:focus {
   box-shadow: 0 4px 12px rgba(0,0,0,0.05);
 }
 
-/* 提醒登入 */
+/* �����n�J */
 .alert {
   padding: 0.75rem 1rem;
   border-radius: 8px;
@@ -4308,7 +4383,7 @@ textarea.form-control:focus {
   border: 1px solid #ffeeba;
 }
 
-/* 標題 */
+/* ���D */
 .comments h3 {
   font-size: 1.3rem;
   margin: 1.2rem 0 0.8rem;
@@ -4317,7 +4392,7 @@ textarea.form-control:focus {
   padding-left: 0.5rem;
 }
 
-/* 留言列表 */
+/* �d���C�� */
 .comment-list {
   list-style: none;
   padding: 0;
@@ -4335,7 +4410,7 @@ textarea.form-control:focus {
   font-weight: 600;
 }
 
-/* 禱告錄音 */
+/* ë�i���� */
 .voice-section {
   margin-top: 2rem;
 }
@@ -4346,7 +4421,7 @@ textarea.form-control:focus {
   border-radius: 6px;
 }
 
-/* 按鈕區 */
+/* ���s�� */
 .audio-actions {
   display: flex;
   gap: 0.5rem;
@@ -4463,30 +4538,30 @@ textarea.form-control:focus {
   position: relative;
 }
 
-/* 左邊 Logo + Brand 名稱 */
+/* ���� Logo + Brand �W�� */
 .brand {
   display: flex;
   align-items: center;
   gap: 0.5rem;
 }
 
-/* 右邊 (選單 + 登入區 + 漢堡) 都排一列 */
+/* �k�� (���� + �n�J�� + �~��) ���Ƥ@�C */
 .nav-right {
   display: flex;
   align-items: center;
   gap: 1rem;
 }
 
-/* 桌機版選單：水平 */
+/* �����������G���� */
 .nav-links {
   display: flex;
   gap: 1rem;
 }
 
-/* 手機版選單：收合成 dropdown */
+/* �����������G���X�� dropdown */
 @media (max-width: 768px) {
   .nav-links {
-    display: none; /* 收合 */
+    display: none; /* ���X */
     position: absolute;
     top: 100%;
     right: 0;
@@ -4502,7 +4577,7 @@ textarea.form-control:focus {
   }
 }
 
-/* 三條槓 */
+/* �T���b */
 .menu-toggle {
   display: none;
   background: none;
@@ -4518,7 +4593,7 @@ textarea.form-control:focus {
 }
 .navbar {
   display: flex;
-  justify-content: space-between; /* 左右分開 */
+  justify-content: space-between; /* ���k���} */
   align-items: center;
   padding: 0.5rem 1rem;
 }
@@ -5297,9 +5372,9 @@ button.cp-link:disabled {
     width: 100%;
   }
 }
-/* 區塊三：運作核心 */
+/* �϶��T�G�B�@�֤� */
 .bg-light-flow {
-  background-color: #f7f7f7; /* 淺灰色底，區隔其他區塊 */
+  background-color: #f7f7f7; /* �L�Ǧ⩳�A�Ϲj���L�϶� */
   padding-top: 5rem;
   padding-bottom: 5rem;
 }
@@ -5310,14 +5385,14 @@ button.cp-link:disabled {
 
 .intro-text {
   max-width: 800px;
-  margin: 1.5rem auto 3rem auto; /* 置中且與下方卡片留出距離 */
+  margin: 1.5rem auto 3rem auto; /* �m���B�P�U���d���d�X�Z�� */
   font-size: 1.15rem;
   color: #555;
 }
 
 .feature-grid-3 {
   display: grid;
-  /* 手機版：單欄 */
+  /* �������G���� */
   grid-template-columns: 1fr; 
   gap: 2rem;
   margin-bottom: 3rem;
@@ -5325,7 +5400,7 @@ button.cp-link:disabled {
 
 @media (min-width: 768px) {
   .feature-grid-3 {
-    /* 桌機版：三欄 (col-4 概念) */
+    /* �������G�T�� (col-4 ����) */
     grid-template-columns: repeat(3, 1fr);
   }
 }
@@ -5336,7 +5411,7 @@ button.cp-link:disabled {
   border-radius: 12px;
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
   transition: transform 0.3s ease, box-shadow 0.3s ease;
-  border-bottom: 4px solid #3b82f6; /* 主題色裝飾 */
+  border-bottom: 4px solid #3b82f6; /* �D�D���˹� */
 }
 
 .feature-item:hover {
@@ -5352,7 +5427,7 @@ button.cp-link:disabled {
   width: 50px;
   height: 50px;
   border-radius: 50%;
-  background-color: #e0f2fe; /* 淺藍色背景 */
+  background-color: #e0f2fe; /* �L�Ŧ��I�� */
   margin-bottom: 1rem;
 }
 
@@ -5370,11 +5445,11 @@ button.cp-link:disabled {
   /* padding: 1rem 2rem; */
   font-size: 1.25rem;
 }
-/* 區塊二：學習禱告與聖徒連結 */
+/* �϶��G�G�ǲ�ë�i�P�t�{�s�� */
 .bg-dark-faith {
-  /* 使用一個深沉、平靜的背景色 */
-  background-color: #1a202c; /* 接近深藍或炭黑色 */
-  color: #f7fafc; /* 淺色文字 */
+  /* �ϥΤ@�Ӳ`�I�B���R���I���� */
+  background-color: #1a202c; /* �����`�ũά��¦� */
+  color: #f7fafc; /* �L�����r */
   padding-top: 5rem;
   padding-bottom: 5rem;
 }
@@ -5387,25 +5462,25 @@ button.cp-link:disabled {
   color: #cbd5e0;
 }
 
-/* 確保反轉的網格在桌機版生效 */
+/* �T�O���઺�����b�������ͮ� */
 @media (min-width: 768px) {
   .content-grid-reverse {
     grid-template-areas: "text image";
-    /* 這裡使用 grid-template-columns: 1fr 1.2fr; 會更貼合上一個區塊的視覺平衡 */
+    /* �o�̨ϥ� grid-template-columns: 1fr 1.2fr; �|���K�X�W�@�Ӱ϶�����ı���� */
     grid-template-columns: 1fr 1.2fr;
   }
-  /* 由於 JSX 中我們沒有使用 CSS Grid Area，直接調整順序 */
+  /* �ѩ� JSX ���ڭ̨S���ϥ� CSS Grid Area�A�����վ㶶�� */
   .content-grid-reverse > .content-text {
-    order: 2; /* 讓文字在右邊 */
+    order: 2; /* �����r�b�k�� */
   }
   .content-grid-reverse > .content-image-wrapper {
-    order: 1; /* 讓圖片在左邊 */
+    order: 1; /* ���Ϥ��b���� */
   }
 }
 
 .badge-light {
   color: #1a202c;
-  background-color: #f6e05e; /* 淺黃色強調 */
+  background-color: #f6e05e; /* �L�����j�� */
 }
 
 .feature-cards {
@@ -5418,15 +5493,15 @@ button.cp-link:disabled {
 
 @media (min-width: 640px) {
   .feature-cards {
-    flex-direction: row; /* 在較寬螢幕上橫向排列 */
+    flex-direction: row; /* �b���e�ù��W���V�ƦC */
   }
 }
 
 .feature-card {
-  background-color: rgba(255, 255, 255, 0.08); /* 輕微透明背景 */
+  background-color: rgba(255, 255, 255, 0.08); /* ���L�z���I�� */
   padding: 1.5rem;
   border-radius: 8px;
-  border-left: 4px solid #f6e05e; /* 亮黃色裝飾線 */
+  border-left: 4px solid #f6e05e; /* �G�����˹��u */
   transition: transform 0.3s ease;
 }
 
@@ -5444,15 +5519,15 @@ button.cp-link:disabled {
   font-size: 0.95rem;
 }
 
-/* 通用容器樣式 */
+/* �q�ήe���˦� */
 .section__container {
   max-width: 1200px;
   margin: 0 auto;
   padding: 0 1.5rem;
 }
-/* 區塊一：普世集氣與社會影響力 */
+/* �϶��@�G���@�����P���|�v�T�O */
 .bg-gradient-power {
-  /* 使用一個柔和、積極的漸變背景 */
+  /* �ϥΤ@�ӬX�M�B�n�������ܭI�� */
   background: linear-gradient(135deg, #f0f8ff 0%, #fff8e1 100%);
   padding-top: 5rem;
   padding-bottom: 5rem;
@@ -5460,14 +5535,14 @@ button.cp-link:disabled {
 
 .content-grid-2 {
   display: grid;
-  grid-template-columns: 1fr; /* 預設為單欄 */
+  grid-template-columns: 1fr; /* �w�]������ */
   gap: 3rem;
   align-items: center;
 }
 
 @media (min-width: 768px) {
   .content-grid-2 {
-    grid-template-columns: 1.2fr 1fr; /* 桌機版為兩欄 */
+    grid-template-columns: 1.2fr 1fr; /* ������������ */
   }
 }
 
@@ -5500,24 +5575,24 @@ button.cp-link:disabled {
   display: block;
 }
 
-/* 網站資訊與法律聲明區塊 */
+/* �������T�P�k���n���϶� */
 .bg-legal-links {
-  background-color: #fcfcfc; /* 輕微的淺色背景 */
-  border-top: 1px solid #eee; /* 頂部分隔線 */
+  background-color: #fcfcfc; /* ���L���L���I�� */
+  border-top: 1px solid #eee; /* �������j�u */
   padding-top: 4rem;
   padding-bottom: 4rem;
 }
 
 .info-links-grid {
   display: grid;
-  /* 手機預設為單欄 */
+  /* �����w�]������ */
   grid-template-columns: 1fr;
   gap: 2rem;
 }
 
 @media (min-width: 768px) {
   .info-links-grid {
-    /* 桌機版為三欄 */
+    /* ���������T�� */
     grid-template-columns: repeat(3, 1fr);
   }
 }
@@ -5530,8 +5605,8 @@ button.cp-link:disabled {
 }
 
 .info-link-group:hover {
-  border-color: #3b82f6; /* 主題色邊框 */
-  box-shadow: 0 4px 10px rgba(59, 130, 246, 0.1); /* 輕微陰影 */
+  border-color: #3b82f6; /* �D�D������ */
+  box-shadow: 0 4px 10px rgba(59, 130, 246, 0.1); /* ���L���v */
 }
 
 .info-link-group h3 {
@@ -5543,12 +5618,12 @@ button.cp-link:disabled {
 .info-link-group p {
   font-size: 0.95rem;
   color: #6b7280;
-  min-height: 40px; /* 保持段落高度一致，避免排版跳動 */
+  min-height: 40px; /* �O���q�����פ@�P�A�קK�ƪ����� */
 }
 
 .link-arrow {
   display: inline-block;
-  color: #3b82f6; /* 主題色連結 */
+  color: #3b82f6; /* �D�D���s�� */
   text-decoration: none;
   font-weight: 600;
   margin-top: 1rem;
@@ -5557,10 +5632,10 @@ button.cp-link:disabled {
 
 .link-arrow:hover {
   text-decoration: underline;
-  margin-left: 5px; /* 箭頭移動效果 */
+  margin-left: 5px; /* �b�Y���ʮĪG */
 }
-/* 確保您的按鈕樣式 (button--primary/secondary) 和 badge-soft 已經定義 */
-/* 這裡假設您的 `button--secondary` 是淺色底色，`button--primary` 是深色底色，以便在不同背景色中都能看清 */.cp-section--form {
+/* �T�O�z�����s�˦� (button--primary/secondary) �M badge-soft �w�g�w�q */
+/* �o�̰��]�z�� `button--secondary` �O�L�⩳���A`button--primary` �O�`�⩳���A�H�K�b���P�I���⤤�����ݲM */.cp-section--form {
   display: grid;
   gap: 2.2rem;
 }
@@ -5925,9 +6000,12 @@ header {
   background: rgba(255, 255, 255, 0.9);
   backdrop-filter: blur(12px);
   border-bottom: 1px solid var(--border-soft);
-  position: sticky;
+  position: fixed;
   top: 0;
-  z-index: 40;
+  left: 0;
+  right: 0;
+  width: 100%;
+  z-index: 50;
 }
 
 header .navbar {
@@ -6453,6 +6531,7 @@ header .nav-user {
 }
 
 .home-card__category {
+  margin-bottom: 6vh;
   position: absolute;
   left: 1rem;
   bottom: 1rem;
@@ -6561,13 +6640,13 @@ header .nav-user {
     color: white!important;
 }
 }
-/* PRAY COIN 技術路線圖樣式 */
+/* PRAY COIN �޳N���u�ϼ˦� */
 
 :root {
-    --color-primary: #1e3a8a; /* 深靛藍 */
-    --color-highlight: #fbbf24; /* 琥珀黃 */
-    --color-text: #374151; /* 深灰色文本 */
-    --color-light-bg: #f9fafb; /* 淺灰色背景 */
+    --color-primary: #1e3a8a; /* �`�Q�� */
+    --color-highlight: #fbbf24; /* �[�Ķ� */
+    --color-text: #374151; /* �`�Ǧ��奻 */
+    --color-light-bg: #f9fafb; /* �L�Ǧ��I�� */
     --color-card-bg: #ffffff;
 }
 
@@ -6596,7 +6675,7 @@ header .nav-user {
     margin: 0 auto 20px auto;
 }
 
-/* 突出顯示當前階段標籤 */
+/* ���X���ܷ��e���q���� */
 .current-status-tag {
     display: inline-block;
     padding: 8px 20px;
@@ -6605,11 +6684,11 @@ header .nav-user {
     font-weight: 700;
     border-radius: 9999px;
     box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
-    /* 增加脈衝動畫以吸引注意力 */
+    /* �W�[�߽İʵe�H�l�ު`�N�O */
     animation: pulse-ring 2s infinite; 
 }
 
-/* 路線圖容器：四欄網格 */
+/* ���u�Ϯe���G�|������ */
 .roadmap-stages-container {
     display: grid;
     gap: 30px;
@@ -6618,7 +6697,7 @@ header .nav-user {
     grid-template-columns: repeat(4, 1fr);
 }
 
-/* 手機版：垂直堆疊 */
+/* �������G�������| */
 @media (max-width: 1024px) {
     .roadmap-stages-container {
         grid-template-columns: 1fr;
@@ -6626,7 +6705,7 @@ header .nav-user {
 }
 
 
-/* 單獨階段卡片樣式 */
+/* ���W���q�d���˦� */
 .roadmap-stage {
     background-color: var(--color-card-bg);
     border-radius: 12px;
@@ -6662,7 +6741,7 @@ header .nav-user {
     color: #1f2937;
 }
 
-/* 內容細節 */
+/* ���e�Ӹ` */
 .stage-content p {
     margin-bottom: 15px;
     font-size: 0.95rem;
@@ -6678,28 +6757,28 @@ header .nav-user {
 }
 
 
-/* --- 針對特定階段的樣式 --- */
+/* --- �w���S�w���q���˦� --- */
 
-/* CURRENT Phase 0: 突出顯示當前階段 */
+/* CURRENT Phase 0: ���X���ܷ��e���q */
 .current-stage {
     border-color: var(--color-highlight);
-    background-color: #fffbeb; /* 淺琥珀色背景 */
-    /* 增加一個外部陰影來強調 */
+    background-color: #fffbeb; /* �L�[�Ħ��I�� */
+    /* �W�[�@�ӥ~�����v�ӱj�� */
     box-shadow: 0 0 0 3px var(--color-highlight), 0 10px 15px -3px rgba(0, 0, 0, 0.2); 
 }
 
 .current-stage .stage-label,
 .current-stage .stage-title {
-    color: #92400e; /* 深琥珀色文本 */
+    color: #92400e; /* �`�[�Ħ��奻 */
 }
 
 .current-stage .stage-focus {
-    background-color: #fef3c7; /* 更淺的琥珀色用於焦點內容 */
+    background-color: #fef3c7; /* ���L���[�Ħ��Ω��J�I���e */
     border-left-color: var(--color-highlight);
 }
 
 
-/* NEXT Phase 1: 標記下一步 */
+/* NEXT Phase 1: �аO�U�@�B */
 .next-stage {
     border-top: 5px solid var(--color-primary);
 }
@@ -6712,9 +6791,9 @@ header .nav-user {
     border-left-color: var(--color-primary);
 }
 
-/* 風險/挑戰樣式 */
+/* ���I/�D�Լ˦� */
 .stage-risk {
-    color: #b91c1c; /* 紅色用於風險 */
+    color: #b91c1c; /* �����Ω����I */
     border: 1px dashed #fecaca;
     background-color: #fef2f2;
     border-radius: 6px;
@@ -6723,7 +6802,7 @@ header .nav-user {
     font-size: 0.9rem;
 }
 
-/* 脈衝動畫定義 */
+/* �߽İʵe�w�q */
 @keyframes pulse-ring {
     0% {
         box-shadow: 0 0 0 0 var(--color-highlight), 0 4px 6px -1px rgba(0, 0, 0, 0.1);
@@ -6842,6 +6921,57 @@ header .nav-user {
     color: #1f2555;
 }
 
+/* --------------------------------------------------------------- */
+/* Route-scoped readability tuning (/about, /howto)                */
+/* --------------------------------------------------------------- */
+.about-page .section h1,
+.about-page .section h2,
+.about-page .section h3,
+.about-page .section strong,
+.howto-page .section h1,
+.howto-page .section h2,
+.howto-page .section h3,
+.howto-page .section strong {
+    color: #0b1220;
+}
+
+.about-page .section p,
+.howto-page .section p {
+    color: #1f2937;
+    line-height: 1.75;
+}
+
+.about-page .lead-text,
+.about-page .icon-card p,
+.about-page .card-icon-top p,
+.about-page .gradient-card p,
+.about-page .timeline-item p,
+.howto-page .lead-text,
+.howto-page .icon-card p,
+.howto-page .card-icon-top p,
+.howto-page .gradient-card p,
+.howto-page .icon-step p {
+    color: #1f2937;
+}
+
+.about-page .checklist li,
+.howto-page .checklist li {
+    color: #1f2937;
+    font-weight: 500;
+}
+
+.about-page .badge-soft,
+.howto-page .badge-soft {
+    background: rgba(37, 99, 235, 0.18);
+    color: #1e3a8a;
+    border: 1px solid rgba(37, 99, 235, 0.28);
+}
+
+.about-page .soft-bg,
+.howto-page .soft-bg {
+    border: 1px solid rgba(15, 23, 42, 0.1);
+}
+
 @media (max-width: 640px) {
     main {
         padding: 0 1rem 3rem;
@@ -6887,3 +7017,4 @@ header .nav-user {
         margin-top: 0.5rem;
     }
 }
+

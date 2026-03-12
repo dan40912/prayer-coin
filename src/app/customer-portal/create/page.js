@@ -1,4 +1,6 @@
-"use client";
+﻿"use client";
+
+import "@/styles/theme-customer.css";
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -6,6 +8,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 
 import { SiteFooter, SiteHeader } from "@/components/site-chrome";
 import { useAuthSession } from "@/hooks/useAuthSession";
+import { buildCardMetaArray } from "@/lib/card-meta";
 
 const HERO_POINTS = [
   "清楚分享當前需要，讓代禱者快速抓住重點",
@@ -25,6 +28,7 @@ const INITIAL_FORM = {
 };
 
 const MAX_UPLOAD_BYTES = 5 * 1024 * 1024;
+const MAX_GALLERY_IMAGES = 3;
 
 export default function CustomerPortalCreatePage() {
   const authUser = useAuthSession();
@@ -43,6 +47,7 @@ export default function CustomerPortalCreatePage() {
   const [editorReady, setEditorReady] = useState(false);
 
   const editorRef = useRef({ CKEditor: null, ClassicEditor: null });
+  const uploadLockRef = useRef(false);
 
   useEffect(() => {
     let mounted = true;
@@ -65,7 +70,7 @@ export default function CustomerPortalCreatePage() {
         };
         setEditorReady(true);
       } catch (error) {
-        console.error("載入 CKEditor 失敗:", error);
+        console.error("頛 CKEditor 憭望?:", error);
         setStatus({ type: "error", message: "無法載入編輯器，請重新整理頁面" });
       }
     };
@@ -82,7 +87,7 @@ export default function CustomerPortalCreatePage() {
     const loadCategories = async () => {
       try {
         const response = await fetch("/api/home-categories", { cache: "no-store" });
-        if (!response.ok) throw new Error("無法載入分類");
+        if (!response.ok) throw new Error("?⊥?頛??");
         const data = await response.json();
         if (mounted) {
           setCategories(data);
@@ -128,15 +133,17 @@ export default function CustomerPortalCreatePage() {
     return plain;
   }, [form.description]);
 
-  const handleFileChange = async (event) => {
+    const handleFileChange = async (event) => {
     const files = Array.from(event.target.files ?? []);
     event.target.value = "";
 
     if (!files.length) return;
+    if (uploadLockRef.current) return;
 
-    const availableSlots = 1 - uploadedImages.length;
+    const currentImages = uploadedImages.slice(0, MAX_GALLERY_IMAGES);
+    const availableSlots = MAX_GALLERY_IMAGES - currentImages.length;
     if (availableSlots <= 0) {
-      setStatus({ type: "error", message: "最多只能上傳三張圖片" });
+      setStatus({ type: "error", message: `最多只能上傳 ${MAX_GALLERY_IMAGES} 張圖片` });
       return;
     }
 
@@ -147,55 +154,70 @@ export default function CustomerPortalCreatePage() {
     }
 
     const selected = imageFiles.slice(0, availableSlots);
-    setIsUploadingImage(true);
-    setStatus({ type: "info", message: "圖片上傳中，請稍候..." });
-
-    const nextImages = [...uploadedImages];
+    const uploadedBatch = [];
     let successCount = 0;
     let lastError = "";
 
-    for (const file of selected) {
-      if (file.size > MAX_UPLOAD_BYTES) {
-        lastError = `圖片 “${file.name}” 大小需小於 5MB`;
-        continue;
-      }
+    uploadLockRef.current = true;
+    setIsUploadingImage(true);
+    setStatus({ type: "info", message: "圖片上傳中..." });
 
-      const formData = new FormData();
-      formData.append("file", file);
-
-      try {
-        const response = await fetch("/api/upload-image", {
-          method: "POST",
-          body: formData,
-        });
-
-        if (!response.ok) {
-          const error = await response.json().catch(() => ({ message: "圖片上傳失敗" }));
-          throw new Error(error.message || "圖片上傳失敗");
+    try {
+      for (const file of selected) {
+        if (file.size > MAX_UPLOAD_BYTES) {
+          lastError = `${file.name} 超過 5MB 限制`;
+          continue;
         }
 
-        const result = await response.json();
-        nextImages.push({ url: result.url, name: file.name });
-        successCount += 1;
-      } catch (error) {
-        console.error("圖片上傳失敗:", error);
-        lastError = error.message || "圖片上傳失敗";
+        const formData = new FormData();
+        formData.append("file", file);
+
+        try {
+          const response = await fetch("/api/upload-image", {
+            method: "POST",
+            body: formData,
+          });
+
+          if (!response.ok) {
+            const error = await response.json().catch(() => ({ message: "圖片上傳失敗" }));
+            throw new Error(error.message || "圖片上傳失敗");
+          }
+
+          const result = await response.json();
+          const image = { url: result.url, name: file.name };
+          if (!uploadedBatch.some((item) => item.url === image.url)) {
+            uploadedBatch.push(image);
+            successCount += 1;
+          }
+        } catch (error) {
+          console.error("圖片上傳失敗:", error);
+          lastError = error.message || "圖片上傳失敗";
+        }
       }
+    } finally {
+      uploadLockRef.current = false;
+      setIsUploadingImage(false);
     }
 
-    setUploadedImages(nextImages);
-    setIsUploadingImage(false);
+    const mergedImages = [...currentImages];
+    for (const image of uploadedBatch) {
+      if (mergedImages.some((item) => item.url === image.url)) continue;
+      mergedImages.push(image);
+      if (mergedImages.length >= MAX_GALLERY_IMAGES) break;
+    }
+
+    setUploadedImages(mergedImages);
 
     if (successCount > 0) {
-      setStatus({ type: "success", message: `已新增 ${successCount} 張圖片` });
+      setStatus({ type: "success", message: `已上傳 ${successCount} 張圖片` });
     } else if (lastError) {
       setStatus({ type: "error", message: lastError });
-    } else if (!nextImages.length) {
+    } else if (!mergedImages.length) {
       setStatus(null);
     }
 
-    if (!form.image.trim() && nextImages.length) {
-      setForm((prev) => ({ ...prev, image: nextImages[nextImages.length - 1].url }));
+    if (!form.image.trim() && mergedImages.length) {
+      setForm((prev) => ({ ...prev, image: mergedImages[mergedImages.length - 1].url }));
     }
   };
 
@@ -216,7 +238,7 @@ export default function CustomerPortalCreatePage() {
     event.preventDefault();
 
     if (!authUser?.id) {
-      setStatus({ type: "error", message: "請先登入後再建立禱告卡。" });
+      setStatus({ type: "error", message: "請先登入後再建立禱告卡" });
       return;
     }
 
@@ -227,17 +249,23 @@ export default function CustomerPortalCreatePage() {
 
     const coverImage = form.image.trim();
     if (!coverImage) {
-      setStatus({ type: "error", message: "請提供至少一張封面圖片" });
+      setStatus({ type: "error", message: "請至少上傳一張圖片" });
       return;
     }
 
     if (!normalizedDescription) {
-      setStatus({ type: "error", message: "請填寫需要禱告的內容" });
+      setStatus({ type: "error", message: "隢‵撖恍?閬曲???批捆" });
       return;
     }
 
     setSubmitting(true);
     setStatus(null);
+
+    const infoLines = form.meta
+      .split("\n")
+      .map((line) => line.trim())
+      .filter(Boolean);
+    const galleryUrls = uploadedImages.map((item) => item.url).filter(Boolean);
 
     const payload = {
       title: form.title.trim(),
@@ -250,10 +278,7 @@ export default function CustomerPortalCreatePage() {
         .split(",")
         .map((tag) => tag.trim())
         .filter(Boolean),
-      meta: form.meta
-        .split("\n")
-        .map((line) => line.trim())
-        .filter(Boolean),
+      meta: buildCardMetaArray(infoLines, galleryUrls),
       detailsHref: form.detailsHref.trim(),
       voiceHref: form.voiceHref.trim(),
       categoryId,
@@ -267,12 +292,12 @@ export default function CustomerPortalCreatePage() {
       });
 
       if (!response.ok) {
-        const error = await response.json().catch(() => ({ message: "建立失敗" }));
-        throw new Error(error.message || "建立失敗");
+        const error = await response.json().catch(() => ({ message: "撱箇?憭望?" }));
+        throw new Error(error.message || "撱箇?憭望?");
       }
 
       await response.json();
-      setStatus({ type: "success", message: "禱告卡已建立並送出審核。" });
+      setStatus({ type: "success", message: "禱告卡已建立" });
       setForm(INITIAL_FORM);
       setUploadedImages([]);
       setShowModal(true);
@@ -282,7 +307,7 @@ export default function CustomerPortalCreatePage() {
       }, 1000);
       setRedirectTimer(timer);
     } catch (error) {
-      setStatus({ type: "error", message: error.message || "建立失敗" });
+      setStatus({ type: "error", message: error.message || "撱箇?憭望?" });
     } finally {
       setSubmitting(false);
     }
@@ -295,13 +320,13 @@ export default function CustomerPortalCreatePage() {
   return (
     <>
       <SiteHeader activePath="/customer-portal" />
-      <main className="customer-create">
+      <main className="customer-create customer-create--editor-only">
         <section className="customer-create__hero">
           <div className="customer-create__hero-card">
             <p className="customer-create__eyebrow">Share & Pray</p>
             <h1>讓需要被看見，邀請眾人一同守望</h1>
             <p>
-              透過清楚的禱告內容，社群能快速了解需求並進入代禱。圖片與文字排版都可以在這裡一次完成。
+              ??皜??曲?摰對?蝷曄黎?賢翰??閫??瘙蒂?脣隞?曲?????????賢隞亙?ㄐ銝甈∪???
             </p>
             <ul>
               {HERO_POINTS.map((point) => (
@@ -325,29 +350,29 @@ export default function CustomerPortalCreatePage() {
 
           <div className="customer-create__row customer-create__row--equal">
             <label>
-              <span>標題 *</span>
+              <span>璅? *</span>
               <input
                 type="text"
                 value={form.title}
                 onChange={updateFormField("title")}
-                placeholder="例：為家人的身體健康禱告"
+                placeholder="靘??箏振鈭箇?頨恍??亙熒蝳勗?"
                 required
               />
             </label>
             {/* <label>
-              <span>自訂網址代號 (slug)</span>
+              <span>?芾?蝬脣?隞?? (slug)</span>
               <input
                 type="text"
                 value={form.slug}
                 onChange={updateFormField("slug")}
-                placeholder="例：family-health"
+                placeholder="靘?family-health"
               />
             </label> */}
           </div>
 
           <div className="customer-create__row customer-create__row--equal">
             <label>
-              <span>分類 *</span>
+              <span>?? *</span>
               <select
                 value={categoryId ?? ""}
                 onChange={(event) => setCategoryId(Number(event.target.value))}
@@ -362,12 +387,12 @@ export default function CustomerPortalCreatePage() {
               </select>
             </label>
             <label>
-              <span>封面圖片 URL *</span>
+              <span>撠?? URL *</span>
               <input
                 type="text"
                 value={form.image}
                 onChange={updateFormField("image")}
-                placeholder="可貼上外部圖庫或 CDN 圖片連結"
+                placeholder="?航票銝??典?摨急? CDN ?????"
                 required
               />
             </label>
@@ -375,15 +400,16 @@ export default function CustomerPortalCreatePage() {
 
           <div className="customer-create__row">
             <label className="customer-create__file-label">
-              <span>上傳圖片 (最多 3 張)</span>
+              <span>銝?? (?憭?3 撘?</span>
               <input
                 type="file"
                 accept="image/*"
                 multiple
                 onChange={handleFileChange}
-                disabled={isUploadingImage || uploadedImages.length >= 1}
+                disabled={isUploadingImage || uploadedImages.length >= MAX_GALLERY_IMAGES}
               />
-              <small className="cp-helper">支援 JPG、PNG、WEBP，單張上限 5MB，僅供封面挑選，不會直接顯示在內容中。</small>
+              <small className="cp-helper">
+                ?舀 JPG?NG?EBP嚗撘萎???5MB??憭?{MAX_GALLERY_IMAGES} 撘蛛?撠＊蝷箸蝳勗?閰單???隞?曲?汗??              </small>
             </label>
             {uploadedImages.length ? (
               <div className="customer-create__gallery">
@@ -400,7 +426,7 @@ export default function CustomerPortalCreatePage() {
                       <figcaption>
                         <span title={name}>{name}</span>
                         <button type="button" onClick={() => removeUploadedImage(url)}>
-                          移除
+                          蝘駁
                         </button>
                       </figcaption>
                     </figure>
@@ -414,25 +440,25 @@ export default function CustomerPortalCreatePage() {
             {previewImage ? (
               <img src={previewImage} alt={form.alt || form.title || "禱告卡預覽"} />
             ) : (
-              <div className="customer-create__placeholder">尚未選擇圖片</div>
+              <div className="customer-create__placeholder">撠?豢???</div>
             )}
           </div>
 
           {/* <div className="customer-create__row">
             <label>
-              <span>圖片替代文字</span>
+              <span>???蹂誨??</span>
               <input
                 type="text"
                 value={form.alt}
                 onChange={updateFormField("alt")}
-                placeholder="例：家人聚集一同禱告"
+                placeholder="靘?摰嗡犖??銝?曲??
               />
             </label>
           </div> */}
 
           <div className="customer-create__row customer-create__row--description">
             <label>
-              <span>需要禱告內容 *</span>
+              <span>?閬曲?摰?*</span>
               <div className="customer-create__editor">
                 {editorReady && CKEditor && ClassicEditor ? (
                   <CKEditor
@@ -472,56 +498,56 @@ export default function CustomerPortalCreatePage() {
                   <textarea
                     value={form.description}
                     onChange={(event) => handleEditorChange(event.target.value)}
-                    placeholder="盡量明確，條列說明需要禱告的事項會幫助大家更容易進入負擔中。"
+                    placeholder="請描述你的代禱內容，越清楚越能幫助大家一起守望。"
                     rows={6}
                   />
                 )}
               </div>
               <small className="cp-helper">
-                盡量明確，條列說明需要禱告的事項會幫助大家更容易進入負擔中。
+                ?⊿??Ⅱ嚗??牧??閬曲??鈭??鼠?拙之摰嗆摰寞??脣鞎?銝准?
               </small>
             </label>
           </div>
 
           {/* <div className="customer-create__row customer-create__row--equal">
             <label>
-              <span>標籤 (以逗號分隔)</span>
+              <span>璅惜 (隞仿???)</span>
               <input
                 type="text"
                 value={form.tags}
                 onChange={updateFormField("tags")}
-                placeholder="例：家庭, 醫療"
+                placeholder="靘?摰嗅滬, ?怎?"
               />
             </label>
             <label>
-              <span>Meta 資訊 (每行一則)</span>
+              <span>Meta 鞈? (瘥?銝??</span>
               <textarea
                 rows={2}
                 value={form.meta}
                 onChange={updateFormField("meta")}
-                placeholder={`例：禱告卡編號：PC-101
-已被 12 位代禱者加入祈禱清單`}
+                placeholder={`靘?蝳勗??∠楊??PC-101
+撌脰◤ 12 雿誨蝳梯??亦?蝳望??害}
               />
             </label>
           </div>
 
           <div className="customer-create__row customer-create__row--equal">
             <label>
-              <span>詳細內容連結 (選填)</span>
+              <span>閰喟敦?批捆??? (?詨‵)</span>
               <input
                 type="text"
                 value={form.detailsHref}
                 onChange={updateFormField("detailsHref")}
-                placeholder="可連結到更完整的見證或說明頁"
+                placeholder="?舫???唳摰??霅?隤芣???
               />
             </label>
             <label>
-              <span>禱告錄音連結 (選填)</span>
+              <span>蝳勗????? (?詨‵)</span>
               <input
                 type="text"
                 value={form.voiceHref}
                 onChange={updateFormField("voiceHref")}
-                placeholder="例：詳細頁的 #voice 區段"
+                placeholder="靘?閰喟敦?? #voice ?畾?
               />
             </label>
           </div> */}
@@ -531,7 +557,7 @@ export default function CustomerPortalCreatePage() {
               {submitting ? "建立中..." : "建立禱告卡"}
             </button>
             <Link href="/customer-portal" className="button button--ghost" prefetch={false}>
-              回到總覽
+              ?蝮質汗
             </Link>
           </div>
         </form>
@@ -541,8 +567,8 @@ export default function CustomerPortalCreatePage() {
       {showModal ? (
         <div className="customer-create__modal" role="alert" aria-live="assertive">
           <div className="customer-create__modal-card">
-            <h3>建立成功！</h3>
-            <p>將在 1 秒後帶您回到管理總覽。</p>
+            <h3>建立成功</h3>
+            <p>1 秒後會回到管理頁</p>
           </div>
         </div>
       ) : null}
@@ -665,3 +691,4 @@ export default function CustomerPortalCreatePage() {
     </>
   );
 }
+

@@ -36,7 +36,7 @@ const FOOTER_COLUMNS = [
     links: [
       { href: "/whitepaper", label: "白皮書&免責聲明" },
       // { href: "/disclaimer", label: "免責聲明" },
-      { href: "/legacy/prayfor/details", label: "祈禱牆" }
+      // { href: "/legacy/prayfor/details", label: "祈禱牆" }
     ]
   },
   {
@@ -189,7 +189,7 @@ export function SiteFooter() {
             <img className="footer-logo" src="/legacy/img/logo.png" alt="Start Pray logo" />
             <div>
               <strong>Start Pray</strong>
-              <p>以祈禱連結世界，整合代禱、媒體與行動。</p>
+              <p>禱告連結世界，整合代禱、媒體與行動。</p>
             </div>
           </div>
           <div className="footer-grid">
@@ -222,7 +222,7 @@ export function SiteFooter() {
           </div> */}
         </div>
         <div className="footer-bottom">
-          <span>&copy; 2025 Start Pray. All rights reserved.</span>
+          <span>&copy; 2026 Start Pray. All rights reserved.</span>
           <div className="footer-legal">
             <Link href="/whitepaper" prefetch={false}>
               白皮書&免責聲明

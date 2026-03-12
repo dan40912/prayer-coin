@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 
 import { SiteFooter, SiteHeader } from "@/components/site-chrome";
+import { buildCardMetaArray, parseCardMeta } from "@/lib/card-meta";
 
 const EMPTY_FORM = {
   title: "",
@@ -17,9 +18,12 @@ const EMPTY_FORM = {
   voiceHref: "",
   categoryId: "",
 };
+const MAX_UPLOAD_BYTES = 5 * 1024 * 1024;
+const MAX_GALLERY_IMAGES = 3;
 
 function mapCardToForm(card) {
   if (!card) return EMPTY_FORM;
+  const { info } = parseCardMeta(card.meta);
   return {
     title: card.title ?? "",
     description: card.description ?? "",
@@ -27,7 +31,7 @@ function mapCardToForm(card) {
     alt: card.alt ?? "",
     slug: card.slug ?? "",
     tags: Array.isArray(card.tags) ? card.tags.join(", ") : "",
-    meta: Array.isArray(card.meta) ? card.meta.join("\n") : "",
+    meta: info.join("\n"),
     detailsHref: card.detailsHref ?? "",
     voiceHref: card.voiceHref ?? "",
     categoryId: card.category?.id ? String(card.category.id) : "",
@@ -45,6 +49,8 @@ export default function CustomerPortalEditCardPage() {
   const [status, setStatus] = useState(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [galleryImages, setGalleryImages] = useState([]);
+  const [isUploadingImage, setIsUploadingImage] = useState(false);
 
   const tagsPreview = useMemo(
     () => form.tags.split(",").map((tag) => tag.trim()).filter(Boolean),
@@ -54,6 +60,10 @@ export default function CustomerPortalEditCardPage() {
   const metaPreview = useMemo(
     () => form.meta.split("\n").map((line) => line.trim()).filter(Boolean),
     [form.meta],
+  );
+  const galleryUrls = useMemo(
+    () => galleryImages.map((item) => item.url).filter(Boolean),
+    [galleryImages],
   );
 
   useEffect(() => {
@@ -87,9 +97,15 @@ export default function CustomerPortalEditCardPage() {
 
         if (!active) return;
 
+        const parsedMeta = parseCardMeta(cardData.meta);
+        const preparedGallery = parsedMeta.gallery.map((url, index) => ({
+          url,
+          name: url.split("?")[0].split("/").pop() || `image-${index + 1}`,
+        }));
         setCard(cardData);
         setCategories(categoryData);
         setForm(mapCardToForm(cardData));
+        setGalleryImages(preparedGallery);
       } catch (error) {
         if (active) {
           setStatus({ type: "error", message: error.message || "載入資料時發生錯誤" });
@@ -111,6 +127,85 @@ export default function CustomerPortalEditCardPage() {
   const updateField = (field) => (event) => {
     const value = event.target.value;
     setForm((prev) => ({ ...prev, [field]: value }));
+  };
+
+  const handleGalleryUpload = async (event) => {
+    const files = Array.from(event.target.files ?? []);
+    event.target.value = "";
+    if (!files.length) return;
+
+    const availableSlots = MAX_GALLERY_IMAGES - galleryImages.length;
+    if (availableSlots <= 0) {
+      setStatus({ type: "error", message: `最多只能上傳 ${MAX_GALLERY_IMAGES} 張圖片` });
+      return;
+    }
+
+    const imageFiles = files.filter((file) => file.type.startsWith("image/")).slice(0, availableSlots);
+    if (!imageFiles.length) {
+      setStatus({ type: "error", message: "請選擇圖片檔案" });
+      return;
+    }
+
+    setIsUploadingImage(true);
+    setStatus({ type: "info", message: "圖片上傳中，請稍候..." });
+    const nextImages = [...galleryImages];
+    let successCount = 0;
+    let lastError = "";
+
+    for (const file of imageFiles) {
+      if (file.size > MAX_UPLOAD_BYTES) {
+        lastError = `圖片 “${file.name}” 大小需小於 5MB`;
+        continue;
+      }
+
+      const formData = new FormData();
+      formData.append("file", file);
+
+      try {
+        const response = await fetch("/api/upload-image", { method: "POST", body: formData });
+        if (!response.ok) {
+          const error = await response.json().catch(() => ({ message: "圖片上傳失敗" }));
+          throw new Error(error.message || "圖片上傳失敗");
+        }
+        const result = await response.json();
+        nextImages.push({ url: result.url, name: file.name });
+        successCount += 1;
+      } catch (error) {
+        console.error("圖片上傳失敗:", error);
+        lastError = error.message || "圖片上傳失敗";
+      }
+    }
+
+    setGalleryImages(nextImages);
+    setIsUploadingImage(false);
+
+    if (!form.image.trim() && nextImages.length) {
+      setForm((prev) => ({ ...prev, image: nextImages[nextImages.length - 1].url }));
+    }
+
+    if (successCount > 0) {
+      setStatus({ type: "success", message: `已新增 ${successCount} 張圖片` });
+    } else if (lastError) {
+      setStatus({ type: "error", message: lastError });
+    } else {
+      setStatus(null);
+    }
+  };
+
+  const selectGalleryImage = (url) => {
+    setForm((prev) => ({ ...prev, image: url }));
+    setStatus(null);
+  };
+
+  const removeGalleryImage = (url) => {
+    setGalleryImages((prev) => {
+      const next = prev.filter((item) => item.url !== url);
+      setForm((prevForm) => {
+        if (prevForm.image !== url) return prevForm;
+        return { ...prevForm, image: next[0]?.url ?? "" };
+      });
+      return next;
+    });
   };
 
   const handleSubmit = async (event) => {

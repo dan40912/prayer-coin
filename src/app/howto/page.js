@@ -134,7 +134,7 @@ export default function HowToPage() {
     <>
       <SiteHeader activePath="/howto" />
 
-      <main>
+      <main className="howto-page">
         <section className="section hero hero-split">
           <div>
             <span className="badge-soft">使用指南</span>

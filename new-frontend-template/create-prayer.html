@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Start Pray | 發布祈禱</title>
+  
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Outfit:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <link rel="stylesheet" href="./css/style.css">
+  <link rel="stylesheet" href="./css/create.css">
+</head>
+<body class="create-page">
+
+  <header class="site-header">
+    <div class="container">
+      <a href="index.html" class="logo">
+        <i class="fa-solid fa-hands-praying logo-icon"></i>
+      </a>
+      <div class="header-title">發布新的祈禱</div>
+      <a href="index.html" class="btn-icon btn-close">
+        <i class="fa-solid fa-xmark"></i>
+      </a>
+    </div>
+  </header>
+
+  <main class="container create-container">
+    <div class="form-wrapper glass-panel">
+      <!-- Step Indicator -->
+      <div class="step-indicator">
+        <div class="step active">1. 內容</div>
+        <div class="step-line"></div>
+        <div class="step">2. 細節</div>
+      </div>
+
+      <form id="create-prayer-form" class="prayer-form">
+        
+        <!-- Step 1: Content -->
+        <div class="form-step active" id="step-1">
+          <h2 class="step-title">您的心中有什麼負擔？</h2>
+          <p class="step-desc">寫下您的故事，社群裡的同行者會為您祝福。</p>
+          
+          <div class="form-group">
+            <label for="prayer-title">標題 (Title)</label>
+            <input type="text" id="prayer-title" placeholder="例如：為即將到來的手術祈求平安" required>
+          </div>
+          
+          <div class="form-group">
+            <label for="prayer-body">內容 (Story)</label>
+            <textarea id="prayer-body" rows="6" placeholder="分享更詳細的背景，讓大家更了解如何為您祈禱..." required></textarea>
+          </div>
+
+          <div class="form-actions right">
+            <button type="button" class="btn btn-primary btn-next">下一步 <i class="fa-solid fa-arrow-right"></i></button>
+          </div>
+        </div>
+
+        <!-- Step 2: Details -->
+        <div class="form-step" id="step-2" style="display: none;">
+          <h2 class="step-title">選擇類別與附加資訊</h2>
+          
+          <div class="form-group">
+            <label>相關分類 (Categories)</label>
+            <div class="category-pills">
+              <label class="pill-checkbox"><input type="checkbox" name="cat" value="health"> <span class="pill-label">🙏 健康醫治</span></label>
+              <label class="pill-checkbox"><input type="checkbox" name="cat" value="family"> <span class="pill-label">❤️ 關係與家庭</span></label>
+              <label class="pill-checkbox"><input type="checkbox" name="cat" value="work"> <span class="pill-label">💼 工作選讀</span></label>
+              <label class="pill-checkbox"><input type="checkbox" name="cat" value="peace"> <span class="pill-label">🕊️ 內心平安</span></label>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label>您的身份顯示</label>
+            <div class="identity-toggle">
+              <label class="radio-label">
+                <input type="radio" name="identity" value="public" checked>
+                <div class="radio-box">
+                  <div class="radio-title">公開顯示</div>
+                  <div class="radio-desc">使用我的名稱 (Daniel) 顯示</div>
+                </div>
+              </label>
+              <label class="radio-label">
+                <input type="radio" name="identity" value="anonymous">
+                <div class="radio-box">
+                  <div class="radio-title">匿名發布</div>
+                  <div class="radio-desc">以「遠方朋友」身分發布</div>
+                </div>
+              </label>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label>搭配自己的聲音 (選填)</label>
+            <div class="voice-recorder-preview">
+              <button type="button" class="btn btn-glass btn-record-self"><i class="fa-solid fa-microphone"></i> 錄製我的聲音</button>
+              <span class="record-hint">用自己的聲音發布能獲得更多共鳴</span>
+            </div>
+          </div>
+
+          <div class="form-actions between">
+            <button type="button" class="btn btn-glass btn-prev"><i class="fa-solid fa-arrow-left"></i> 上一步</button>
+            <button type="submit" class="btn btn-primary btn-submit"><i class="fa-solid fa-paper-plane"></i> 發布祈禱</button>
+          </div>
+        </div>
+
+      </form>
+    </div>
+  </main>
+
+  <script src="./js/app.js"></script>
+</body>
+</html>

@@ -2,6 +2,11 @@
 
 const CARD_DEFAULT_INCLUDE = {
   category: true,
+  owner: {
+    select: {
+      name: true
+    }
+  },
   _count: {
     select: {
       responses: true
@@ -133,6 +138,34 @@ export async function readRelatedHomeCards(id, limit = 3) {
     take: Math.max(0, Number(limit) || 0),
     include: CARD_DEFAULT_INCLUDE
   });
+}
+
+export async function readAdjacentHomeCards(id) {
+  const cardId = Number(id);
+  if (!Number.isInteger(cardId) || cardId <= 0) {
+    return { prev: null, next: null };
+  }
+
+  const [prev, next] = await Promise.all([
+    prisma.homePrayerCard.findFirst({
+      where: {
+        isBlocked: false,
+        id: { lt: cardId },
+      },
+      orderBy: [{ id: "desc" }],
+      include: CARD_DEFAULT_INCLUDE,
+    }),
+    prisma.homePrayerCard.findFirst({
+      where: {
+        isBlocked: false,
+        id: { gt: cardId },
+      },
+      orderBy: [{ id: "asc" }],
+      include: CARD_DEFAULT_INCLUDE,
+    }),
+  ]);
+
+  return { prev, next };
 }
 
 

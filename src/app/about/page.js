@@ -9,7 +9,7 @@ export const metadata = {
 const coreValues = [
   { title: "真實陪伴", description: "結合文字與語音禱告，讓彼此的生命故事被聽見，取代快速、片段的社群互動。" },
   { title: "透明信任", description: "以區塊鏈紀錄代幣發放與消耗，打造可追蹤、可驗證的守望流程。" },
-  { title: "共享資源", description: "提供 API 與 SDK，讓教會、非營利組織與開發者能快速串接，延伸祈禱網絡。" },
+  { title: "共享資源", description: "提供 API 與 SDK，讓教會、非營利組織與開發者能快速串接，延伸禱告網絡。" },
   { title: "合規守護", description: "遵循區域法規、重視資料隱私，確保每筆禱告、每次代幣交易都在安全環境中進行。" }
 ];
 
@@ -38,9 +38,9 @@ const milestones = [
   { title: "2025 11 · 上GCP和購買正式URL", description: "徵求有意願參加的行銷或開發人員" },
   { title: "2025 12 · 預備英文網站", description: "徵求翻譯 或 管理員" },
   { title: "2026 01 · 上Github 開源", description: "提供非錢包版本給大家使用" },
-  { title: "2026 02 · 上鏈 ! 準備發送代幣", description: "上Binance Alpha" },
-  { title: "2026 05 · 銷毀代幣", description: "持有數量減少" },
-  { title: "2026 07 · 預備區塊鏈代禱事項蒐尋器", description: "環境搭建預計五個月" },
+  { title: "2026 04 · 預備禱告發送成功後，可以獲得代幣作為紀念", description: "僅自行使用" },
+  { title: "2026 05 · 鼓勵更多使用者參與使用", description: "持有數量減少" },
+  { title: "2026 07 · 預備區塊鏈禱告保存器", description: "環境搭建預計五個月" },
 ];
 
 // 創建新的資訊結構，取代舊的 teamFocuses
@@ -67,7 +67,7 @@ export default function AboutPage() {
     <>
       <SiteHeader activePath="/about" />
 
-      <main>
+      <main className="about-page">
         {/* --- 英雄區塊：強化痛點與解決方案 --- */}
         <section className="section hero hero-split">
           <div>
