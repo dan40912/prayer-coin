@@ -1,0 +1,119 @@
+# QA 自動測試操作說明
+
+這份說明提供「簡單指令」完成以下流程：
+
+1. 註冊
+2. 登入
+3. 建立禱告內容
+4. 到其他事項留言並附語音（AI 產生）
+
+---
+
+## 1) 前置需求
+
+- Node.js 18+（建議 20+）
+- 專案依賴已安裝：`npm install`
+- 本機伺服器已啟動（預設 `http://localhost:3000`）
+
+```powershell
+npm run dev
+```
+
+如果你的 dev 跑在其他埠，後面指令加上 `--base-url` 即可。
+
+---
+
+## 2) 一鍵完整流程（推薦）
+
+### 使用 AI 語音（OpenAI）
+
+PowerShell:
+
+```powershell
+$env:OPENAI_API_KEY="你的金鑰"
+npm run qa:full
+```
+
+如果不是 3000 埠：
+
+```powershell
+npm run qa:full -- --base-url http://localhost:3004
+```
+
+---
+
+## 3) 分步執行（可單獨驗證每一步）
+
+```powershell
+# Step 1: 註冊兩個測試帳號（owner + responder）
+npm run qa -- register
+
+# Step 2: 兩個帳號都登入
+npm run qa -- login
+
+# Step 3: owner 建立禱告內容（home card）
+npm run qa -- create-prayer
+
+# Step 4: responder 對該事項留言 + AI 語音上傳
+$env:OPENAI_API_KEY="你的金鑰"
+npm run qa -- comment-ai-voice
+```
+
+---
+
+## 4) 不接 AI（離線測試語音上傳）
+
+如果你暫時沒有 OpenAI 金鑰，可先用 mock 音檔驗證上傳流程：
+
+```powershell
+npm run qa -- comment-ai-voice -- --voice-provider mock
+```
+
+---
+
+## 5) 產出與檔案
+
+- 測試狀態會寫到：`.qa/session.json`
+- 會保存：
+  - 註冊帳號資訊
+  - 登入結果
+  - 建立的禱告卡 `card.id`
+  - 留言/語音回應 `response.id` 與 `voiceUrl`
+
+你可以用下面指令查看：
+
+```powershell
+npm run qa -- status
+```
+
+---
+
+## 6) 常見錯誤排查
+
+- `No active home categories`
+  - 代表資料庫沒有可用分類，請先在後台建立至少一個分類。
+
+- `OPENAI_API_KEY is missing`
+  - 代表你執行 AI 語音時沒有設定金鑰。
+
+- `connect ECONNREFUSED`
+  - 代表伺服器尚未啟動，請先執行 `npm run dev`。
+
+---
+
+## 7) 指令摘要
+
+```powershell
+# 一鍵完整流程（含 AI 語音）
+$env:OPENAI_API_KEY="你的金鑰"
+npm run qa:full
+
+# 分步
+npm run qa -- register
+npm run qa -- login
+npm run qa -- create-prayer
+npm run qa -- comment-ai-voice
+
+# 查看 session
+npm run qa -- status
+```

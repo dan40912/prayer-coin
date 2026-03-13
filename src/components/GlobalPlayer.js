@@ -1,15 +1,16 @@
 "use client";
 
-import { useAudio } from "@/context/AudioContext";
-import { usePathname } from "next/navigation";
 import { useRef } from "react";
+import { usePathname } from "next/navigation";
 
-const FALLBACK_SPEAKER = "匿名代禱者";
-const FALLBACK_TITLE = "禱告留言";
-const FALLBACK_EMPTY_HINT = "尚未選擇播放項目，點擊留言或錄音即可開始收聽。";
+import { useAudio } from "@/context/AudioContext";
+
+const FALLBACK_SPEAKER = "匿名代祷者";
+const FALLBACK_TITLE = "代祷留言";
+const FALLBACK_EMPTY_HINT = "尚未选择播放项目，点选留言或录音即可开始播放。";
 
 function getSpeakerInitial(name) {
-  return name?.charAt(0)?.toUpperCase() || "祈";
+  return name?.charAt(0)?.toUpperCase() || "祷";
 }
 
 export default function GlobalPlayer() {
@@ -38,8 +39,9 @@ export default function GlobalPlayer() {
   const hasTrack = Boolean(currentTrack);
   const hasQueue = playlist.length > 0;
   const canPlay = hasQueue;
+  const hasStartedPlayback = hasTrack;
 
-  const displayTrack = hasTrack
+  const displayTrack = hasStartedPlayback
     ? currentTrack
     : hasQueue
       ? playlist[0]
@@ -53,7 +55,7 @@ export default function GlobalPlayer() {
 
   const trackSpeaker = displayTrack.speaker || FALLBACK_SPEAKER;
   const marqueeText = (displayTrack.message || displayTrack.requestTitle || FALLBACK_TITLE).trim();
-  const showSpeakerBubble = hasQueue && Boolean(marqueeText);
+  const showSpeakerBubble = hasStartedPlayback && Boolean(marqueeText);
 
   const effectiveProgress = hasQueue ? queueProgress : 0;
   const effectiveDuration = hasQueue
@@ -113,38 +115,31 @@ export default function GlobalPlayer() {
         </div>
       </div>
 
-      <div className="player-controls-container">
-        <div className="track-info">
-          {displayTrack.avatarUrl ? (
-            <img
-              src={displayTrack.avatarUrl}
-              alt={trackSpeaker}
-              className={`track-avatar ${hasTrack && isPlaying ? "pulse" : ""}`}
-            />
-          ) : (
-            <div
-              className={`track-avatar ${hasTrack && isPlaying ? "pulse" : ""}`}
-              style={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                background: "var(--accent-gold)",
-              }}
-              aria-hidden="true"
-            >
-              {getSpeakerInitial(trackSpeaker)}
+      <div className={`player-controls-container ${hasStartedPlayback ? "" : "is-idle"}`}>
+        {hasStartedPlayback ? (
+          <div className="track-info">
+            {displayTrack.avatarUrl ? (
+              <img
+                src={displayTrack.avatarUrl}
+                alt={trackSpeaker}
+                className={`track-avatar ${hasTrack && isPlaying ? "pulse" : ""}`}
+              />
+            ) : (
+              <div className={`track-avatar ${hasTrack && isPlaying ? "pulse" : ""}`} aria-hidden="true">
+                {getSpeakerInitial(trackSpeaker)}
+              </div>
+            )}
+            <div className="track-details">
+              <div className="track-title">{trackSpeaker}</div>
+              <div className="track-origin">{displayTrack.requestTitle || FALLBACK_TITLE}</div>
             </div>
-          )}
-          <div className="track-details">
-            <div className="track-title">{trackSpeaker}</div>
-            <div className="track-origin">{displayTrack.requestTitle || FALLBACK_TITLE}</div>
           </div>
-        </div>
+        ) : null}
 
-        <div className="player-controls">
+        <div className={`player-controls ${hasStartedPlayback ? "" : "is-idle"}`}>
           <button
             className="control-btn"
-            title="播放上一則"
+            title="上一则"
             onClick={() => hasQueue && playPrev()}
             disabled={!hasQueue || playlist.length <= 1}
           >
@@ -155,7 +150,7 @@ export default function GlobalPlayer() {
           </button>
           <button
             className="control-btn"
-            title="播放下一則"
+            title="下一则"
             onClick={() => hasQueue && playNext()}
             disabled={!hasQueue || playlist.length <= 1}
           >
@@ -163,24 +158,26 @@ export default function GlobalPlayer() {
           </button>
         </div>
 
-        <div className="player-actions">
-          <button
-            className={`control-btn ${isLoop ? "is-active" : ""}`}
-            title={isLoop ? "取消循環播放" : "循環播放"}
-            onClick={handleLoopToggle}
-          >
-            <i className="fa-solid fa-repeat" aria-hidden="true" />
-          </button>
-          {playlist.length ? (
+        {hasStartedPlayback ? (
+          <div className="player-actions">
             <button
-              className={`control-btn ${isExpanded ? "is-active" : ""}`}
-              title={isExpanded ? "收合播放清單" : "展開播放清單"}
-              onClick={handleQueueToggle}
+              className={`control-btn ${isLoop ? "is-active" : ""}`}
+              title={isLoop ? "取消循环播放" : "循环播放"}
+              onClick={handleLoopToggle}
             >
-              <i className="fa-solid fa-list" aria-hidden="true" />
+              <i className="fa-solid fa-repeat" aria-hidden="true" />
             </button>
-          ) : null}
-        </div>
+            {playlist.length ? (
+              <button
+                className={`control-btn ${isExpanded ? "is-active" : ""}`}
+                title={isExpanded ? "收合播放清单" : "展开播放清单"}
+                onClick={handleQueueToggle}
+              >
+                <i className="fa-solid fa-list" aria-hidden="true" />
+              </button>
+            ) : null}
+          </div>
+        ) : null}
       </div>
 
       {showSpeakerBubble ? (
@@ -200,11 +197,7 @@ export default function GlobalPlayer() {
             <div className="pray-audio-modal__bubble">
               <strong className="pray-audio-modal__speaker-name">{trackSpeaker}</strong>
               <div className="pray-audio-modal__marquee">
-                <div
-                  className={`pray-audio-modal__marquee-track ${
-                    isPlaying ? "is-playing" : ""
-                  }`}
-                >
+                <div className={`pray-audio-modal__marquee-track ${isPlaying ? "is-playing" : ""}`}>
                   <span>{marqueeText}</span>
                   <span aria-hidden="true">{marqueeText}</span>
                 </div>
@@ -218,15 +211,15 @@ export default function GlobalPlayer() {
         <div className="player-empty-hint">{FALLBACK_EMPTY_HINT}</div>
       ) : null}
 
-      {playlist.length ? (
+      {hasStartedPlayback && playlist.length ? (
         <div className={`player-queue-panel ${isExpanded ? "is-open" : ""}`}>
           <div className="player-queue-header">
             <div>
-              <p className="eyebrow">播放清單</p>
-              <strong>{playlist.length} 則留言</strong>
+              <p className="eyebrow">播放清单</p>
+              <strong>{playlist.length} 则留言</strong>
             </div>
             <button type="button" className="queue-toggle" onClick={handleQueueToggle}>
-              {isExpanded ? "收合" : "展開"}
+              {isExpanded ? "收合" : "展开"}
             </button>
           </div>
           {isExpanded ? (
@@ -249,7 +242,7 @@ export default function GlobalPlayer() {
                     <button
                       type="button"
                       className="queue-track__delete"
-                      aria-label="移除這則錄音"
+                      aria-label="移除此录音"
                       onClick={() => removeTrack(track.id)}
                     >
                       <i className="fa-solid fa-xmark" aria-hidden="true" />
@@ -264,4 +257,3 @@ export default function GlobalPlayer() {
     </div>
   );
 }
-

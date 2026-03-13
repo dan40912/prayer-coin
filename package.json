@@ -14,7 +14,9 @@
     "db:generate": "prisma generate",
     "db:migrate": "prisma migrate dev",
     "db:studio": "prisma studio",
-    "seed:admins": "node scripts/seed-admins.js"
+    "seed:admins": "node scripts/seed-admins.js",
+    "qa": "node scripts/qa-flow.mjs",
+    "qa:full": "node scripts/qa-flow.mjs full"
   },
   "dependencies": {
     "@ckeditor/ckeditor5-build-classic": "^39.0.2",

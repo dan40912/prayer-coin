@@ -5,6 +5,7 @@ import { headers } from "next/headers";
 import { Open_Sans, Raleway, Poppins } from "next/font/google";
 
 import { SiteFooter, SiteHeader } from "@/components/site-chrome";
+import GlobalPlayerGate from "@/components/GlobalPlayerGate";
 import { readSiteSettings } from "@/lib/siteSettings";
 
 const openSans = Open_Sans({ subsets: ["latin"], variable: "--font-sans" });
@@ -60,15 +61,10 @@ function shouldBypassMaintenance(pathname) {
 }
 
 import { AudioProvider } from "@/context/AudioContext";
-import GlobalPlayer from "@/components/GlobalPlayer";
 
 export default async function RootLayout({ children }) {
   const requestHeaders = headers();
   const requestPath = extractPathFromHeaders(requestHeaders);
-  const hideGlobalPlayer =
-    requestPath === "/" ||
-    requestPath.startsWith("/prayfor/") ||
-    requestPath.startsWith("/customer-portal/create");
 
   if (!shouldBypassMaintenance(requestPath)) {
     const settings = await readSiteSettings();
@@ -164,7 +160,7 @@ export default async function RootLayout({ children }) {
       <body className="admin-layout">
         <AudioProvider>
           {children}
-          {!hideGlobalPlayer ? <GlobalPlayer /> : null}
+          <GlobalPlayerGate />
         </AudioProvider>
       </body>
     </html>

@@ -614,7 +614,7 @@ export default function Comments({ requestId, ownerId = null }) {
     try {
       const res = await fetch("/api/responses", { method: "POST", body: formData });
       if (!res.ok) {
-        throw new Error("Failed to submit response. Please try again.");
+        throw new Error("送出回應失敗，請稍後再試。");
       }
 
       const saved = await res.json();
@@ -629,7 +629,7 @@ export default function Comments({ requestId, ownerId = null }) {
       setRecorderStep("idle");
       return true;
     } catch (err) {
-      setActionNotice(err?.message || "Failed to submit response.");
+      setActionNotice(err?.message || "送出回應失敗。");
       setActionNoticeType("error");
       return false;
     } finally {
@@ -655,51 +655,51 @@ export default function Comments({ requestId, ownerId = null }) {
     if (!isRecorderModalOpen) return null;
 
     return (
-      <div className="record-modal" role="dialog" aria-modal="true" aria-label="Recorder">
+      <div className="record-modal" role="dialog" aria-modal="true" aria-label="錄音器">
         <div className="record-modal__backdrop" onClick={closeRecorderModal} />
         <div className="record-modal__card">
           {recordError ? (
             <>
-              <h4>Recording Error</h4>
+              <h4>錄音錯誤</h4>
               <p className="cp-alert cp-alert--error">{recordError}</p>
               <button type="button" className="cp-button cp-button--ghost" onClick={closeRecorderModal}>
-                Close
+                關閉
               </button>
             </>
           ) : recorderStep === "countdown" ? (
             <>
-              <h4>Get Ready</h4>
-              <p>Recording starts after countdown.</p>
+              <h4>準備錄音</h4>
+              <p>倒數結束後將開始錄音。</p>
               <div className="record-modal__count">{countdownValue}</div>
               <button type="button" className="cp-button cp-button--ghost" onClick={closeRecorderModal}>
-                Cancel
+                取消
               </button>
             </>
           ) : recorderStep === "recording" ? (
             <>
-              <h4>Recording</h4>
-              <p>Maximum {MAX_RECORD_SECONDS} seconds.</p>
+              <h4>錄音中</h4>
+              <p>最長可錄 {MAX_RECORD_SECONDS} 秒。</p>
               <div className="record-modal__timer">{formatSeconds(recordSeconds)}</div>
               <div className="record-modal__actions">
                 <button type="button" className="cp-button cp-button--danger" onClick={stopRecording}>
-                  Stop Recording
+                  停止錄音
                 </button>
               </div>
             </>
           ) : recorderStep === "review" && audioUrl ? (
             <>
-              <h4>Review Recording</h4>
-              <p>Upload now, or record again.</p>
+              <h4>檢查錄音</h4>
+              <p>可直接送出，或重新錄音。</p>
               <audio src={audioUrl} controls preload="metadata" className="record-modal__audio" />
               <div className="record-modal__actions record-modal__actions--review">
                 <button type="button" className="cp-button cp-button--ghost" onClick={rerecordAudio} disabled={submittingResponse}>
-                  Re-record
+                  重新錄音
                 </button>
                 <button type="button" className="cp-button cp-button--ghost" onClick={useRecordedAudio} disabled={submittingResponse}>
-                  Keep and Close
+                  保留並關閉
                 </button>
                 <button type="button" className="cp-button" onClick={submitFromRecorderModal} disabled={submittingResponse}>
-                  {submittingResponse ? "Uploading..." : "Upload Now"}
+                  {submittingResponse ? "上傳中..." : "立即上傳"}
                 </button>
               </div>
             </>
@@ -869,28 +869,28 @@ export default function Comments({ requestId, ownerId = null }) {
                   style={{ display: "inline-flex", alignItems: "center", gap: "8px", padding: "12px 24px", borderRadius: "50px" }}
                 >
                   <i className="fa-solid fa-microphone"></i>
-                  Record Audio
+                  開始錄音
                 </button>
               ) : null}
 
               {hasAudio ? (
                 <div className="audio-preview glass-panel" style={{ padding: "10px", marginTop: "10px" }}>
                   <p style={{ margin: "0 0 10px 0", fontSize: "0.9rem", color: "var(--text-light)" }}>
-                    Audio ready. Re-record or submit your response.
+                    錄音已完成，可重新錄音或直接送出回應。
                   </p>
                   <audio src={audioUrl} controls preload="metadata" style={{ width: "100%" }} />
                   <div className="audio-preview__actions" style={{ display: "flex", gap: "10px", marginTop: "10px" }}>
                     <button type="button" className="btn btn-glass" onClick={resetRecording}>
-                      <i className="fa-solid fa-rotate-right"></i> Re-record
+                      <i className="fa-solid fa-rotate-right"></i> 重新錄音
                     </button>
                     <button type="submit" className="btn btn-primary" disabled={recording || submittingResponse}>
-                      <i className="fa-solid fa-paper-plane"></i> {submittingResponse ? "Sending..." : "Send Response"}
+                      <i className="fa-solid fa-paper-plane"></i> {submittingResponse ? "送出中..." : "送出回應"}
                     </button>
                   </div>
                 </div>
               ) : (
                 <button type="submit" className="btn btn-primary" disabled={recording || submittingResponse} style={{ marginTop: "10px" }}>
-                  {submittingResponse ? "Sending..." : "Send Response"}
+                  {submittingResponse ? "送出中..." : "送出回應"}
                 </button>
               )}
             </div>
