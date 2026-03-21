@@ -62,7 +62,7 @@ export default function GlobalError({ reset }) {
             </div>
             <div className="error-actions" style={{ display: "flex", justifyContent: "center", gap: "1rem", flexWrap: "wrap" }}>
               <Link
-                href="/"
+                href="/prayfor"
                 prefetch={false}
                 style={{
                   display: "inline-flex",
@@ -76,7 +76,7 @@ export default function GlobalError({ reset }) {
                   fontWeight: 600
                 }}
               >
-                返回首頁
+                返回禱告牆
               </Link>
               <button
                 type="button"
@@ -90,7 +90,7 @@ export default function GlobalError({ reset }) {
               >
                 重新整理
               </button>
-              <a href="mailto:support@prayercoin.app" style={outlineButtonStyle}>
+              <a href="mailto:startpraynow@gmail.com" style={outlineButtonStyle}>
                 聯絡支援
               </a>
             </div>
@@ -107,7 +107,6 @@ export default function GlobalError({ reset }) {
               <strong>我們正在努力恢復服務</strong>
               <ul className="auth-meta-list" style={{ color: "rgba(226, 232, 240, 0.85)" }}>
                 <li>自動警示已通知維運團隊。</li>
-                <li>代幣鏈上交易不受此事件影響。</li>
                 <li>如有急迫需求，請提供您的禱告 ID 與錯誤時間。</li>
               </ul>
             </div>

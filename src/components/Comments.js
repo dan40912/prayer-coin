@@ -218,7 +218,7 @@ export default function Comments({ requestId, ownerId = null }) {
         } catch (copyErr) {
           throw new Error("無法使用分享功能");
         } finally {
-          document.body.removeChild(textarea);
+          textarea.remove();
         }
       }
     } catch (err) {

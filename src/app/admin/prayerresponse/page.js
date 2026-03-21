@@ -1,6 +1,7 @@
 ﻿"use client";
 
 import { useEffect, useState } from "react";
+import { useDebouncedValue } from "@/hooks/useDebouncedValue";
 
 export default function AdminPrayerResponsePage() {
   const [responses, setResponses] = useState([]);
@@ -13,13 +14,14 @@ export default function AdminPrayerResponsePage() {
     total: 0,
     totalPages: 1,
   });
+  const debouncedSearch = useDebouncedValue(search, 400);
 
   // 載入留言資料
   const loadResponses = async () => {
     try {
       setLoading(true);
       const res = await fetch(
-        `/api/admin/prayerresponse?search=${search}&status=${statusFilter}&page=${page}&limit=10`,
+        `/api/admin/prayerresponse?search=${debouncedSearch}&status=${statusFilter}&page=${page}&limit=10`,
         { cache: "no-store" }
       );
       if (!res.ok) throw new Error("無法取得留言");
@@ -35,6 +37,9 @@ export default function AdminPrayerResponsePage() {
 
   // 切換封鎖狀態
   const handleToggleBlock = async (id, block) => {
+    const shouldContinue = confirm(block ? "確定要封鎖這則回應？" : "確定要解除封鎖這則回應？");
+    if (!shouldContinue) return;
+
     try {
       const res = await fetch(`/api/admin/prayerresponse/${id}/block`, {
         method: "PATCH",
@@ -50,7 +55,7 @@ export default function AdminPrayerResponsePage() {
 
   useEffect(() => {
     loadResponses();
-  }, [page, search, statusFilter]);
+  }, [page, debouncedSearch, statusFilter]);
 
   return (
     <div className="admin-section">
@@ -72,15 +77,21 @@ export default function AdminPrayerResponsePage() {
               type="search"
               placeholder="搜尋留言內容或作者"
               value={search}
-              onChange={(e) => setSearch(e.target.value)}
+              onChange={(e) => {
+                setSearch(e.target.value);
+                setPage(1);
+              }}
             />
             <select
               value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
+              onChange={(e) => {
+                setStatusFilter(e.target.value);
+                setPage(1);
+              }}
             >
               <option value="all">所有狀態</option>
-              <option value="active">Active</option>
-              <option value="blocked">Blocked</option>
+              <option value="active">啟用中</option>
+              <option value="blocked">已封鎖</option>
             </select>
           </div>
         </header>
@@ -90,59 +101,55 @@ export default function AdminPrayerResponsePage() {
         ) : error ? (
           <p className="error">{error}</p>
         ) : (
-          <table className="admin-table">
-            <thead>
-              <tr>
-                <th>作者</th>
-                <th>Email</th>
-                <th>留言</th>
-                <th>對應卡片</th>
-                <th>狀態</th>
-                <th>檢舉次數</th>
-                <th>建立時間</th>
-                <th>操作</th>
-              </tr>
-            </thead>
-            <tbody>
-              {responses.length === 0 ? (
+          <div className="admin-table-wrap">
+            <table className="admin-table">
+              <thead>
                 <tr>
-                  <td colSpan={8}>目前沒有留言</td>
+                  <th>作者</th>
+                  <th>Email</th>
+                  <th>留言</th>
+                  <th>對應卡片</th>
+                  <th>狀態</th>
+                  <th>檢舉次數</th>
+                  <th>建立時間</th>
+                  <th>操作</th>
                 </tr>
-              ) : (
-                responses.map((resp) => (
-                  <tr key={resp.id}>
-                    <td>{resp.responder?.name || "匿名"}</td>
-                    <td>{resp.responder?.email || "-"}</td>
-                    <td>{resp.message}</td>
-                    <td>{resp.homeCard?.title || "—"}</td>
-                    <td>
-                      {resp.isBlocked ? (
-                        <span className="status-badge status-badge--blocked">
-                          Blocked
-                        </span>
-                      ) : (
-                        <span className="status-badge status-badge--active">
-                          Active
-                        </span>
-                      )}
-                    </td>
-                    <td>{resp.reportCount}</td>
-                    <td>{new Date(resp.createdAt).toLocaleString()}</td>
-                    <td>
-                      <button
-                        className="link-button"
-                        onClick={() =>
-                          handleToggleBlock(resp.id, !resp.isBlocked)
-                        }
-                      >
-                        {resp.isBlocked ? "解除封鎖" : "封鎖"}
-                      </button>
-                    </td>
+              </thead>
+              <tbody>
+                {responses.length === 0 ? (
+                  <tr>
+                    <td colSpan={8}>目前沒有留言</td>
                   </tr>
-                ))
-              )}
-            </tbody>
-          </table>
+                ) : (
+                  responses.map((resp) => (
+                    <tr key={resp.id}>
+                      <td>{resp.responder?.name || "匿名"}</td>
+                      <td>{resp.responder?.email || "-"}</td>
+                      <td>{resp.message}</td>
+                      <td>{resp.homeCard?.title || "—"}</td>
+                      <td>
+                        {resp.isBlocked ? (
+                          <span className="status-badge status-badge--blocked">已封鎖</span>
+                        ) : (
+                          <span className="status-badge status-badge--active">啟用中</span>
+                        )}
+                      </td>
+                      <td>{resp.reportCount}</td>
+                      <td>{new Date(resp.createdAt).toLocaleString()}</td>
+                      <td>
+                        <button
+                          className="link-button"
+                          onClick={() => handleToggleBlock(resp.id, !resp.isBlocked)}
+                        >
+                          {resp.isBlocked ? "解除封鎖" : "封鎖"}
+                        </button>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
         )}
 
         {/* 分頁控制 */}

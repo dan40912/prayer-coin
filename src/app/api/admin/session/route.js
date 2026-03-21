@@ -1,28 +1,28 @@
-﻿import { NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 
-const SESSION_COOKIE = "prayer-coin-admin-session";
+import {
+  clearAdminSessionCookie,
+  readAdminSessionFromRequest,
+} from "@/lib/admin-session";
 
-export async function POST(request) {
-  try {
-    const body = await request.json();
-    const payload = JSON.stringify(body ?? {});
-    const res = NextResponse.json({ ok: true });
-    res.cookies.set(SESSION_COOKIE, payload, {
-      httpOnly: true,
-      path: "/",
-    });
-    return res;
-  } catch (error) {
-    return NextResponse.json({ ok: false }, { status: 400 });
+export async function GET(request) {
+  const session = readAdminSessionFromRequest(request);
+  if (!session) {
+    return NextResponse.json({ authenticated: false }, { status: 401 });
   }
+
+  return NextResponse.json({
+    authenticated: true,
+    user: {
+      id: session.adminId,
+      username: session.username,
+      role: session.role,
+    },
+  });
 }
 
 export async function DELETE() {
-  const res = NextResponse.json({ ok: true });
-  res.cookies.set(SESSION_COOKIE, "", {
-    httpOnly: true,
-    path: "/",
-    maxAge: 0,
-  });
-  return res;
+  const response = NextResponse.json({ ok: true });
+  clearAdminSessionCookie(response);
+  return response;
 }

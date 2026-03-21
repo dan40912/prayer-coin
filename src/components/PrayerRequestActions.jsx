@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
@@ -110,7 +110,7 @@ export default function PrayerRequestActions({
         } catch (copyErr) {
           throw new Error("無法使用分享功能");
         } finally {
-          document.body.removeChild(textarea);
+          textarea.remove();
         }
       }
     } catch (err) {

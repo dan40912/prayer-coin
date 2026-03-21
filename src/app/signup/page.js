@@ -26,24 +26,6 @@ const stepItems = [
   }
 ];
 
-const heroStats = [
-  { label: "已提交禱告", value: "38,420+" },
-  { label: "社群語音禱告", value: "126,800 秒" },
-  { label: "彼此陪伴成功率", value: "99.8%" }
-];
-
-const signupReasons = [
-  "讓每一個聲音都來自真實的你。",
-  "給彼此安心的環境，放心分享心聲。",
-  "保護社群安全，避免惡意註冊。"
-];
-
-const postSignupBenefits = [
-  "立即錄下你的禱告或心聲，讓人聽見並回應。",
-  "收到來自社群的語音與文字陪伴。",
-  "在 Dashboard 追蹤你的分享與互動成效。"
-];
-
 export default function SignupPage() {
   return (
     <>

@@ -1,7 +1,7 @@
 ﻿import { SiteFooter, SiteHeader } from "@/components/site-chrome";
 
 export const metadata = {
-  title: "Start Pray | 關於我們 | 禱告幣",
+  title: "Start Pray | 關於我們",
   // 優化：強調解決「無聲的呼求」與「不知如何回應」的困境
   description: "認識 Start Pray 的使命、核心價值與團隊故事。我們正在將無聲的禱告，轉化為可被看見、被回應的溫暖行動。"
 };
@@ -73,7 +73,7 @@ export default function AboutPage() {
           <div>
             <span className="badge-soft">我們的故事 (OUR STORY)</span>
             {/* 優化標題：直指痛點，點出解決方案的核心價值 */}
-            <h1>我們都在 Let's Pray For You !</h1>
+            <h1>Start Pray 與你一起代禱</h1>
             <p>
               {/* 優化文案：更強調「無從開始幫助」的解決方案 */}
               你需要別人的禱告嗎? 你想聽聽別人為你禱告和祝福嗎? 

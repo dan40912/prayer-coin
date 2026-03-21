@@ -4,20 +4,6 @@ import Image from "next/image";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
-const SESSION_STORAGE_KEY = "prayer-coin-admin-session";
-
-function readAdminSession() {
-  if (typeof window === "undefined") return null;
-  const raw = sessionStorage.getItem(SESSION_STORAGE_KEY);
-  if (!raw) return null;
-  try {
-    return JSON.parse(raw);
-  } catch (error) {
-    sessionStorage.removeItem(SESSION_STORAGE_KEY);
-    return null;
-  }
-}
-
 export default function AdminLoginPage() {
   const router = useRouter();
   const [username, setUsername] = useState("");
@@ -27,19 +13,28 @@ export default function AdminLoginPage() {
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
-    const session = readAdminSession();
-    if (session?.role) {
-      router.replace("/admin/dashboard");
-    }
+    let active = true;
+
+    const checkSession = async () => {
+      try {
+        const response = await fetch("/api/admin/session", { cache: "no-store" });
+        if (!active) return;
+        if (response.ok) {
+          router.replace("/admin/dashboard");
+        }
+      } catch (err) {
+        console.error("檢查管理員 session 失敗", err);
+      }
+    };
+
+    checkSession();
+    return () => {
+      active = false;
+    };
   }, [router]);
 
   const handleSubmit = async (event) => {
     event.preventDefault();
-
-    if (twoFactor.trim() !== "199405") {
-      setError("二階段驗證碼錯誤");
-      return;
-    }
 
     try {
       setSubmitting(true);
@@ -51,26 +46,18 @@ export default function AdminLoginPage() {
         body: JSON.stringify({
           username: username.trim(),
           password,
+          otp: twoFactor.trim(),
         }),
       });
 
       if (!response.ok) {
         const data = await response.json().catch(() => ({}));
-        throw new Error(data.message || "登入失敗，請確認帳號密碼");
-      }
-
-      const data = await response.json();
-
-      if (typeof window !== "undefined") {
-        sessionStorage.setItem(
-          SESSION_STORAGE_KEY,
-          JSON.stringify({ username: data.username, role: data.role })
-        );
+        throw new Error(data.message || "登入失敗，請確認帳號密碼與 OTP");
       }
 
       router.replace("/admin/dashboard");
     } catch (err) {
-      setError(err.message);
+      setError(err.message || "登入失敗，請稍後再試");
     } finally {
       setSubmitting(false);
     }
@@ -80,17 +67,11 @@ export default function AdminLoginPage() {
     <main className="admin-auth admin-auth--simple">
       <section className="admin-auth__panel">
         <div className="admin-auth__brand">
-          <Image
-            src="/legacy/img/logo.png"
-            alt="Start Pray"
-            width={56}
-            height={56}
-            className="admin-auth__logo"
-          />
+          <Image src="/img/logo.png" alt="Start Pray" width={56} height={56} className="admin-auth__logo" />
           <div>
-            <p className="admin-auth__eyebrow">PRAY COIN</p>
-            <h1 className="admin-auth__title">管理員登入</h1>
-            <p className="admin-auth__subtitle">請輸入帳號、密碼與 2FA 驗證碼即可進入後台。</p>
+            <p className="admin-auth__eyebrow">START PRAY ADMIN</p>
+            <h1 className="admin-auth__title">管理後台登入</h1>
+            <p className="admin-auth__subtitle">請輸入帳號密碼與 2FA OTP 以繼續。</p>
           </div>
         </div>
 
@@ -100,7 +81,7 @@ export default function AdminLoginPage() {
             <input
               id="username"
               type="text"
-              placeholder="輸入管理員帳號"
+              placeholder="管理員帳號"
               value={username}
               onChange={(event) => setUsername(event.target.value)}
               autoComplete="username"
@@ -114,7 +95,7 @@ export default function AdminLoginPage() {
             <input
               id="password"
               type="password"
-              placeholder="輸入密碼"
+              placeholder="管理員密碼"
               value={password}
               onChange={(event) => setPassword(event.target.value)}
               autoComplete="current-password"
@@ -124,16 +105,13 @@ export default function AdminLoginPage() {
           </div>
 
           <div className="admin-auth__form-group">
-            <label htmlFor="twoFactor">
-              二階段驗證碼
-              <span className="admin-auth__hint"></span>
-            </label>
+            <label htmlFor="twoFactor">2FA OTP</label>
             <input
               id="twoFactor"
               type="text"
               inputMode="numeric"
               maxLength={6}
-              placeholder="輸入 6 碼驗證碼"
+              placeholder="6 位數 OTP"
               value={twoFactor}
               onChange={(event) => setTwoFactor(event.target.value)}
               disabled={submitting}
@@ -144,7 +122,7 @@ export default function AdminLoginPage() {
           {error ? <p className="admin-auth__error">{error}</p> : null}
 
           <button type="submit" className="admin-auth__submit" disabled={submitting}>
-            {submitting ? "登入中…" : "登入後台"}
+            {submitting ? "登入中..." : "登入後台"}
           </button>
         </form>
       </section>

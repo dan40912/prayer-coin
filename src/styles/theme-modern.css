@@ -551,6 +551,10 @@ button {
 .section.home-explorer > * {
   position: relative;
   z-index: 1;
+  width: 100%;
+  max-width: min(1320px, 100%);
+  margin-left: auto;
+  margin-right: auto;
 }
 
 .home-explorer__header h2,
@@ -568,6 +572,8 @@ button {
 }
 
 .home-explorer__header {
+  position: relative;
+  z-index: 8;
   gap: 0.9rem;
 }
 
@@ -588,21 +594,28 @@ button {
 
 .home-explorer__intro-text {
   margin: 0;
-  font-size: 1.12rem;
+  font-size: clamp(1.04rem, 1.4vw, 1.2rem);
   font-weight: 700;
-  color: #f8fbff;
+  color: rgba(226, 232, 240, 0.96);
   letter-spacing: 0.01em;
-  text-shadow: 0 4px 18px rgba(2, 8, 23, 0.7);
+  text-shadow: 0 2px 10px rgba(2, 8, 23, 0.55);
 }
 
 .home-explorer__search-card {
+  position: relative;
+  z-index: 9;
+  overflow: visible;
   display: grid;
-  gap: 0.65rem;
-  padding: 0.95rem 1rem 0.85rem;
-  border-radius: 1rem;
-  border: 1px solid rgba(147, 197, 253, 0.42);
-  background: linear-gradient(140deg, rgba(30, 58, 138, 0.42), rgba(8, 16, 30, 0.9));
-  box-shadow: inset 0 0 0 1px rgba(147, 197, 253, 0.08), 0 14px 30px -18px rgba(2, 8, 23, 0.95);
+  gap: 0.85rem;
+  padding: 1.05rem 1.08rem 0.95rem;
+  border-radius: 1.18rem;
+  border: 1px solid rgba(147, 197, 253, 0.48);
+  background:
+    linear-gradient(145deg, rgba(22, 47, 100, 0.78), rgba(6, 17, 36, 0.92));
+  box-shadow:
+    inset 0 0 0 1px rgba(147, 197, 253, 0.08),
+    0 18px 34px -22px rgba(2, 8, 23, 0.95);
+  backdrop-filter: blur(8px);
 }
 
 .home-explorer__search-head {
@@ -612,33 +625,38 @@ button {
 
 .home-explorer__search-title {
   margin: 0;
-  font-size: 1.12rem;
+  font-size: 1.18rem;
   font-weight: 800;
   color: #ffffff;
   letter-spacing: 0.01em;
-  text-shadow: 0 3px 14px rgba(2, 8, 23, 0.62);
+  text-shadow: 0 3px 12px rgba(2, 8, 23, 0.56);
 }
 
 .home-explorer__search-helper {
   margin: 0;
   font-size: 0.9rem;
   font-weight: 600;
-  color: #dbeafe;
+  color: rgba(219, 234, 254, 0.92);
 }
 
 .home-explorer__search {
   position: relative;
   width: 100%;
+  z-index: 10;
+}
+
+.home-explorer__suggestions {
+  z-index: 40;
 }
 
 .home-explorer__search-input {
   width: 100%;
-  padding: 0.72rem 6.3rem 0.72rem 0.95rem;
-  border-radius: 0.88rem;
+  padding: 0.76rem 6.4rem 0.76rem 0.98rem;
+  border-radius: 0.92rem;
   border: 1px solid rgba(148, 163, 184, 0.34);
-  background: rgba(248, 250, 252, 0.94);
+  background: rgba(248, 250, 252, 0.97);
   color: #0f172a;
-  font-size: 1.03rem;
+  font-size: 1.05rem;
   font-weight: 600;
 }
 
@@ -649,8 +667,8 @@ button {
 
 .home-explorer__search-input:focus {
   outline: none;
-  border-color: rgba(96, 165, 250, 0.72);
-  box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.22);
+  border-color: rgba(125, 211, 252, 0.88);
+  box-shadow: 0 0 0 3px rgba(125, 211, 252, 0.24);
 }
 
 .home-explorer__search-button {
@@ -659,19 +677,27 @@ button {
   right: 0.38rem;
   transform: translateY(-50%);
   border: none;
-  border-radius: 0.7rem;
-  padding: 0.42rem 0.9rem;
+  border-radius: 0.76rem;
+  padding: 0.44rem 0.94rem;
   min-width: 5.4rem;
-  background: linear-gradient(135deg, #2563eb, #3b82f6);
+  background: linear-gradient(135deg, #3b82f6, #60a5fa);
   color: #fff;
   font-size: 0.84rem;
   font-weight: 700;
   letter-spacing: 0.02em;
-  transition: filter var(--transition-fast);
+  box-shadow: 0 10px 20px -14px rgba(59, 130, 246, 0.72);
+  transition: filter var(--transition-fast), box-shadow var(--transition-fast);
 }
 
 .home-explorer__search-button:hover:not(:disabled) {
   filter: brightness(1.06);
+  box-shadow: 0 14px 24px -16px rgba(59, 130, 246, 0.76);
+}
+
+.home-explorer__search-button:disabled {
+  background: rgba(148, 163, 184, 0.52);
+  color: rgba(241, 245, 249, 0.92);
+  box-shadow: none;
 }
 
 .home-explorer__quick-tags {
@@ -689,13 +715,14 @@ button {
 
 .home-explorer__quick-tag {
   flex: 0 0 auto;
-  min-height: 24px;
-  padding: 0.14rem 0.58rem;
+  min-height: 28px;
+  padding: 0.18rem 0.62rem;
   border-radius: 999px;
   border: 1px solid rgba(147, 197, 253, 0.46);
-  background: rgba(15, 23, 42, 0.62);
+  background: rgba(15, 23, 42, 0.68);
   color: rgba(226, 232, 240, 0.95);
-  font-size: 0.73rem;
+  font-size: 0.74rem;
+  font-weight: 600;
   line-height: 1;
   white-space: nowrap;
 }
@@ -866,6 +893,14 @@ button {
   white-space: nowrap;
   color: rgba(241, 245, 249, 0.95);
   font-size: 0.79rem;
+}
+
+/* Reset legacy absolute positioning from globals so mobile card tags keep desktop flow */
+.home-card__tag-row .home-card__category {
+  position: static;
+  left: auto;
+  bottom: auto;
+  margin: 0;
 }
 
 .home-card__author {
@@ -1472,6 +1507,313 @@ button {
   color: var(--accent-rose);
 }
 
+.player-companion__switch {
+  border: 1px solid rgba(148, 163, 184, 0.38);
+  border-radius: 999px;
+  background: rgba(15, 23, 42, 0.6);
+  color: rgba(226, 232, 240, 0.9);
+  font-size: 0.72rem;
+  line-height: 1;
+  padding: 0.36rem 0.62rem;
+  white-space: nowrap;
+  transition: background var(--transition-fast), border-color var(--transition-fast), color var(--transition-fast);
+}
+
+.player-companion__switch.is-on {
+  border-color: rgba(125, 211, 252, 0.64);
+  background: rgba(2, 132, 199, 0.22);
+  color: #dbeafe;
+}
+
+.player-companion__switch.is-off {
+  opacity: 0.82;
+}
+
+.player-companion-inline {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0 auto 0.55rem;
+  color: rgba(203, 213, 225, 0.86);
+  font-size: 0.75rem;
+}
+
+.companion-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 240;
+  pointer-events: none;
+}
+
+.companion-overlay__bg,
+.companion-overlay__scrim {
+  position: absolute;
+  inset: 0;
+}
+
+.companion-overlay__bg {
+  background:
+    radial-gradient(circle at 18% 14%, rgba(56, 189, 248, 0.2), transparent 42%),
+    linear-gradient(135deg, rgba(8, 20, 40, 0.9), rgba(2, 6, 23, 0.92));
+  background-size: cover;
+  background-position: center;
+  transform: scale(1.03);
+  filter: blur(8px) saturate(1.05);
+}
+
+.companion-overlay__scrim {
+  background: linear-gradient(180deg, rgba(2, 6, 23, 0.3) 0%, rgba(2, 6, 23, 0.8) 68%, rgba(2, 6, 23, 0.92) 100%);
+}
+
+.companion-overlay__content {
+  position: relative;
+  z-index: 1;
+  height: 100%;
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  pointer-events: none;
+}
+
+.companion-overlay__header {
+  width: min(980px, calc(100vw - 2rem));
+  margin: 1.15rem auto 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.8rem;
+  pointer-events: auto;
+}
+
+.companion-overlay__close {
+  border: 1px solid rgba(148, 163, 184, 0.45);
+  background: rgba(2, 6, 23, 0.56);
+  color: rgba(241, 245, 249, 0.94);
+  border-radius: 999px;
+  padding: 0.38rem 0.72rem;
+  font-size: 0.78rem;
+}
+
+.companion-overlay__status {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: rgba(226, 232, 240, 0.92);
+  font-size: 0.78rem;
+  font-weight: 600;
+}
+
+.companion-overlay__stage {
+  align-self: start;
+  justify-self: center;
+  margin-top: min(16vh, 130px);
+  width: min(680px, calc(100vw - 2rem));
+  pointer-events: auto;
+}
+
+.companion-overlay__hint {
+  margin: 0;
+  border: 1px solid rgba(148, 163, 184, 0.28);
+  border-radius: 24px;
+  background: rgba(2, 6, 23, 0.42);
+  color: rgba(226, 232, 240, 0.92);
+  font-size: 0.94rem;
+  line-height: 1.7;
+  padding: 1.2rem 1.35rem;
+  text-align: center;
+}
+
+.companion-overlay__card {
+  border: 1px solid rgba(148, 163, 184, 0.34);
+  border-radius: 28px;
+  background: linear-gradient(145deg, rgba(10, 20, 38, 0.78), rgba(2, 6, 23, 0.72));
+  box-shadow: 0 32px 56px -38px rgba(2, 6, 23, 0.92), inset 0 0 0 1px rgba(148, 163, 184, 0.08);
+  padding: clamp(1.15rem, 2vw, 1.55rem);
+  display: grid;
+  gap: 0.75rem;
+}
+
+.companion-overlay__card.is-enter {
+  animation: companion-overlay-card-enter 0.52s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+.companion-overlay__card.is-exit {
+  animation: companion-overlay-card-exit 0.36s ease both;
+}
+
+.companion-overlay__meta {
+  display: flex;
+  align-items: center;
+  gap: 0.72rem;
+}
+
+.companion-overlay__avatar {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  overflow: hidden;
+  border: 1px solid rgba(148, 163, 184, 0.42);
+  background: linear-gradient(135deg, rgba(56, 189, 248, 0.42), rgba(59, 130, 246, 0.58));
+  display: grid;
+  place-items: center;
+  font-weight: 700;
+  color: #f8fbff;
+  flex-shrink: 0;
+}
+
+.companion-overlay__avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.companion-overlay__author {
+  display: grid;
+  gap: 0.18rem;
+  min-width: 0;
+}
+
+.companion-overlay__author strong {
+  color: #f8fbff;
+  font-size: 0.98rem;
+  line-height: 1.25;
+}
+
+.companion-overlay__badge {
+  width: fit-content;
+  border-radius: 999px;
+  border: 1px solid rgba(125, 211, 252, 0.42);
+  background: rgba(56, 189, 248, 0.15);
+  color: #dbeafe;
+  font-size: 0.72rem;
+  line-height: 1;
+  padding: 0.26rem 0.56rem;
+}
+
+.companion-overlay__message {
+  margin: 0;
+  color: rgba(241, 245, 249, 0.98);
+  font-size: clamp(1rem, 1.3vw, 1.12rem);
+  line-height: 1.8;
+}
+
+.companion-overlay__voice {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.companion-overlay__voice p {
+  margin: 0;
+  color: rgba(241, 245, 249, 0.98);
+  font-size: 1rem;
+  line-height: 1.7;
+}
+
+.companion-overlay__voice small {
+  color: rgba(191, 219, 254, 0.9);
+  font-size: 0.82rem;
+}
+
+.companion-overlay__voice-btn {
+  justify-self: start;
+  border: 1px solid rgba(148, 163, 184, 0.4);
+  border-radius: 999px;
+  background: rgba(2, 6, 23, 0.55);
+  color: rgba(226, 232, 240, 0.94);
+  font-size: 0.78rem;
+  line-height: 1;
+  padding: 0.44rem 0.72rem;
+}
+
+.companion-overlay__counter {
+  justify-self: center;
+  margin-bottom: calc(102px + env(safe-area-inset-bottom));
+  color: rgba(226, 232, 240, 0.92);
+  font-size: 0.82rem;
+  font-variant-numeric: tabular-nums;
+  pointer-events: none;
+}
+
+.companion-overlay__notice {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  bottom: calc(136px + env(safe-area-inset-bottom));
+  margin: 0;
+  width: min(520px, calc(100vw - 2rem));
+  text-align: center;
+  color: #bfdbfe;
+  font-size: 0.8rem;
+}
+
+@keyframes companion-overlay-card-enter {
+  from {
+    opacity: 0;
+    transform: translateY(24px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes companion-overlay-card-exit {
+  from {
+    opacity: 1;
+    transform: translateX(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateX(-24px);
+  }
+}
+
+.global-player.is-overlay-active {
+  left: 50%;
+  right: auto;
+  transform: translateX(-50%);
+  width: min(620px, calc(100vw - 2rem));
+  bottom: max(12px, env(safe-area-inset-bottom));
+  border-radius: 18px;
+  border: 1px solid rgba(148, 163, 184, 0.3);
+  background: linear-gradient(145deg, rgba(8, 17, 33, 0.88), rgba(2, 6, 23, 0.84));
+  z-index: 250;
+}
+
+.global-player.is-overlay-active .player-controls-container {
+  justify-content: center;
+  gap: 0.7rem;
+  padding: 0.72rem 1rem 0.86rem;
+}
+
+.global-player.is-overlay-active .player-controls {
+  width: auto;
+  gap: 0.85rem;
+}
+
+.global-player.is-overlay-active .control-btn {
+  min-width: 36px;
+  min-height: 36px;
+}
+
+body.companion-overlay-open {
+  overflow: hidden;
+}
+
+body.companion-overlay-open .pdv2-comments-card {
+  opacity: 0;
+  transform: translateY(16px);
+  pointer-events: none;
+  transition: opacity 0.25s ease, transform 0.25s ease;
+}
+
+body.companion-mode-active .pdv2-comments-card .comment-item.is-companion-active {
+  border-color: rgba(125, 211, 252, 0.52);
+  border-left-color: rgba(56, 189, 248, 0.9);
+  background: rgba(8, 24, 46, 0.78);
+  box-shadow: 0 0 0 1px rgba(125, 211, 252, 0.16), 0 14px 28px -24px rgba(56, 189, 248, 0.35);
+}
+
 @media (max-width: 768px) {
   body {
     padding-bottom: calc(184px + env(safe-area-inset-bottom));
@@ -1579,6 +1921,123 @@ button {
     max-height: min(52vh, 320px);
     overflow: auto;
     -webkit-overflow-scrolling: touch;
+  }
+
+  /* Compact player on prayer detail mobile to avoid covering related cards/category browsing */
+  .global-player.is-prayer-detail {
+    left: 50%;
+    right: auto;
+    transform: translateX(-50%);
+    width: min(360px, calc(100vw - 12px));
+    bottom: max(8px, env(safe-area-inset-bottom));
+    border-radius: 14px;
+    border: 1px solid rgba(148, 163, 184, 0.28);
+    min-height: auto;
+    overflow: hidden;
+  }
+
+  .global-player.is-prayer-detail .player-progress {
+    gap: 0;
+  }
+
+  .global-player.is-prayer-detail .player-times {
+    display: none;
+  }
+
+  .global-player.is-prayer-detail .track-info,
+  .global-player.is-prayer-detail .player-actions,
+  .global-player.is-prayer-detail .pray-audio-modal__card.pray-audio-modal__card--player {
+    display: none;
+  }
+
+  .player-companion-inline {
+    margin-bottom: 0.42rem;
+    font-size: 0.7rem;
+    gap: 0.4rem;
+  }
+
+  .player-companion__switch {
+    font-size: 0.66rem;
+    padding: 0.32rem 0.52rem;
+  }
+
+  .companion-overlay__header {
+    width: calc(100vw - 1rem);
+    margin-top: 0.72rem;
+  }
+
+  .companion-overlay__stage {
+    width: calc(100vw - 1rem);
+    margin-top: min(15vh, 108px);
+  }
+
+  .companion-overlay__card {
+    border-radius: 22px;
+    padding: 0.92rem 1rem;
+  }
+
+  .companion-overlay__avatar {
+    width: 38px;
+    height: 38px;
+  }
+
+  .companion-overlay__author strong {
+    font-size: 0.92rem;
+  }
+
+  .companion-overlay__message,
+  .companion-overlay__voice p {
+    font-size: 0.92rem;
+  }
+
+  .companion-overlay__counter {
+    margin-bottom: calc(92px + env(safe-area-inset-bottom));
+    font-size: 0.76rem;
+  }
+
+  .companion-overlay__notice {
+    bottom: calc(122px + env(safe-area-inset-bottom));
+    font-size: 0.74rem;
+  }
+
+  .global-player.is-prayer-detail .player-controls-container {
+    display: flex;
+    justify-content: center;
+    padding: 0.5rem 0.65rem 0.55rem;
+  }
+
+  .global-player.is-prayer-detail .player-controls {
+    width: auto;
+    gap: 0.55rem;
+    justify-content: center;
+  }
+
+  .global-player.is-prayer-detail .control-btn {
+    min-width: 32px;
+    min-height: 32px;
+    font-size: 0.95rem;
+  }
+
+  .global-player.is-prayer-detail .play-pause-btn {
+    width: 38px;
+    height: 38px;
+    flex-basis: 38px;
+  }
+
+  .global-player.is-overlay-active {
+    width: calc(100vw - 1rem);
+    bottom: max(8px, env(safe-area-inset-bottom));
+    border-radius: 14px;
+  }
+
+  .global-player.is-prayer-detail .player-queue-panel {
+    position: fixed;
+    left: 8px;
+    right: 8px;
+    bottom: calc(56px + env(safe-area-inset-bottom));
+    border-radius: 12px;
+    border: 1px solid rgba(148, 163, 184, 0.24);
+    max-height: min(46vh, 280px);
   }
 }
 

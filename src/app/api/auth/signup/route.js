@@ -6,7 +6,6 @@ const REQUIRED_FIELDS = [
   "fullName",
   "username",
   "email",
-  "country",
   "password",
   "confirmPassword",
   "acceptedTerms",
@@ -28,13 +27,14 @@ export async function POST(request) {
     const fullName = normalizeString(payload.fullName);
     const username = normalizeString(payload.username).toLowerCase();
     const email = normalizeString(payload.email).toLowerCase();
+    const faithTradition = normalizeString(payload.faithTradition);
     const country = normalizeString(payload.country);
     const password = normalizeString(payload.password);
     const confirmPassword = normalizeString(payload.confirmPassword);
     const acceptedTerms = Boolean(payload.acceptedTerms);
 
-    if (!fullName || !username || !email || !country) {
-      return NextResponse.json({ message: "所有欄位皆需填寫" }, { status: 400 });
+    if (!fullName || !username || !email) {
+      return NextResponse.json({ message: "請完整填寫必填欄位" }, { status: 400 });
     }
 
     if (!/^[a-z0-9_-]{4,}$/i.test(username)) {
@@ -74,7 +74,8 @@ export async function POST(request) {
         email,
         name: fullName,
         username,
-        country,
+        faithTradition: faithTradition || null,
+        country: country || null,
         passwordHash,
         acceptedTerms: true,
       },
@@ -87,6 +88,7 @@ export async function POST(request) {
           email: user.email,
           name: user.name,
           username: user.username,
+          faithTradition: user.faithTradition,
           country: user.country,
           createdAt: user.createdAt,
         },

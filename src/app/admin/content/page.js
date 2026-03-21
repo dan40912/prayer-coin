@@ -127,39 +127,38 @@ export default function AdminContentPage() {
         {loading ? (
           <p>載入中...</p>
         ) : (
-          <table className="admin-table">
-            <thead>
-              <tr>
-                <th>Eyebrow</th>
-                <th>主標題</th>
-                <th>副標題</th>
-                <th>操作</th>
-              </tr>
-            </thead>
-            <tbody>
-              {banners.length === 0 ? (
+          <div className="admin-table-wrap">
+            <table className="admin-table">
+              <thead>
                 <tr>
-                  <td colSpan={4}>目前沒有 Banner</td>
+                  <th>Eyebrow</th>
+                  <th>主標題</th>
+                  <th>副標題</th>
+                  <th>操作</th>
                 </tr>
-              ) : (
-                banners.map((banner) => (
-                  <tr key={banner.id}>
-                    <td>{banner.eyebrow || "—"}</td>
-                    <td>{banner.headline}</td>
-                    <td>{banner.subheadline}</td>
-                    <td>
-                      <button
-                        className="link-button"
-                        onClick={() => openModal(banner)}
-                      >
-                        編輯
-                      </button>
-                    </td>
+              </thead>
+              <tbody>
+                {banners.length === 0 ? (
+                  <tr>
+                    <td colSpan={4}>目前沒有 Banner</td>
                   </tr>
-                ))
-              )}
-            </tbody>
-          </table>
+                ) : (
+                  banners.map((banner) => (
+                    <tr key={banner.id}>
+                      <td>{banner.eyebrow || "—"}</td>
+                      <td>{banner.headline}</td>
+                      <td>{banner.subheadline}</td>
+                      <td>
+                        <button className="link-button" onClick={() => openModal(banner)}>
+                          編輯
+                        </button>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
         )}
       </section>
 

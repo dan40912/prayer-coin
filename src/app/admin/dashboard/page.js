@@ -288,7 +288,7 @@ export default function AdminDashboardPage() {
       link.download = `dashboard-${new Date().toISOString().slice(0, 10)}.csv`;
       document.body.appendChild(link);
       link.click();
-      document.body.removeChild(link);
+      link.remove();
       URL.revokeObjectURL(url);
     } catch (error) {
       console.error("匯出儀表板失敗:", error);
@@ -346,7 +346,7 @@ export default function AdminDashboardPage() {
     <div className="admin-section">
       <header className="admin-dashboard__header">
         <div>
-          <p className="admin-dashboard__eyebrow">PRAY COIN 後台</p>
+          <p className="admin-dashboard__eyebrow">START PRAY 後台</p>
           <h1>儀表板總覽</h1>
           <p>即時掌握平台健康度，並快速處理需要注意的高風險項目。</p>
         </div>

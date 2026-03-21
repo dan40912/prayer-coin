@@ -1,6 +1,7 @@
 ﻿"use client";
 
 import { useEffect, useState } from "react";
+import { useDebouncedValue } from "@/hooks/useDebouncedValue";
 
 export default function AdminPrayforPage() {
   const [cards, setCards] = useState([]);
@@ -11,12 +12,13 @@ export default function AdminPrayforPage() {
   const [order, setOrder] = useState("desc");
   const [page, setPage] = useState(1);
   const [pagination, setPagination] = useState({ total: 0, totalPages: 1 });
+  const debouncedSearch = useDebouncedValue(search, 400);
 
   const loadCards = async () => {
     try {
       setLoading(true);
       const query = new URLSearchParams({
-        search,
+        search: debouncedSearch,
         status,
         sort,
         order,
@@ -39,6 +41,11 @@ export default function AdminPrayforPage() {
   };
 
  const toggleBlock = async (id, block) => {
+  const shouldContinue = confirm(
+    block ? "確定要封鎖這則代禱事項？" : "確定要解除封鎖這則代禱事項？"
+  );
+  if (!shouldContinue) return;
+
   try {
     const res = await fetch(`/api/admin/prayfor`, {
       method: "PATCH",
@@ -59,7 +66,7 @@ export default function AdminPrayforPage() {
 
   useEffect(() => {
     loadCards();
-  }, [search, status, sort, order, page]);
+  }, [debouncedSearch, status, sort, order, page]);
 
   return (
     <div className="admin-section">
@@ -73,12 +80,21 @@ export default function AdminPrayforPage() {
             type="search"
             placeholder="搜尋標題或描述"
             value={search}
-            onChange={(e) => setSearch(e.target.value)}
+            onChange={(e) => {
+              setSearch(e.target.value);
+              setPage(1);
+            }}
           />
-          <select value={status} onChange={(e) => setStatus(e.target.value)}>
+          <select
+            value={status}
+            onChange={(e) => {
+              setStatus(e.target.value);
+              setPage(1);
+            }}
+          >
             <option value="all">全部</option>
-            <option value="active">Active</option>
-            <option value="blocked">Blocked</option>
+            <option value="active">啟用中</option>
+            <option value="blocked">已封鎖</option>
           </select>
           <select value={sort} onChange={(e) => setSort(e.target.value)}>
             <option value="createdAt">建立時間</option>
@@ -95,54 +111,52 @@ export default function AdminPrayforPage() {
         <p>載入中...</p>
       ) : (
         <>
-          <table className="admin-table">
-            <thead>
-              <tr>
-                <th>標題</th>
-                <th>作者</th>
-                <th>狀態</th>
-                <th>檢舉次數</th>
-                <th>建立時間</th>
-                <th>操作</th>
-              </tr>
-            </thead>
-            <tbody>
-              {cards.length === 0 ? (
+          <div className="admin-table-wrap">
+            <table className="admin-table">
+              <thead>
                 <tr>
-                  <td colSpan={6}>沒有資料</td>
+                  <th>標題</th>
+                  <th>作者</th>
+                  <th>狀態</th>
+                  <th>檢舉次數</th>
+                  <th>建立時間</th>
+                  <th>操作</th>
                 </tr>
-              ) : (
-                cards.map((card) => (
-                  <tr key={card.id}>
-                    <td>{card.title}</td>
-                    <td>{card.owner?.name || card.owner?.email || "匿名"}</td>
-                    <td>
-                      {card.isBlocked ? (
-                        <span className="status-badge status-badge--blocked">
-                          Blocked
-                        </span>
-                      ) : (
-                        <span className="status-badge status-badge--active">
-                          Active
-                        </span>
-                      )}
-                    </td>
-                    <td>{card.reportCount}</td>
-                    <td>{new Date(card.createdAt).toLocaleDateString()}</td>
-                    <td>
-                      <button
-                        type="button"
-                        className="link-button"
-                        onClick={() => toggleBlock(card.id, !card.isBlocked)}
-                      >
-                        {card.isBlocked ? "解除封鎖" : "封鎖"}
-                      </button>
-                    </td>
+              </thead>
+              <tbody>
+                {cards.length === 0 ? (
+                  <tr>
+                    <td colSpan={6}>沒有資料</td>
                   </tr>
-                ))
-              )}
-            </tbody>
-          </table>
+                ) : (
+                  cards.map((card) => (
+                    <tr key={card.id}>
+                      <td>{card.title}</td>
+                      <td>{card.owner?.name || card.owner?.email || "匿名"}</td>
+                      <td>
+                        {card.isBlocked ? (
+                          <span className="status-badge status-badge--blocked">已封鎖</span>
+                        ) : (
+                          <span className="status-badge status-badge--active">啟用中</span>
+                        )}
+                      </td>
+                      <td>{card.reportCount}</td>
+                      <td>{new Date(card.createdAt).toLocaleDateString()}</td>
+                      <td>
+                        <button
+                          type="button"
+                          className="link-button"
+                          onClick={() => toggleBlock(card.id, !card.isBlocked)}
+                        >
+                          {card.isBlocked ? "解除封鎖" : "封鎖"}
+                        </button>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
 
           {/* 分頁控制 */}
           <div className="pagination">

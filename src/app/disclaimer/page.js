@@ -47,7 +47,7 @@ const RISK_CARDS = [
 const PRIVACY_ITEMS = [
   "平台依《個人資料保護法》蒐集、處理與利用使用者資料，僅於提供祈禱媒合與影響力呈現目的範圍內使用。",
   "未經同意不會出售或出租個資，惟於法令要求、司法調查或為保護使用者權益時得提供必要資訊。",
-  "使用者得隨時透過 legal@prayercoin.app 請求查閱、更正或刪除相關紀錄。"
+  "使用者得隨時透過 startpraynow@gmail.com 請求查閱、更正或刪除相關紀錄。"
 ];
 
 export default function DisclaimerPage() {
@@ -67,7 +67,7 @@ export default function DisclaimerPage() {
             <h2>聯絡與更新</h2>
             <ul>
               <li>
-                法務與稽核：<a href="mailto:legal@prayercoin.app">legal@prayercoin.app</a>
+                法務與稽核：<a href="mailto:startpraynow@gmail.com">startpraynow@gmail.com</a>
               </li>
               <li>最新版本：2025.09.22</li>
               <li>下次檢視：2026 Q1</li>
@@ -110,7 +110,7 @@ export default function DisclaimerPage() {
           <div className="legal-section__header">
             <h2>資料保護與舉報機制</h2>
             <p>
-              我們採用 ISO 27001 等級的資安管理流程，並設置舉報表單與 24 小時客服信箱，協助社群共同維護安全。
+              我們持續改善資安與審核流程，並提供客服信箱，協助社群共同維護安全。
             </p>
           </div>
           <div className="legal-steps">
@@ -130,7 +130,7 @@ export default function DisclaimerPage() {
             </ol>
             <aside className="legal-cta">
               <p>發現違規內容或詐騙風險？</p>
-              <a className="button button--primary" href="mailto:safety@prayercoin.app">
+              <a className="button button--primary" href="mailto:startpraynow@gmail.com">
                 立即回報
               </a>
             </aside>

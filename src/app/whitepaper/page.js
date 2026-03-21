@@ -1,9 +1,9 @@
 ﻿import { SiteFooter, SiteHeader } from "@/components/site-chrome";
 
 export const metadata = {
-  title: "Start Pray | 白皮書 | 免責聲明 | 禱告幣",
+  title: "Start Pray | 白皮書與使用條款",
   // 優化：強調解決「無聲的呼求」與「不知如何回應」的困境
-  description: "PRAY COIN 技術路線圖：從中心化到去中心化我們的發展分為四個階段，旨在逐步提升平台的透明度、可信度與用戶內容的永久性。",
+  description: "Start Pray 技術路線圖：從中心化到去中心化，逐步提升平台透明度、可信度與內容永久性。",
 };
 
 
@@ -54,7 +54,7 @@ const RISK_CARDS = [
 const PRIVACY_ITEMS = [
   "平台依《個人資料保護法》蒐集、處理與利用使用者資料，僅於提供祈禱媒合與影響力呈現目的範圍內使用。",
   "未經同意不會出售或出租個資，惟於法令要求、司法調查或為保護使用者權益時得提供必要資訊。",
-  "使用者得隨時透過 legal@prayercoin.app 請求查閱、更正或刪除相關紀錄。"
+  "使用者得隨時透過 startpraynow@gmail.com 請求查閱、更正或刪除相關紀錄。"
 ];
 
 
@@ -65,7 +65,7 @@ export default function WhitepaperPage() {
       <main className="whitepaper-page">
  <section id="tech-roadmap">
 <div className="roadmap-header">
-<h2>PRAY COIN 技術路線圖：從中心化到去中心化</h2>
+<h2>Start Pray 技術路線圖：從中心化到去中心化</h2>
 <p>我們的發展分為四個階段，旨在逐步提升平台的透明度、可信度與用戶內容的永久性。</p>
 {/* 突出顯示當前階段 */}
 <div className="current-status-tag">
@@ -83,7 +83,7 @@ export default function WhitepaperPage() {
   </div>
   <div className="stage-content">
     <p className="stage-goal">
-      **現階段：** 平台已上線並運作。所有帳戶和交易都集中儲存在我們的資料庫中，包含模擬的 PRAY COIN 餘額。
+      **現階段：** 平台已上線並運作。所有帳戶和交易都集中儲存在我們的資料庫中，包含模擬的 Start Pray 代幣餘額。
     </p>
     <p className="stage-focus">
       **核心重點：** 快速啟動、最小可行產品 (MVP)。所有信任度基於我們的隱私和透明政策。
@@ -102,7 +102,7 @@ export default function WhitepaperPage() {
   </div>
   <div className="stage-content">
     <p className="stage-goal">
-      **目標：** 在 Binance Smart Chain (BSC) 上正式發行 PRAY COIN 代幣。代幣具備公開的經濟模型、多重簽名管理和專業審計。
+      **目標：** 在 Binance Smart Chain (BSC) 上正式發行 Start Pray 代幣。代幣具備公開的經濟模型、多重簽名管理和專業審計。
     </p>
     <p className="stage-focus">
       **核心重點：** 發行官方數位貨幣。代幣可在市場上流通，但用戶的內容和資料仍集中管理。

@@ -1,11 +1,12 @@
 import "./globals.css";
-import "@/styles/theme-modern.css"; // Newly added base theme
+import "@/styles/theme-modern.css";
 import "@/styles/admin.css";
 import { headers } from "next/headers";
 import { Open_Sans, Raleway, Poppins } from "next/font/google";
 
 import { SiteFooter, SiteHeader } from "@/components/site-chrome";
 import GlobalPlayerGate from "@/components/GlobalPlayerGate";
+import { AudioProvider } from "@/context/AudioContext";
 import { readSiteSettings } from "@/lib/siteSettings";
 
 const openSans = Open_Sans({ subsets: ["latin"], variable: "--font-sans" });
@@ -18,7 +19,7 @@ const poppins = Poppins({
 
 export const metadata = {
   title: "Start Pray",
-  description: "Start Pray 讓我們一同禱告、陪伴與連結。",
+  description: "Start Pray 讓你可以發布代禱需求，也可以用聲音回應別人的需要。",
 };
 
 export const dynamic = "force-dynamic";
@@ -59,8 +60,6 @@ function shouldBypassMaintenance(pathname) {
     pathname.startsWith("/favicon")
   );
 }
-
-import { AudioProvider } from "@/context/AudioContext";
 
 export default async function RootLayout({ children }) {
   const requestHeaders = headers();
@@ -116,9 +115,9 @@ export default async function RootLayout({ children }) {
                   >
                     Server 500 Error
                   </div>
-                  <h1 style={{ marginBottom: "1rem" }}>系統維修中，請幫我們禱告盡快修好...</h1>
+                  <h1 style={{ marginBottom: "1rem" }}>目前站點維護中</h1>
                   <p style={{ lineHeight: 1.8 }}>
-                    我們目前正在維修中，敬請期待我們很快回來！如果您有任何緊急問題，請聯絡我們。
+                    站點正在進行必要維護，完成後會自動恢復。若有緊急問題，請透過下方信箱聯絡我們。
                   </p>
                 </div>
                 <div style={{ display: "flex", justifyContent: "center", gap: "1rem", flexWrap: "wrap" }}>
@@ -136,7 +135,7 @@ export default async function RootLayout({ children }) {
                       fontWeight: 600,
                     }}
                   >
-                    發送 Email
+                    聯絡我們
                   </a>
                 </div>
               </div>

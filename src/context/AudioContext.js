@@ -42,6 +42,9 @@ export function AudioProvider({ children }) {
   const trackDurationsRef = useRef({});
   const pendingSeekRef = useRef(null);
   const probingKeysRef = useRef(new Set());
+  const shouldAutoPlayRef = useRef(false);
+  const loadedTrackKeyRef = useRef(null);
+  const skipAutoPlayEffectRef = useRef(false);
 
   const setDurationForTrack = useCallback((track, seconds) => {
     const key = getTrackKey(track);
@@ -57,9 +60,28 @@ export function AudioProvider({ children }) {
     if (!audioRef.current) return;
     audioRef.current.pause();
     audioRef.current.currentTime = 0;
+    shouldAutoPlayRef.current = false;
+    skipAutoPlayEffectRef.current = false;
+    loadedTrackKeyRef.current = null;
     setIsPlaying(false);
     setProgress(0);
     setDuration(0);
+  }, []);
+
+  const tryPlayAudio = useCallback((audio, errorLabel = "Play failed") => {
+    if (!audio) return;
+    const playPromise = audio.play();
+    if (playPromise && typeof playPromise.then === "function") {
+      playPromise
+        .then(() => setIsPlaying(true))
+        .catch((error) => {
+          shouldAutoPlayRef.current = false;
+          setIsPlaying(false);
+          console.error(errorLabel, error);
+        });
+      return;
+    }
+    setIsPlaying(!audio.paused);
   }, []);
 
   // Initialize Audio element
@@ -68,6 +90,9 @@ export function AudioProvider({ children }) {
       audioRef.current = new Audio();
 
       const audio = audioRef.current;
+      const handlePlayEvent = () => setIsPlaying(true);
+      const handlePauseEvent = () => setIsPlaying(false);
+      const handleErrorEvent = () => setIsPlaying(false);
 
       const updateProgress = () => {
         setProgress(audio.currentTime);
@@ -83,9 +108,19 @@ export function AudioProvider({ children }) {
         setIsPlaying(false);
         setCurrentIndex((prevIndex) => {
           const total = playlistRef.current.length;
-          if (total === 0) return -1;
-          if (prevIndex < total - 1) return prevIndex + 1;
-          if (isLoopRef.current) return 0;
+          if (total === 0) {
+            shouldAutoPlayRef.current = false;
+            return -1;
+          }
+          if (prevIndex < total - 1) {
+            shouldAutoPlayRef.current = true;
+            return prevIndex + 1;
+          }
+          if (isLoopRef.current) {
+            shouldAutoPlayRef.current = true;
+            return 0;
+          }
+          shouldAutoPlayRef.current = false;
           return prevIndex;
         });
       };
@@ -104,12 +139,18 @@ export function AudioProvider({ children }) {
       audio.addEventListener("timeupdate", updateProgress);
       audio.addEventListener("ended", handleEnded);
       audio.addEventListener("loadedmetadata", handleLoadedMetadata);
+      audio.addEventListener("play", handlePlayEvent);
+      audio.addEventListener("pause", handlePauseEvent);
+      audio.addEventListener("error", handleErrorEvent);
 
       return () => {
         audio.pause();
         audio.removeEventListener("timeupdate", updateProgress);
         audio.removeEventListener("ended", handleEnded);
         audio.removeEventListener("loadedmetadata", handleLoadedMetadata);
+        audio.removeEventListener("play", handlePlayEvent);
+        audio.removeEventListener("pause", handlePauseEvent);
+        audio.removeEventListener("error", handleErrorEvent);
       };
     }
   }, [setDurationForTrack]);
@@ -125,6 +166,7 @@ export function AudioProvider({ children }) {
       );
 
       if (existingIndex >= 0) {
+        shouldAutoPlayRef.current = true;
         setCurrentIndex(existingIndex);
         return prev;
       }
@@ -134,6 +176,7 @@ export function AudioProvider({ children }) {
           (track.id ? item.id !== track.id : true) &&
           (item.voiceUrl ? item.voiceUrl !== track.voiceUrl : true)
       );
+      shouldAutoPlayRef.current = true;
       setCurrentIndex(0);
       return [track, ...deduped];
     });
@@ -154,26 +197,87 @@ export function AudioProvider({ children }) {
     }
 
     if (startIndex < 0) {
-      stopAndResetAudio();
-      setCurrentIndex(-1);
+      const currentTrack = playlistRef.current[currentIndexRef.current];
+      const preserveKey = getTrackKey(currentTrack) || loadedTrackKeyRef.current;
+
+      if (!preserveKey) {
+        shouldAutoPlayRef.current = false;
+        skipAutoPlayEffectRef.current = false;
+        setCurrentIndex(-1);
+        return;
+      }
+
+      const nextIndex = normalized.findIndex((track) => getTrackKey(track) === preserveKey);
+      if (nextIndex < 0) {
+        stopAndResetAudio();
+        setCurrentIndex(-1);
+        return;
+      }
+
+      const audio = audioRef.current;
+      shouldAutoPlayRef.current = Boolean(audio && !audio.paused);
+      skipAutoPlayEffectRef.current = false;
+      setCurrentIndex(nextIndex);
       return;
     }
 
     const safeIndex = Math.min(Math.max(startIndex, 0), normalized.length - 1);
+    shouldAutoPlayRef.current = true;
+    skipAutoPlayEffectRef.current = false;
     setCurrentIndex(safeIndex);
     setIsExpanded(true);
   }, [stopAndResetAudio]);
 
-  const togglePlay = useCallback(() => {
-    if (audioRef.current) {
-      if (isPlaying) {
-        audioRef.current.pause();
-      } else {
-        audioRef.current.play().catch(e => console.error("Play failed", e));
-      }
-      setIsPlaying(!isPlaying);
+  const playByIndex = useCallback((index) => {
+    const audio = audioRef.current;
+    const tracks = playlistRef.current;
+    if (!audio) return false;
+    if (index < 0 || index >= tracks.length) return false;
+
+    const track = tracks[index];
+    if (!track?.voiceUrl) return false;
+    const targetKey = getTrackKey(track);
+
+    const currentTrack = tracks[currentIndexRef.current];
+    const shouldSwitchTrack =
+      loadedTrackKeyRef.current !== targetKey || getTrackKey(currentTrack) !== targetKey;
+
+    setCurrentIndex(index);
+    setIsExpanded(true);
+    shouldAutoPlayRef.current = true;
+    skipAutoPlayEffectRef.current = true;
+
+    if (shouldSwitchTrack) {
+      audio.src = track.voiceUrl;
+      loadedTrackKeyRef.current = targetKey;
+      const knownDuration = normalizeDuration(trackDurationsRef.current[getTrackKey(track)]);
+      setDuration(knownDuration);
+      setProgress(0);
     }
-  }, [isPlaying]);
+
+    tryPlayAudio(audio, "Play failed");
+    return true;
+  }, [tryPlayAudio]);
+
+  const togglePlay = useCallback(() => {
+    const audio = audioRef.current;
+    if (!audio) return;
+    if (audio.paused) {
+      shouldAutoPlayRef.current = true;
+      tryPlayAudio(audio, "Play failed");
+      return;
+    }
+    shouldAutoPlayRef.current = false;
+    audio.pause();
+  }, [tryPlayAudio]);
+
+  const pause = useCallback(() => {
+    if (audioRef.current) {
+      shouldAutoPlayRef.current = false;
+      audioRef.current.pause();
+    }
+    setIsPlaying(false);
+  }, []);
 
   const seek = useCallback((time) => {
     if (audioRef.current) {
@@ -192,7 +296,14 @@ export function AudioProvider({ children }) {
       return key ? normalizeDuration(trackDurationsRef.current[key]) : 0;
     });
     const knownTotal = durations.reduce((sum, value) => sum + value, 0);
-    if (knownTotal <= 0) return;
+    if (knownTotal <= 0) {
+      const singleTrackDuration = normalizeDuration(audio.duration);
+      if (singleTrackDuration <= 0) return;
+      const target = Math.min(Math.max(time, 0), singleTrackDuration);
+      audio.currentTime = target;
+      setProgress(target);
+      return;
+    }
 
     const target = Math.min(Math.max(time, 0), knownTotal);
     let accumulated = 0;
@@ -215,6 +326,7 @@ export function AudioProvider({ children }) {
 
     if (targetIndex !== currentIndexRef.current) {
       pendingSeekRef.current = targetOffset;
+      shouldAutoPlayRef.current = !audio.paused;
       setCurrentIndex(targetIndex);
       return;
     }
@@ -227,26 +339,31 @@ export function AudioProvider({ children }) {
     setCurrentIndex((prevIndex) => {
       const total = playlistRef.current.length;
       if (total === 0) return -1;
-      if (prevIndex < total - 1) return prevIndex + 1;
-      if (isLoop) return 0;
+      if (prevIndex < total - 1) {
+        shouldAutoPlayRef.current = true;
+        return prevIndex + 1;
+      }
+      if (isLoop) {
+        shouldAutoPlayRef.current = true;
+        return 0;
+      }
+      shouldAutoPlayRef.current = false;
       setIsPlaying(false);
       return prevIndex;
     });
   }, [isLoop]);
 
   const playPrev = useCallback(() => {
-    setCurrentIndex((prevIndex) => (prevIndex > 0 ? prevIndex - 1 : prevIndex));
+    setCurrentIndex((prevIndex) => {
+      if (prevIndex <= 0) return prevIndex;
+      shouldAutoPlayRef.current = true;
+      return prevIndex - 1;
+    });
   }, []);
 
   const selectTrack = useCallback((index) => {
-    setCurrentIndex((prevIndex) => {
-      if (index < 0 || index >= playlistRef.current.length) {
-        return prevIndex;
-      }
-      return index;
-    });
-    setIsExpanded(true);
-  }, []);
+    playByIndex(index);
+  }, [playByIndex]);
 
   const removeTrack = useCallback((trackId) => {
     setPlaylist((prev) => {
@@ -338,16 +455,34 @@ export function AudioProvider({ children }) {
     if (currentIndex >= 0 && playlist[currentIndex] && audioRef.current) {
       const track = playlist[currentIndex];
       const audio = audioRef.current;
+      const targetKey = getTrackKey(track);
+      const shouldSwitchTrack = loadedTrackKeyRef.current !== targetKey;
+      if (shouldSwitchTrack) {
+        audio.src = track.voiceUrl;
+        loadedTrackKeyRef.current = targetKey;
+        const knownDuration = normalizeDuration(trackDurationsRef.current[getTrackKey(track)]);
+        setDuration(knownDuration);
+        setProgress(0);
+      }
 
-      audio.src = track.voiceUrl;
-      const knownDuration = normalizeDuration(trackDurationsRef.current[getTrackKey(track)]);
-      setDuration(knownDuration);
-      setProgress(0);
-      audio.play().then(() => setIsPlaying(true)).catch((e) => console.error("Play error", e));
+      if (shouldAutoPlayRef.current) {
+        if (skipAutoPlayEffectRef.current) {
+          skipAutoPlayEffectRef.current = false;
+        } else {
+          tryPlayAudio(audio, "Play error");
+        }
+      } else {
+        skipAutoPlayEffectRef.current = false;
+        audio.pause();
+        setIsPlaying(false);
+      }
       return;
     }
+    shouldAutoPlayRef.current = false;
+    skipAutoPlayEffectRef.current = false;
+    loadedTrackKeyRef.current = null;
     setIsPlaying(false);
-  }, [currentIndex, playlist]);
+  }, [currentIndex, playlist, tryPlayAudio]);
 
   const currentTrack = currentIndex >= 0 ? playlist[currentIndex] : null;
   const queueDuration = useMemo(
@@ -391,7 +526,9 @@ export function AudioProvider({ children }) {
     setIsExpanded,
     playTrack,
     setQueue,
+    playByIndex,
     togglePlay,
+    pause,
     seek,
     seekQueue,
     playNext,

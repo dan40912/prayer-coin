@@ -8,35 +8,35 @@ import { useAuthSession } from "@/hooks/useAuthSession";
 import { clearAuthSession } from "@/lib/auth-storage";
 
 const PRIMARY_NAV = [
-  { href: "/", label: "首頁" },
   { href: "/prayfor", label: "禱告牆" },
-  { href: "/about", label: "關於我們" },
-  { href: "/howto", label: "使用教學" },
-  { href: "/customer-portal", label: "會員中心" },
+  { href: "/about", label: "平台介紹" },
+  { href: "/howto", label: "使用方式" },
+  { href: "/customer-portal", label: "會員中心", requiresAuth: true },
 ];
 
 const FOOTER_COLUMNS = [
   {
     title: "Start Pray",
     links: [
-      { href: "/", label: "首頁" },
-      { href: "/about", label: "關於我們" },
-      { href: "/howto", label: "使用教學" },
+      { href: "/prayfor", label: "禱告牆" },
+      { href: "/about", label: "平台介紹" },
+      { href: "/howto", label: "使用方式" },
       { href: "/customer-portal", label: "會員中心" },
     ],
   },
   {
-    title: "資源",
+    title: "信任與條款",
     links: [
-      { href: "/whitepaper", label: "白皮書 / 免責聲明" },
+      { href: "/whitepaper", label: "白皮書與使用條款" },
+      { href: "/disclaimer", label: "免責與風險聲明" },
     ],
   },
   {
-    title: "帳戶",
+    title: "帳號與聯絡",
     links: [
       { href: "/login", label: "登入" },
       { href: "/signup", label: "註冊" },
-      { href: "mailto:startpraynow@gmail.com", label: "聯絡我們" },
+      { href: "mailto:startpraynow@gmail.com", label: "客服信箱" },
     ],
   },
 ];
@@ -47,6 +47,20 @@ const SOCIAL_LINKS = [
   { href: "#", label: "YouTube" },
 ];
 
+function resolveNavHref(item, isAuthenticated) {
+  if (item.requiresAuth && !isAuthenticated) {
+    return "/login?next=/customer-portal";
+  }
+  return item.href;
+}
+
+function isNavActive(currentPath, href) {
+  if (href === "/prayfor") {
+    return currentPath === "/prayfor" || currentPath.startsWith("/prayfor/");
+  }
+  return currentPath === href || currentPath.startsWith(`${href}/`);
+}
+
 export function SiteHeader({ activePath, hideAuthActions = false }) {
   const pathname = usePathname();
   const router = useRouter();
@@ -55,13 +69,7 @@ export function SiteHeader({ activePath, hideAuthActions = false }) {
 
   const current = activePath ?? pathname;
   const isAuthenticated = Boolean(authUser);
-
-  const navItems = useMemo(() => {
-    if (isAuthenticated) {
-      return PRIMARY_NAV.filter((item) => item.href !== "/login" && item.href !== "/signup");
-    }
-    return PRIMARY_NAV.filter((item) => item.href !== "/customer-portal");
-  }, [isAuthenticated]);
+  const navItems = useMemo(() => PRIMARY_NAV, []);
 
   const closeMenu = useCallback(() => {
     setMenuOpen(false);
@@ -74,14 +82,14 @@ export function SiteHeader({ activePath, hideAuthActions = false }) {
   const handleLogout = useCallback(() => {
     closeMenu();
     clearAuthSession();
-    router.push("/");
+    router.push("/prayfor");
   }, [closeMenu, router]);
 
   return (
     <header className="site-header">
       <div className="container navbar">
         <Link className="logo" href="/" prefetch={false}>
-          <img className="logo-img" src="/legacy/img/logo.png" alt="Start Pray logo" />
+          <img className="logo-img" src="/img/logo.png" alt="Start Pray logo" />
           Start Pray
         </Link>
 
@@ -90,6 +98,8 @@ export function SiteHeader({ activePath, hideAuthActions = false }) {
           className={`menu-toggle${menuOpen ? " is-open" : ""}`}
           onClick={() => setMenuOpen((prev) => !prev)}
           aria-label="切換導覽選單"
+          aria-expanded={menuOpen}
+          aria-controls="site-primary-nav"
         >
           <span className="menu-toggle__icon" aria-hidden="true">
             <span />
@@ -98,16 +108,18 @@ export function SiteHeader({ activePath, hideAuthActions = false }) {
           </span>
         </button>
 
-        <nav className={`nav-links ${menuOpen ? "open" : ""}`}>
+        <nav id="site-primary-nav" className={`nav-links ${menuOpen ? "open" : ""}`}>
           {navItems.map((item) => {
-            const isActive = current === item.href;
+            const targetHref = resolveNavHref(item, isAuthenticated);
+            const isActive = isNavActive(current, item.href);
             return (
               <Link
                 key={item.href}
-                href={item.href}
+                href={targetHref}
                 prefetch={false}
                 className={isActive ? "active" : undefined}
                 onClick={closeMenu}
+                title={item.requiresAuth && !isAuthenticated ? "登入後可進入會員中心" : undefined}
               >
                 {item.label}
               </Link>
@@ -119,7 +131,7 @@ export function SiteHeader({ activePath, hideAuthActions = false }) {
               {isAuthenticated ? (
                 <>
                   <Link href="/customer-portal/create" prefetch={false} className="btn btn-primary" onClick={closeMenu}>
-                    + 發布禱告
+                    + 新增代禱
                   </Link>
                   {authUser?.name ? <span className="nav-user">Hi, {authUser.name}</span> : null}
                   <button type="button" className="btn btn-glass" onClick={handleLogout}>
@@ -150,10 +162,12 @@ export function SiteFooter() {
       <div className="footer-inner">
         <div className="footer-top">
           <div className="footer-brand">
-            <img className="footer-logo" src="/legacy/img/logo.png" alt="Start Pray logo" />
+            <Link href="/" prefetch={false} aria-label="Start Pray homepage">
+              <img className="footer-logo" src="/img/logo.png" alt="Start Pray logo" />
+            </Link>
             <div>
               <strong>Start Pray</strong>
-              <p>讓禱告被聽見，讓陪伴真正發生。</p>
+              <p>讓需要幫助的人能安全說出來，讓願意代禱的人能真實回應。</p>
             </div>
           </div>
           <div className="footer-grid">
@@ -174,30 +188,13 @@ export function SiteFooter() {
               </div>
             ))}
           </div>
-          {/*
-          <div className="footer-social">
-            <span className="footer-title">社群</span>
-            <div className="footer-social-links">
-              {SOCIAL_LINKS.map((social) => (
-                <a key={social.label} href={social.href}>
-                  {social.label}
-                </a>
-              ))}
-            </div>
-          </div>
-          */}
         </div>
         <div className="footer-bottom">
           <span>&copy; 2026 Start Pray. All rights reserved.</span>
           <div className="footer-legal">
             <Link href="/whitepaper" prefetch={false}>
-              白皮書 / 免責聲明
+              白皮書與使用條款
             </Link>
-            {/*
-            <Link href="/disclaimer" prefetch={false}>
-              免責聲明
-            </Link>
-            */}
           </div>
         </div>
       </div>

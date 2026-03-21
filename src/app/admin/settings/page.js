@@ -2,24 +2,10 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 
-const SESSION_STORAGE_KEY = "prayer-coin-admin-session";
 const ROLE_OPTIONS = [
   { value: "SUPER", label: "超級管理員" },
   { value: "ADMIN", label: "一般管理員" },
 ];
-
-function readSessionRole() {
-  if (typeof window === "undefined") return null;
-  try {
-    const raw = sessionStorage.getItem(SESSION_STORAGE_KEY);
-    if (!raw) return null;
-    const parsed = JSON.parse(raw);
-    return parsed?.role ?? null;
-  } catch (error) {
-    sessionStorage.removeItem(SESSION_STORAGE_KEY);
-    return null;
-  }
-}
 
 export default function SettingsPage() {
   const [accounts, setAccounts] = useState([]);
@@ -36,9 +22,32 @@ export default function SettingsPage() {
   const [settingsSubmitting, setSettingsSubmitting] = useState(false);
 
   useEffect(() => {
-    const role = readSessionRole();
-    setSessionRole(role);
-    setSessionChecked(true);
+    let active = true;
+    const loadSessionRole = async () => {
+      try {
+        const response = await fetch("/api/admin/session", { cache: "no-store" });
+        if (!active) return;
+        if (!response.ok) {
+          setSessionRole(null);
+          return;
+        }
+
+        const data = await response.json();
+        setSessionRole(data?.user?.role ?? null);
+      } catch (error) {
+        console.error("載入管理員角色失敗:", error);
+        setSessionRole(null);
+      } finally {
+        if (active) {
+          setSessionChecked(true);
+        }
+      }
+    };
+
+    loadSessionRole();
+    return () => {
+      active = false;
+    };
   }, []);
 
   const loadSiteSettings = useCallback(async () => {
@@ -60,9 +69,6 @@ export default function SettingsPage() {
 
       const response = await fetch("/api/admin/site-settings", {
         cache: "no-store",
-        headers: {
-          "x-admin-role": sessionRole ?? "",
-        },
       });
 
       if (!response.ok) {
@@ -96,9 +102,6 @@ export default function SettingsPage() {
 
       const response = await fetch("/api/admin/accounts", {
         cache: "no-store",
-        headers: {
-          "x-admin-role": sessionRole ?? "",
-        },
       });
 
       if (!response.ok) {
@@ -141,7 +144,6 @@ export default function SettingsPage() {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
-          "x-admin-role": sessionRole ?? "",
         },
         body: JSON.stringify({
           maintenanceMode: !siteSettings.maintenanceMode,
@@ -188,7 +190,6 @@ export default function SettingsPage() {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "x-admin-role": sessionRole ?? "",
         },
         body: JSON.stringify(form),
       });
@@ -218,7 +219,6 @@ export default function SettingsPage() {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
-          "x-admin-role": sessionRole ?? "",
         },
         body: JSON.stringify({ isActive: !account.isActive }),
       });
@@ -245,7 +245,6 @@ export default function SettingsPage() {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
-          "x-admin-role": sessionRole ?? "",
         },
         body: JSON.stringify({ role }),
       });

@@ -44,13 +44,13 @@ export default function NotFound() {
             <p>您造訪的連結可能已下架、重新命名或暫時無法使用。請確認 URL 是否正確，或透過以下連結回到熟悉的地方。</p>
           </div>
           <div className="error-actions" style={{ display: "flex", justifyContent: "center", gap: "1rem", flexWrap: "wrap" }}>
-            <Link className="btn btn-primary" href="/" prefetch={false}>
-              返回首頁
+            <Link className="btn btn-primary" href="/prayfor" prefetch={false}>
+              返回禱告牆
             </Link>
-            <Link className="btn btn-outline" href="/legacy/prayfor/details" prefetch={false}>
+            <Link className="btn btn-outline" href="/prayfor" prefetch={false}>
               前往禱告牆
             </Link>
-            <a className="btn btn-outline" href="mailto:support@prayercoin.app">
+            <a className="btn btn-outline" href="mailto:startpraynow@gmail.com">
               聯絡支援
             </a>
           </div>

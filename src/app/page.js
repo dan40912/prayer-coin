@@ -1,7 +1,7 @@
-import { redirect } from "next/navigation";
+import HomeLandingPage, { dynamic, metadata } from "@/components/HomeLandingPage";
 
-export const dynamic = "force-dynamic";
+export { dynamic, metadata };
 
-export default function HomePageRedirect() {
-  redirect("/prayfor");
+export default function HomePage() {
+  return <HomeLandingPage />;
 }

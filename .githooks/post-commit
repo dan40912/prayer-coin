@@ -1,0 +1,3 @@
+#!/bin/sh
+
+python scripts/update_progress_tracker.py --event commit

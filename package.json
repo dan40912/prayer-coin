@@ -16,7 +16,11 @@
     "db:studio": "prisma studio",
     "seed:admins": "node scripts/seed-admins.js",
     "qa": "node scripts/qa-flow.mjs",
-    "qa:full": "node scripts/qa-flow.mjs full"
+    "qa:full": "node scripts/qa-flow.mjs full",
+    "progress:sync": "python scripts/update_progress_tracker.py --event manual",
+    "progress:commit": "python scripts/update_progress_tracker.py --event commit",
+    "progress:push": "python scripts/update_progress_tracker.py --event push",
+    "handoff:prepare": "python scripts/prepare_handoff.py"
   },
   "dependencies": {
     "@ckeditor/ckeditor5-build-classic": "^39.0.2",

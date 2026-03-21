@@ -80,7 +80,7 @@ export default function CustomerPortalEditPage() {
     setStatus(null);
 
     const derivedSlug = card.slug.trim() || `card-${card.id}`;
-    const derivedDetails = `/legacy/prayfor/details.html?prayer=${derivedSlug}`;
+    const derivedDetails = `/prayfor/${card.id}`;
     const payload = {
       slug: derivedSlug,
       image: card.image.trim(),
@@ -90,7 +90,7 @@ export default function CustomerPortalEditPage() {
       tags: card.tags,
       meta: card.meta,
       detailsHref: card.detailsHref.trim() || derivedDetails,
-      voiceHref: card.voiceHref.trim() || `${derivedDetails}#voice`,
+      voiceHref: card.voiceHref.trim() || "",
       categoryId: card.category?.id || null
     };
 

@@ -6,20 +6,8 @@ import LoginForm from "./LoginForm";
 
 export const metadata = {
   title: "Start Pray | 登入",
-  description: "登入 Start Pray 管理禱告內容、追蹤互動數據並查看代幣紀錄。"
+  description: "登入 Start Pray 會員中心，管理你的禱告內容與互動紀錄。"
 };
-
-const securityTips = [
-  "建議啟用 MFA 或 WebAuthn，保護個人資料與代幣資產。",
-  "陌生裝置登入時，系統會寄送通知到您的電子信箱。",
-  "客服不會主動索取密碼或助記詞，如遇可疑請立即回報。"
-];
-
-const managementHighlights = [
-  "建立或編輯禱告：支援純文字 200–1000 字範圍。",
-  "圖片管理：封面 + 敘事至少兩張，提升社群分享成效。",
-  "代幣動態：掌握語音禱告獎勵、曝光加值與使用紀錄。"
-];
 
 export default function LoginPage() {
   return (

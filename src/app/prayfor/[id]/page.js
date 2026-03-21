@@ -90,6 +90,7 @@ export default async function PrayerDetailPage({ params }) {
         message: card.title,
         avatarUrl: ownerAvatar,
         requestTitle: card.title,
+        coverImage: detailImage,
       }
     : null;
 
@@ -135,9 +136,9 @@ export default async function PrayerDetailPage({ params }) {
             <div className="pdv2-hero-body">
               <div className="pdv2-title-row">
                 <h1>{card.title}</h1>
-                <button type="button" className="pdv2-follow-btn">
-                  關注
-                </button>
+                <Link href="#responses-panel" prefetch={false} className="pdv2-follow-btn">
+                  留下回應
+                </Link>
               </div>
 
               <div className="pdv2-meta-row">
@@ -158,6 +159,35 @@ export default async function PrayerDetailPage({ params }) {
               <h2>留言與代禱回應</h2>
             </div>
             <Comments requestId={String(card.id)} ownerId={owner?.id} prayerTitle={card.title} />
+          </section>
+
+          <section className="pdv2-adjacent" aria-label="上一篇與下一篇">
+            <h2>繼續瀏覽</h2>
+            <div className="pdv2-adjacent-grid">
+              {previousCard ? (
+                <Link href={`/prayfor/${previousCard.id}`} prefetch={false} className="pdv2-adjacent-card">
+                  <span className="pdv2-adjacent-card__label">上一篇</span>
+                  <strong>{previousCard.title}</strong>
+                </Link>
+              ) : (
+                <div className="pdv2-adjacent-card is-disabled" aria-disabled="true">
+                  <span className="pdv2-adjacent-card__label">上一篇</span>
+                  <strong>目前沒有上一篇</strong>
+                </div>
+              )}
+
+              {nextCard ? (
+                <Link href={`/prayfor/${nextCard.id}`} prefetch={false} className="pdv2-adjacent-card">
+                  <span className="pdv2-adjacent-card__label">下一篇</span>
+                  <strong>{nextCard.title}</strong>
+                </Link>
+              ) : (
+                <div className="pdv2-adjacent-card is-disabled" aria-disabled="true">
+                  <span className="pdv2-adjacent-card__label">下一篇</span>
+                  <strong>目前沒有下一篇</strong>
+                </div>
+              )}
+            </div>
           </section>
 
           {relatedCards?.length ? (

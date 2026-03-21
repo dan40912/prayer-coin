@@ -1,6 +1,7 @@
 ﻿"use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 
 import { saveAuthSession } from "@/lib/auth-storage";
@@ -38,7 +39,7 @@ export default function LoginForm() {
 
       saveAuthSession(data.user);
 
-      setStatus({ state: "success", message: "登入成功！即將帶您進入管理中心。" });
+      setStatus({ state: "success", message: "登入成功！即將帶您進入會員中心。" });
       setTimeout(() => {
         router.push("/customer-portal");
       }, 1200);
@@ -76,7 +77,12 @@ export default function LoginForm() {
           onChange={updateField("password")}
           required
         />
-        <span className="form-helper">忘記密碼功能暫停中，請聯繫管理員協助。</span>
+        <span className="form-helper">
+          忘記密碼？{" "}
+          <Link href="/forgot-password" prefetch={false}>
+            前往重設密碼
+          </Link>
+        </span>
       </div>
       {status.message && (
         <div
@@ -93,7 +99,7 @@ export default function LoginForm() {
         </div>
       )}
       <button type="submit" className="btn btn-primary" style={{ width: "100%", justifyContent: "center" }} disabled={status.state === "loading"}>
-        {status.state === "loading" ? "驗證中" : "登入祈禱管理中心"}
+        {status.state === "loading" ? "驗證中" : "登入會員中心"}
       </button>
     </form>
   );

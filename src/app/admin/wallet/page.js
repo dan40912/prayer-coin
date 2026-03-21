@@ -2,7 +2,6 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 
-const SESSION_STORAGE_KEY = "prayer-coin-admin-session";
 const PAGE_SIZE = 20;
 
 const STATUS_OPTIONS = [
@@ -85,19 +84,6 @@ function formatStatus(status) {
   return STATUS_LABELS[status] ?? status;
 }
 
-function readSessionRole() {
-  if (typeof window === "undefined") return null;
-  const raw = sessionStorage.getItem(SESSION_STORAGE_KEY);
-  if (!raw) return null;
-  try {
-    const parsed = JSON.parse(raw);
-    return parsed?.role ?? null;
-  } catch (error) {
-    sessionStorage.removeItem(SESSION_STORAGE_KEY);
-    return null;
-  }
-}
-
 export default function AdminWalletPage() {
   const [transactions, setTransactions] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -127,9 +113,31 @@ export default function AdminWalletPage() {
   const [balancesError, setBalancesError] = useState("");
 
   useEffect(() => {
-    const role = readSessionRole();
-    setSessionRole(role);
-    setSessionChecked(true);
+    let active = true;
+    const loadSessionRole = async () => {
+      try {
+        const response = await fetch("/api/admin/session", { cache: "no-store" });
+        if (!active) return;
+        if (!response.ok) {
+          setSessionRole(null);
+          return;
+        }
+        const data = await response.json();
+        setSessionRole(data?.user?.role ?? null);
+      } catch (error) {
+        console.error("載入管理員角色失敗:", error);
+        setSessionRole(null);
+      } finally {
+        if (active) {
+          setSessionChecked(true);
+        }
+      }
+    };
+
+    loadSessionRole();
+    return () => {
+      active = false;
+    };
   }, []);
 
   const canViewTransactions = sessionRole === "SUPER";
@@ -181,9 +189,6 @@ export default function AdminWalletPage() {
 
       const response = await fetch(`/api/admin/transactions?${params.toString()}` , {
         cache: "no-store",
-        headers: {
-          "x-admin-role": sessionRole ?? "",
-        },
       });
 
       if (!response.ok) {
@@ -223,9 +228,6 @@ export default function AdminWalletPage() {
 
       const response = await fetch("/api/admin/token-rules", {
         cache: "no-store",
-        headers: {
-          "x-admin-role": sessionRole ?? "",
-        },
       });
 
       if (!response.ok) {
@@ -261,9 +263,6 @@ export default function AdminWalletPage() {
 
       const response = await fetch("/api/admin/token-balances?limit=50", {
         cache: "no-store",
-        headers: {
-          "x-admin-role": sessionRole ?? "",
-        },
       });
 
       if (!response.ok) {
@@ -372,7 +371,6 @@ export default function AdminWalletPage() {
           method: "PATCH",
           headers: {
             "Content-Type": "application/json",
-            "x-admin-role": sessionRole ?? "",
           },
           body: JSON.stringify({ status: targetStatus, txHash: txHash || null }),
         });
@@ -420,7 +418,6 @@ export default function AdminWalletPage() {
           method: "PATCH",
           headers: {
             "Content-Type": "application/json",
-            "x-admin-role": sessionRole ?? "",
           },
           body: JSON.stringify(payload),
         });

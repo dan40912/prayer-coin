@@ -4,7 +4,7 @@ import "@/styles/theme-customer.css";
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { SiteFooter, SiteHeader } from "@/components/site-chrome";
 import { useAuthSession } from "@/hooks/useAuthSession";
@@ -29,6 +29,8 @@ const INITIAL_FORM = {
 
 const MAX_UPLOAD_BYTES = 5 * 1024 * 1024;
 const MAX_GALLERY_IMAGES = 3;
+const DRAFT_STORAGE_KEY = "customer-portal-create-draft-v1";
+const AUTO_SAVE_DELAY_MS = 700;
 
 export default function CustomerPortalCreatePage() {
   const authUser = useAuthSession();
@@ -44,42 +46,76 @@ export default function CustomerPortalCreatePage() {
   const [categoriesLoading, setCategoriesLoading] = useState(true);
   const [uploadedImages, setUploadedImages] = useState([]);
   const [isUploadingImage, setIsUploadingImage] = useState(false);
-  const [editorReady, setEditorReady] = useState(false);
+  const [lastAutoSavedAt, setLastAutoSavedAt] = useState(null);
 
-  const editorRef = useRef({ CKEditor: null, ClassicEditor: null });
   const uploadLockRef = useRef(false);
 
   useEffect(() => {
-    let mounted = true;
+    if (typeof window === "undefined") return;
+    try {
+      const raw = window.localStorage.getItem(DRAFT_STORAGE_KEY);
+      if (!raw) return;
+      const draft = JSON.parse(raw);
+      if (!draft || typeof draft !== "object") return;
 
-    const loadEditor = async () => {
-      try {
-        const [CKEditorModule, ClassicEditorModule] = await Promise.all([
-          import("@ckeditor/ckeditor5-react"),
-          import("@ckeditor/ckeditor5-build-classic"),
-        ]);
+      const hasDraftContent = Boolean(
+        draft?.form?.title?.trim?.() ||
+          draft?.form?.description?.trim?.() ||
+          draft?.form?.image?.trim?.() ||
+          (Array.isArray(draft?.uploadedImages) && draft.uploadedImages.length)
+      );
+      if (!hasDraftContent) return;
 
-        if (!mounted) return;
-        const CKEditorComponent =
-          CKEditorModule.CKEditor ?? CKEditorModule.default ?? CKEditorModule;
-        const ClassicEditor = ClassicEditorModule.default ?? ClassicEditorModule;
-
-        editorRef.current = {
-          CKEditor: CKEditorComponent,
-          ClassicEditor,
-        };
-        setEditorReady(true);
-      } catch (error) {
-        console.error("頛 CKEditor 憭望?:", error);
-        setStatus({ type: "error", message: "無法載入編輯器，請重新整理頁面" });
+      setForm((prev) => ({ ...prev, ...draft.form }));
+      if (Array.isArray(draft.uploadedImages)) {
+        setUploadedImages(draft.uploadedImages.slice(0, MAX_GALLERY_IMAGES));
       }
-    };
-
-    loadEditor();
-    return () => {
-      mounted = false;
-    };
+      if (Number.isFinite(draft.categoryId)) {
+        setCategoryId((prev) => prev ?? draft.categoryId);
+      }
+      if (draft.savedAt) {
+        setLastAutoSavedAt(draft.savedAt);
+      }
+      setStatus({ type: "info", message: "已還原上次未送出的草稿" });
+    } catch (error) {
+      console.warn("restore draft failed", error);
+    }
   }, []);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const hasContent = Boolean(
+      form.title.trim() ||
+        form.description.trim() ||
+        form.image.trim() ||
+        uploadedImages.length
+    );
+    if (!hasContent) {
+      window.localStorage.removeItem(DRAFT_STORAGE_KEY);
+      setLastAutoSavedAt(null);
+      return;
+    }
+
+    const timer = window.setTimeout(() => {
+      try {
+        const savedAt = new Date().toISOString();
+        window.localStorage.setItem(
+          DRAFT_STORAGE_KEY,
+          JSON.stringify({
+            form,
+            categoryId,
+            uploadedImages,
+            savedAt,
+          })
+        );
+        setLastAutoSavedAt(savedAt);
+      } catch (error) {
+        console.warn("save draft failed", error);
+      }
+    }, AUTO_SAVE_DELAY_MS);
+
+    return () => window.clearTimeout(timer);
+  }, [form, categoryId, uploadedImages]);
 
   useEffect(() => {
     let mounted = true;
@@ -87,7 +123,7 @@ export default function CustomerPortalCreatePage() {
     const loadCategories = async () => {
       try {
         const response = await fetch("/api/home-categories", { cache: "no-store" });
-        if (!response.ok) throw new Error("?⊥?頛??");
+        if (!response.ok) throw new Error("無法載入分類");
         const data = await response.json();
         if (mounted) {
           setCategories(data);
@@ -124,16 +160,7 @@ export default function CustomerPortalCreatePage() {
     }
   };
 
-  const handleEditorChange = (value) => {
-    setForm((prev) => ({ ...prev, description: value }));
-  };
-
-  const normalizedDescription = useMemo(() => {
-    const plain = form.description.replace(/<[^>]*>/g, "").replace(/&nbsp;/g, " ").trim();
-    return plain;
-  }, [form.description]);
-
-    const handleFileChange = async (event) => {
+  const handleFileChange = async (event) => {
     const files = Array.from(event.target.files ?? []);
     event.target.value = "";
 
@@ -253,8 +280,8 @@ export default function CustomerPortalCreatePage() {
       return;
     }
 
-    if (!normalizedDescription) {
-      setStatus({ type: "error", message: "隢‵撖恍?閬曲???批捆" });
+    if (!form.description.trim()) {
+      setStatus({ type: "error", message: "請至少填寫一段代禱內容" });
       return;
     }
 
@@ -292,14 +319,18 @@ export default function CustomerPortalCreatePage() {
       });
 
       if (!response.ok) {
-        const error = await response.json().catch(() => ({ message: "撱箇?憭望?" }));
-        throw new Error(error.message || "撱箇?憭望?");
+        const error = await response.json().catch(() => ({ message: "建立失敗" }));
+        throw new Error(error.message || "建立失敗");
       }
 
       await response.json();
       setStatus({ type: "success", message: "禱告卡已建立" });
       setForm(INITIAL_FORM);
       setUploadedImages([]);
+      if (typeof window !== "undefined") {
+        window.localStorage.removeItem(DRAFT_STORAGE_KEY);
+      }
+      setLastAutoSavedAt(null);
       setShowModal(true);
 
       const timer = setTimeout(() => {
@@ -307,15 +338,13 @@ export default function CustomerPortalCreatePage() {
       }, 1000);
       setRedirectTimer(timer);
     } catch (error) {
-      setStatus({ type: "error", message: error.message || "撱箇?憭望?" });
+      setStatus({ type: "error", message: error.message || "建立失敗" });
     } finally {
       setSubmitting(false);
     }
   };
 
   const previewImage = form.image.trim();
-
-  const { CKEditor, ClassicEditor } = editorRef.current;
 
   return (
     <>
@@ -326,7 +355,7 @@ export default function CustomerPortalCreatePage() {
             <p className="customer-create__eyebrow">Share & Pray</p>
             <h1>讓需要被看見，邀請眾人一同守望</h1>
             <p>
-              ??皜??曲?摰對?蝷曄黎?賢翰??閫??瘙蒂?脣隞?曲?????????賢隞亙?ㄐ銝甈∪???
+              在這裡整理你的近況、壓力與需要，讓代禱者更快理解並以禱告托住你。你可以先上傳圖片，再撰寫內容。
             </p>
             <ul>
               {HERO_POINTS.map((point) => (
@@ -350,12 +379,12 @@ export default function CustomerPortalCreatePage() {
 
           <div className="customer-create__row customer-create__row--equal">
             <label>
-              <span>璅? *</span>
+              <span>標題 *</span>
               <input
                 type="text"
                 value={form.title}
                 onChange={updateFormField("title")}
-                placeholder="靘??箏振鈭箇?頨恍??亙熒蝳勗?"
+                placeholder="例如：為家人健康與平安代禱"
                 required
               />
             </label>
@@ -372,7 +401,7 @@ export default function CustomerPortalCreatePage() {
 
           <div className="customer-create__row customer-create__row--equal">
             <label>
-              <span>?? *</span>
+              <span>分類 *</span>
               <select
                 value={categoryId ?? ""}
                 onChange={(event) => setCategoryId(Number(event.target.value))}
@@ -387,12 +416,12 @@ export default function CustomerPortalCreatePage() {
               </select>
             </label>
             <label>
-              <span>撠?? URL *</span>
+              <span>封面圖片 URL *</span>
               <input
                 type="text"
                 value={form.image}
                 onChange={updateFormField("image")}
-                placeholder="?航票銝??典?摨急? CDN ?????"
+                placeholder="可貼上圖片網址，或用下方上傳"
                 required
               />
             </label>
@@ -400,7 +429,7 @@ export default function CustomerPortalCreatePage() {
 
           <div className="customer-create__row">
             <label className="customer-create__file-label">
-              <span>銝?? (?憭?3 撘?</span>
+              <span>上傳圖片（最多 3 張）</span>
               <input
                 type="file"
                 accept="image/*"
@@ -409,7 +438,8 @@ export default function CustomerPortalCreatePage() {
                 disabled={isUploadingImage || uploadedImages.length >= MAX_GALLERY_IMAGES}
               />
               <small className="cp-helper">
-                ?舀 JPG?NG?EBP嚗撘萎???5MB??憭?{MAX_GALLERY_IMAGES} 撘蛛?撠＊蝷箸蝳勗?閰單???隞?曲?汗??              </small>
+                支援 JPG、PNG、WEBP，每張上限 5MB，最多 {MAX_GALLERY_IMAGES} 張。可先上傳後再選為封面。
+              </small>
             </label>
             {uploadedImages.length ? (
               <div className="customer-create__gallery">
@@ -426,7 +456,7 @@ export default function CustomerPortalCreatePage() {
                       <figcaption>
                         <span title={name}>{name}</span>
                         <button type="button" onClick={() => removeUploadedImage(url)}>
-                          蝘駁
+                          移除
                         </button>
                       </figcaption>
                     </figure>
@@ -440,7 +470,7 @@ export default function CustomerPortalCreatePage() {
             {previewImage ? (
               <img src={previewImage} alt={form.alt || form.title || "禱告卡預覽"} />
             ) : (
-              <div className="customer-create__placeholder">撠?豢???</div>
+              <div className="customer-create__placeholder">尚未設定封面圖片</div>
             )}
           </div>
 
@@ -458,54 +488,15 @@ export default function CustomerPortalCreatePage() {
 
           <div className="customer-create__row customer-create__row--description">
             <label>
-              <span>?閬曲?摰?*</span>
-              <div className="customer-create__editor">
-                {editorReady && CKEditor && ClassicEditor ? (
-                  <CKEditor
-                    editor={ClassicEditor}
-                    data={form.description}
-                    config={{
-                      toolbar: [
-                        "heading",
-                        "|",
-                        "bold",
-                        "italic",
-                        "underline",
-                        "strikethrough",
-                        "link",
-                        "bulletedList",
-                        "numberedList",
-                        "blockQuote",
-                        "insertTable",
-                        "undo",
-                        "redo",
-                      ],
-                      removePlugins: [
-                        "Image",
-                        "ImageCaption",
-                        "ImageStyle",
-                        "ImageToolbar",
-                        "ImageUpload",
-                        "EasyImage",
-                        "CKFinder",
-                        "CKFinderUploadAdapter",
-                        "MediaEmbed",
-                      ],
-                    }}
-                    onChange={(_, editor) => handleEditorChange(editor.getData())}
-                  />
-                ) : (
-                  <textarea
-                    value={form.description}
-                    onChange={(event) => handleEditorChange(event.target.value)}
-                    placeholder="請描述你的代禱內容，越清楚越能幫助大家一起守望。"
-                    rows={6}
-                  />
-                )}
-              </div>
-              <small className="cp-helper">
-                ?⊿??Ⅱ嚗??牧??閬曲??鈭??鼠?拙之摰嗆摰寞??脣鞎?銝准?
-              </small>
+              <span>代禱內容 *</span>
+              <textarea
+                value={form.description}
+                onChange={updateFormField("description")}
+                placeholder="請直接輸入代禱內容，清楚描述目前情況、需要代禱與盼望。"
+                rows={10}
+                required
+              />
+              <small className="cp-helper">請直接輸入文字即可，不提供模板與即時預覽。</small>
             </label>
           </div>
 
@@ -557,7 +548,7 @@ export default function CustomerPortalCreatePage() {
               {submitting ? "建立中..." : "建立禱告卡"}
             </button>
             <Link href="/customer-portal" className="button button--ghost" prefetch={false}>
-              ?蝮質汗
+              返回管理頁
             </Link>
           </div>
         </form>
@@ -574,29 +565,144 @@ export default function CustomerPortalCreatePage() {
       ) : null}
 
       <style jsx>{`
-        .customer-create__editor {
-          width: 100%;
-          min-width: 0;
+        .customer-create--editor-only {
+          background:
+            radial-gradient(circle at 8% 12%, rgba(59, 130, 246, 0.16), transparent 42%),
+            radial-gradient(circle at 90% 82%, rgba(56, 189, 248, 0.12), transparent 46%);
+          padding-bottom: 4rem;
         }
 
-        .customer-create__editor :global(.ck-editor) {
-          width: 100%;
+        .customer-create__hero-card {
+          border: 1px solid rgba(148, 163, 184, 0.3);
+          background: linear-gradient(145deg, rgba(10, 20, 38, 0.9), rgba(15, 23, 42, 0.78));
+          box-shadow: 0 28px 50px -34px rgba(2, 6, 23, 0.8);
         }
 
-        .customer-create__editor :global(.ck-editor__main) {
-          width: 100%;
+        .customer-create__form {
+          width: min(980px, 100%);
+          margin: 1rem auto 0;
+          padding: clamp(1rem, 2vw, 1.3rem);
+          border-radius: 20px;
+          border: 1px solid rgba(148, 163, 184, 0.26);
+          background: linear-gradient(160deg, rgba(7, 16, 34, 0.9), rgba(10, 21, 41, 0.84));
+          box-shadow: 0 24px 48px -34px rgba(2, 6, 23, 0.86);
         }
 
-        .customer-create__editor :global(.ck-editor__editable) {
-          min-height: 240px;
+        .customer-create__row label {
+          display: grid;
+          gap: 0.42rem;
+        }
+
+        .customer-create__row label > span {
+          color: rgba(226, 232, 240, 0.95);
+          font-size: 0.84rem;
+          font-weight: 700;
+          letter-spacing: 0.01em;
+        }
+
+        .customer-create__row input,
+        .customer-create__row select,
+        .customer-create__row textarea {
           border-radius: 12px;
-          word-break: break-word;
-          overflow-wrap: break-word;
+          border: 1px solid rgba(148, 163, 184, 0.36);
+          background: rgba(15, 23, 42, 0.66);
+          color: #f8fbff;
+          min-height: 44px;
+          padding: 0.7rem 0.78rem;
+        }
+
+        .customer-create__row input::placeholder,
+        .customer-create__row textarea::placeholder {
+          color: rgba(148, 163, 184, 0.88);
+        }
+
+        .customer-create__row input:focus,
+        .customer-create__row select:focus,
+        .customer-create__row textarea:focus {
+          outline: none;
+          border-color: rgba(125, 211, 252, 0.9);
+          box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.22);
+        }
+
+        .customer-create__preview {
+          border: 1px dashed rgba(148, 163, 184, 0.42);
+          border-radius: 16px;
+          min-height: 180px;
+          display: grid;
+          place-items: center;
+          background: rgba(2, 6, 23, 0.35);
+        }
+
+        .customer-create__preview img {
+          width: 100%;
+          height: 100%;
+          max-height: 360px;
+          object-fit: cover;
+          border-radius: 16px;
+        }
+
+        .customer-create__placeholder {
+          color: rgba(226, 232, 240, 0.82);
+          font-size: 0.9rem;
+        }
+
+        .customer-create__status {
+          border-radius: 12px;
+          border: 1px solid rgba(148, 163, 184, 0.34);
+          background: rgba(15, 23, 42, 0.5);
+          padding: 0.65rem 0.78rem;
+        }
+
+        .customer-create__actions {
+          margin-top: 0.2rem;
+          display: flex;
+          gap: 0.65rem;
+        }
+
+        .customer-create__actions :global(.button) {
+          min-height: 44px;
+          border-radius: 12px;
+          font-weight: 700;
+        }
+
+        .customer-create__actions :global(.button--primary) {
+          background: linear-gradient(135deg, #3b82f6, #0ea5e9);
+          border-color: transparent;
+        }
+
+        .customer-create__actions :global(.button--ghost) {
+          border-color: rgba(148, 163, 184, 0.45);
+          color: #e2e8f0;
+          background: rgba(15, 23, 42, 0.4);
+        }
+
+        .customer-create__row--description textarea {
+          min-height: 280px;
+          line-height: 1.7;
+          resize: vertical;
+        }
+
+        .customer-create__row--description .cp-helper {
+          margin: 0;
         }
 
         @media (max-width: 640px) {
-          .customer-create__editor :global(.ck-editor__editable) {
-            min-height: 200px;
+          .customer-create__form {
+            border-radius: 16px;
+            padding: 0.88rem;
+          }
+
+          .customer-create__actions {
+            flex-direction: column;
+          }
+
+          .customer-create__actions :global(.button) {
+            width: 100%;
+            justify-content: center;
+          }
+
+          .customer-create__row--description textarea {
+            min-height: 220px;
           }
         }
 

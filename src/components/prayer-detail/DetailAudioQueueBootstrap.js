@@ -17,10 +17,11 @@ function normalizePrimaryTrack(track, prayerTitle) {
     message: track.message?.trim() || "",
     avatarUrl: track.avatarUrl?.trim() || "",
     requestTitle: track.requestTitle || prayerTitle || FALLBACK_TITLE,
+    coverImage: track.coverImage?.trim() || "",
   };
 }
 
-function normalizeResponseTrack(item, index, prayerTitle) {
+function normalizeResponseTrack(item, index, prayerTitle, fallbackCoverImage = "") {
   if (!item?.voiceUrl) return null;
   const isAnonymous = Boolean(item.isAnonymous);
   return {
@@ -32,6 +33,7 @@ function normalizeResponseTrack(item, index, prayerTitle) {
     message: item.message?.trim() || "",
     avatarUrl: item.responder?.avatarUrl?.trim() || "",
     requestTitle: prayerTitle || item.card?.title || FALLBACK_TITLE,
+    coverImage: item.card?.image?.trim?.() || fallbackCoverImage || "",
   };
 }
 
@@ -75,7 +77,7 @@ export default function DetailAudioQueueBootstrap({
 
       const responseTracks = Array.isArray(data)
         ? data
-            .map((item, index) => normalizeResponseTrack(item, index, prayerTitle))
+            .map((item, index) => normalizeResponseTrack(item, index, prayerTitle, primaryTrack?.coverImage || ""))
             .filter(Boolean)
         : [];
 

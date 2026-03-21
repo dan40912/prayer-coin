@@ -1,0 +1,4 @@
+#!/bin/sh
+
+refs_payload="$(cat)"
+python scripts/update_progress_tracker.py --event push --refs "$refs_payload"

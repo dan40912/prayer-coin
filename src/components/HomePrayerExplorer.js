@@ -7,7 +7,8 @@ import { useAudio } from "@/context/AudioContext";
 const POPULAR_SLUG = "popular";
 const DEFAULT_LIMIT = 12;
 const SUGGESTION_LIMIT = 6;
-const SEARCH_DEBOUNCE = 2000;
+const FALLBACK_CATEGORY_LIMIT = 3;
+const SEARCH_DEBOUNCE = 450;
 const QUICK_SEARCH_TAGS = ["福音", "醫治", "家庭", "工作", "個人", "世界"];
 
 function buildQuery(params = {}) {
@@ -95,8 +96,10 @@ export default function HomePrayerExplorer({
   initialCategories = [],
   initialCards = [],
   initialActiveSlug = POPULAR_SLUG,
+  cardLimit = DEFAULT_LIMIT,
 }) {
   const { setQueue } = useAudio();
+  const resolvedCardLimit = Number.isFinite(cardLimit) && cardLimit > 0 ? Math.floor(cardLimit) : DEFAULT_LIMIT;
 
   const [categories] = useState(initialCategories);
   const [activeCategory, setActiveCategory] = useState(initialActiveSlug);
@@ -129,6 +132,13 @@ export default function HomePrayerExplorer({
       })),
     ];
   }, [topCategories]);
+  const fallbackCategories = useMemo(
+    () =>
+      categoryItems
+        .filter((item) => item?.slug && item.slug !== POPULAR_SLUG)
+        .slice(0, FALLBACK_CATEGORY_LIMIT),
+    [categoryItems]
+  );
 
   const trimmedQuery = searchQuery.trim();
 
@@ -139,7 +149,7 @@ export default function HomePrayerExplorer({
     setSearchError(null);
     try {
       const results = await fetchCards(
-        { search: query, limit: DEFAULT_LIMIT * 2, sort: "responses" },
+        { search: query, limit: resolvedCardLimit * 2, sort: "responses" },
         { signal }
       );
       setSearchResults(results);
@@ -152,7 +162,7 @@ export default function HomePrayerExplorer({
     } finally {
       setIsSearchLoading(false);
     }
-  }, []);
+  }, [resolvedCardLimit]);
 
   useEffect(() => {
     if (debounceTimeoutRef.current) {
@@ -204,8 +214,8 @@ export default function HomePrayerExplorer({
     trimmedQuery && (isSearchLoading || searchError || suggestions.length > 0 || hasSearched)
   );
   const queueCards = useMemo(
-    () => (Array.isArray(displayCards) ? displayCards.slice(0, DEFAULT_LIMIT) : []),
-    [displayCards]
+    () => (Array.isArray(displayCards) ? displayCards.slice(0, resolvedCardLimit) : []),
+    [displayCards, resolvedCardLimit]
   );
   const queueSignature = useMemo(
     () =>
@@ -228,7 +238,7 @@ export default function HomePrayerExplorer({
     setLoadError(null);
 
     try {
-      const params = { limit: DEFAULT_LIMIT };
+      const params = { limit: resolvedCardLimit };
       if (slug === POPULAR_SLUG) {
         params.sort = "responses";
       } else {
@@ -256,6 +266,13 @@ export default function HomePrayerExplorer({
       setSearchError(null);
       setActiveCategory((prev) => prev || POPULAR_SLUG);
     }
+  };
+  const handleResetToPopular = () => {
+    setSearchQuery("");
+    setHasSearched(false);
+    setSearchResults([]);
+    setSearchError(null);
+    void handleCategorySelect(POPULAR_SLUG);
   };
 
   const handleSearchSubmit = () => {
@@ -415,9 +432,38 @@ export default function HomePrayerExplorer({
                   </div>
                 ) : null}
                 {!isSearchLoading && !searchError && hasSearched && suggestions.length === 0 ? (
-                  <div className="home-explorer__suggestion home-explorer__suggestion--status muted">
-                    沒有找到相關結果
-                  </div>
+                  <>
+                    <div
+                      className="home-explorer__suggestion home-explorer__suggestion--status muted"
+                      role="status"
+                      aria-live="polite"
+                    >
+                      找不到符合的結果，試試熱門禱告或其他分類。
+                    </div>
+                    <div className="home-explorer__suggestion-actions">
+                      <button
+                        type="button"
+                        className="home-explorer__action-btn"
+                        onClick={handleResetToPopular}
+                      >
+                        找不到？改看熱門禱告
+                      </button>
+                    </div>
+                    {fallbackCategories.length ? (
+                      <div className="home-explorer__suggestion-tag-list" role="group" aria-label="推薦分類">
+                        {fallbackCategories.map((item) => (
+                          <button
+                            key={`fallback-${item.slug}`}
+                            type="button"
+                            className="home-explorer__suggestion-tag"
+                            onClick={() => void handleCategorySelect(item.slug)}
+                          >
+                            {item.name}
+                          </button>
+                        ))}
+                      </div>
+                    ) : null}
+                  </>
                 ) : null}
                 {suggestions.map((item) => {
                   if (!item) return null;
@@ -482,7 +528,7 @@ export default function HomePrayerExplorer({
       </div>
 
       <div className="home-cards">
-        <div className="home-cards__header">
+        <div className="home-cards__header" aria-live="polite">
           <h3>{headingText}</h3>
           {displayIsLoading ? <span className="home-cards__status">載入中...</span> : null}
           {displayError ? <span className="home-cards__status error">{displayError}</span> : null}
@@ -524,7 +570,23 @@ export default function HomePrayerExplorer({
           })}
 
           {!displayIsLoading && !displayError && displayCards.length === 0 ? (
-            <p className="home-card__empty">目前沒有符合條件的禱告卡片。</p>
+            <div className="home-card__empty" role="status" aria-live="polite">
+              <p>目前沒有符合條件的禱告卡片。</p>
+              <div className="home-card__empty-actions">
+                <button type="button" className="home-explorer__action-btn" onClick={handleResetToPopular}>
+                  回到熱門禱告
+                </button>
+                {fallbackCategories[0] ? (
+                  <button
+                    type="button"
+                    className="home-explorer__action-btn home-explorer__action-btn--ghost"
+                    onClick={() => void handleCategorySelect(fallbackCategories[0].slug)}
+                  >
+                    改看「{fallbackCategories[0].name}」
+                  </button>
+                ) : null}
+              </div>
+            </div>
           ) : null}
         </div>
       </div>

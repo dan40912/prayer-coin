@@ -103,17 +103,16 @@ export default function SignupForm() {
         </div>
         <div className="form-group">
           <label className="form-label" htmlFor="faith">
-           您是否有信仰 ? <span className="required-badge">必填</span>
+            您是否有信仰？ <span className="optional-badge">選填</span>
           </label>
           <select
             className="form-select"
             id="faith"
             value={form.faithTradition}
             onChange={updateField("faithTradition")}
-            required
           >
-            <option value="" disabled>
-              請選擇
+            <option value="">
+              暫不填寫
             </option>
             <option>基督徒</option>
             <option>佛教</option>
@@ -122,20 +121,20 @@ export default function SignupForm() {
             <option>一貫道</option>
             <option>無信仰</option>
           </select>
+          <span className="form-helper">可先略過，之後在會員中心補上。</span>
         </div>
         <div className="form-group">
           <label className="form-label" htmlFor="country">
-            居住區域 <span className="required-badge">必填</span>
+            居住區域 <span className="optional-badge">選填</span>
           </label>
           <select
             className="form-select"
             id="country"
             value={form.country}
             onChange={updateField("country")}
-            required
           >
-            <option value="" disabled>
-              請選擇
+            <option value="">
+              暫不填寫
             </option>
             <option>台灣</option>
             <option>香港</option>
@@ -162,10 +161,11 @@ export default function SignupForm() {
             <option>阿根廷</option>
             <option>其他</option>
           </select>
+          <span className="form-helper">只用於內容在地化推薦，不影響帳號建立。</span>
         </div>
       </div>
 
-      <span className="form-section-title">帳戶與錢包</span>
+      <span className="form-section-title">帳戶資料</span>
       <div className="form-grid columns-2">
         <div className="form-group">
           <label className="form-label" htmlFor="signup-email">
@@ -240,7 +240,7 @@ export default function SignupForm() {
           className="form-label"
           style={{ fontWeight: 500, fontSize: "0.9rem", color: "var(--text-primary)" }}
         >
-          我已詳閱並同意 <a href="/whitepaper" target="_blank" rel="noreferrer">免責聲、白皮書</a>
+          我已詳閱並同意 <a href="/whitepaper" target="_blank" rel="noreferrer">白皮書與使用條款</a>
         </label>
       </div>
 
