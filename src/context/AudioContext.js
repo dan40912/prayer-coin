@@ -92,7 +92,19 @@ export function AudioProvider({ children }) {
       const audio = audioRef.current;
       const handlePlayEvent = () => setIsPlaying(true);
       const handlePauseEvent = () => setIsPlaying(false);
-      const handleErrorEvent = () => setIsPlaying(false);
+      const handleErrorEvent = () => {
+        setIsPlaying(false);
+        setCurrentIndex((prevIndex) => {
+          const total = playlistRef.current.length;
+          if (total === 0) return -1;
+          if (prevIndex >= 0 && prevIndex < total - 1) {
+            shouldAutoPlayRef.current = true;
+            return prevIndex + 1;
+          }
+          shouldAutoPlayRef.current = false;
+          return prevIndex;
+        });
+      };
 
       const updateProgress = () => {
         setProgress(audio.currentTime);

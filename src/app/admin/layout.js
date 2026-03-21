@@ -116,7 +116,7 @@ export default function AdminLayout({ children }) {
 
       <aside className={`admin-shell__sidebar${sidebarOpen ? " is-open" : ""}`}>
         <div className="admin-shell__brand">
-          <Image src="/img/logo.png" alt="Start Pray logo" width={42} height={42} />
+                  <Image src="/img/LOGO.PNG" alt="Start Pray logo" width={42} height={42} />
           <div>
             <p>START PRAY</p>
             <span>Admin Console</span>

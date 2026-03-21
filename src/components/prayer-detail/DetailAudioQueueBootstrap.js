@@ -87,7 +87,9 @@ export default function DetailAudioQueueBootstrap({
       setIsExpanded(false);
     } catch (error) {
       console.error("DetailAudioQueueBootstrap loadQueue failed", error);
-      setQueue([], -1);
+      // Keep primary prayer audio playable even if response API fails.
+      const fallbackQueue = primaryTrack ? [primaryTrack] : [];
+      setQueue(fallbackQueue, -1);
       setIsExpanded(false);
     }
   }, [requestId, primaryTrack, prayerTitle, setQueue, setIsExpanded]);

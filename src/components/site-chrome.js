@@ -89,7 +89,7 @@ export function SiteHeader({ activePath, hideAuthActions = false }) {
     <header className="site-header">
       <div className="container navbar">
         <Link className="logo" href="/" prefetch={false}>
-          <img className="logo-img" src="/img/logo.png" alt="Start Pray logo" />
+          <img className="logo-img" src="/img/LOGO.PNG" alt="Start Pray logo" />
           Start Pray
         </Link>
 
@@ -163,7 +163,7 @@ export function SiteFooter() {
         <div className="footer-top">
           <div className="footer-brand">
             <Link href="/" prefetch={false} aria-label="Start Pray homepage">
-              <img className="footer-logo" src="/img/logo.png" alt="Start Pray logo" />
+              <img className="footer-logo" src="/img/LOGO.PNG" alt="Start Pray logo" />
             </Link>
             <div>
               <strong>Start Pray</strong>
