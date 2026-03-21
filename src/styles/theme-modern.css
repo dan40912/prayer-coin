@@ -1582,6 +1582,10 @@ button {
   justify-content: space-between;
   gap: 0.8rem;
   pointer-events: auto;
+  background: transparent !important;
+  border: none;
+  box-shadow: none;
+  backdrop-filter: none;
 }
 
 .companion-overlay__close {

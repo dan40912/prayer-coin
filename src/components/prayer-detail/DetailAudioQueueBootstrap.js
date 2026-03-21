@@ -4,15 +4,17 @@ import { useCallback, useEffect, useMemo } from "react";
 
 import { useAudio } from "@/context/AudioContext";
 import { PRAYER_RESPONSE_CREATED } from "@/lib/events";
+import { normalizeAudioUrl } from "@/lib/media-url";
 
 const FALLBACK_SPEAKER = "Anonymous";
 const FALLBACK_TITLE = "Prayer Audio";
 
 function normalizePrimaryTrack(track, prayerTitle) {
-  if (!track?.voiceUrl) return null;
+  const voiceUrl = normalizeAudioUrl(track?.voiceUrl);
+  if (!voiceUrl) return null;
   return {
     id: track.id ?? "primary-track",
-    voiceUrl: track.voiceUrl,
+    voiceUrl,
     speaker: track.speaker?.trim() || FALLBACK_SPEAKER,
     message: track.message?.trim() || "",
     avatarUrl: track.avatarUrl?.trim() || "",
@@ -22,11 +24,12 @@ function normalizePrimaryTrack(track, prayerTitle) {
 }
 
 function normalizeResponseTrack(item, index, prayerTitle, fallbackCoverImage = "") {
-  if (!item?.voiceUrl) return null;
+  const voiceUrl = normalizeAudioUrl(item?.voiceUrl);
+  if (!voiceUrl) return null;
   const isAnonymous = Boolean(item.isAnonymous);
   return {
     id: item.id ?? `response-${index}`,
-    voiceUrl: item.voiceUrl,
+    voiceUrl,
     speaker: isAnonymous
       ? FALLBACK_SPEAKER
       : item.responder?.name?.trim() || item.responder?.email?.trim() || FALLBACK_SPEAKER,

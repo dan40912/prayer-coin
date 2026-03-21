@@ -1142,12 +1142,12 @@ export default function CustomerPortalPage() {
                   <strong className="home-stats__value">{renderUserStatValue(userStats.totalResponses)}</strong>
                   <p className="home-stats__hint">收到的禱告錄音回應</p>
                 </article>
-                <article className="home-stats__item">
+                {/* <article className="home-stats__item">
                   <span className="home-stats__icon" aria-hidden="true">⚠️</span>
                   <span className="home-stats__label">被檢舉數</span>
                   <strong className="home-stats__value">{renderUserStatValue(userStats.totalReports)}</strong>
                   <p className="home-stats__hint">累計的檢舉紀錄</p>
-                </article>
+                </article> */}
               </div>
             </section>
 

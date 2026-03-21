@@ -481,7 +481,6 @@ export default function GlobalPlayer() {
     return null;
   }
 
-  const waitingForPlay = companionEnabled && companionEntries.length > 0 && !isPlaying && activeCompanionIndex < 0;
   const overlayBackgroundStyle = overlayBackground ? { backgroundImage: `url(${overlayBackground})` } : undefined;
   const currentCompanionOrder =
     companionEntries.length > 0 && activeCompanionIndex >= 0 ? activeCompanionIndex + 1 : 0;
@@ -498,17 +497,7 @@ export default function GlobalPlayer() {
               <button type="button" className="companion-overlay__close" onClick={handleCloseOverlay}>
                 關閉
               </button>
-              <div className="companion-overlay__status">
-                <span>Companion Mode</span>
-                <button
-                  type="button"
-                  className={`player-companion__switch ${companionEnabled ? "is-on" : "is-off"}`}
-                  onClick={handleCompanionToggle}
-                  aria-pressed={companionEnabled}
-                >
-                  {companionEnabled ? "ON" : "OFF"}
-                </button>
-              </div>
+
             </header>
 
             <div className="companion-overlay__stage">
@@ -653,26 +642,6 @@ export default function GlobalPlayer() {
             </div>
           ) : null}
         </div>
-
-        {showCompanionPanel && !showCompanionOverlay ? (
-          <div className="player-companion-inline">
-            <button
-              type="button"
-              className={`player-companion__switch ${companionEnabled ? "is-on" : "is-off"}`}
-              onClick={handleCompanionToggle}
-              aria-pressed={companionEnabled}
-            >
-              Companion {companionEnabled ? "ON" : "OFF"}
-            </button>
-            <span>
-              {companionEnabled
-                ? waitingForPlay
-                  ? "按下播放後將進入陪伴模式"
-                  : "播放中會開啟沉浸陪伴模式"
-                : "已關閉陪伴模式"}
-            </span>
-          </div>
-        ) : null}
 
         {!showCompanionOverlay && showSpeakerBubble ? (
           <div className="pray-audio-modal__card pray-audio-modal__card--player" aria-live="polite">

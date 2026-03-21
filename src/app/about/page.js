@@ -73,7 +73,8 @@ export default function AboutPage() {
           <div>
             <span className="badge-soft">我們的故事 (OUR STORY)</span>
             {/* 優化標題：直指痛點，點出解決方案的核心價值 */}
-            <h1>Start Pray 與你一起代禱</h1>
+            <h1>
+              與你一起代禱</h1>
             <p>
               {/* 優化文案：更強調「無從開始幫助」的解決方案 */}
               你需要別人的禱告嗎? 你想聽聽別人為你禱告和祝福嗎? 

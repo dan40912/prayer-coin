@@ -67,7 +67,7 @@ export default function AdminLoginPage() {
     <main className="admin-auth admin-auth--simple">
       <section className="admin-auth__panel">
         <div className="admin-auth__brand">
-            <Image src="/img/LOGO.PNG" alt="Start Pray" width={56} height={56} className="admin-auth__logo" />
+            <Image src="/img/logo.png" alt="Start Pray" width={56} height={56} className="admin-auth__logo" />
           <div>
             <p className="admin-auth__eyebrow">START PRAY ADMIN</p>
             <h1 className="admin-auth__title">管理後台登入</h1>

@@ -1382,7 +1382,7 @@
 
 @media (max-width: 820px) {
   .pdv2-page {
-    padding-top: calc(var(--site-header-height, 72px) + 1rem);
+    padding-top: calc(var(--site-header-height, 72px) + 0.4rem);
     padding-bottom: 265px;
   }
 
@@ -1458,7 +1458,7 @@
 
 @media (max-width: 768px) {
   .pdv2-page {
-    padding: calc(var(--site-header-height, 72px) + 1rem) 0 1rem;
+    padding: calc(var(--site-header-height, 72px) + 0.35rem) 0 1rem;
   }
 
   .pdv2-nav-arrow {

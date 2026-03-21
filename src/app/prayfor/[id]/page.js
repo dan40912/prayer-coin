@@ -10,6 +10,7 @@ import {
   readRelatedHomeCards,
 } from "@/lib/homeCards";
 import { sanitizeHtmlForDisplay, sanitizeHtmlToPlainText } from "@/lib/htmlSanitizer";
+import { normalizeAudioUrl } from "@/lib/media-url";
 
 import "@/styles/theme-detail.css";
 
@@ -82,10 +83,11 @@ export default async function PrayerDetailPage({ params }) {
   const detailImage = card.image || "/img/categories/popular.jpg";
   const descriptionHtml = sanitizeHtmlForDisplay(card.description || "<p>目前尚無詳細內容</p>");
   const responseCount = Number(card?._count?.responses || 0);
-  const initialTrack = card.voiceHref
+  const normalizedVoiceHref = normalizeAudioUrl(card.voiceHref);
+  const initialTrack = normalizedVoiceHref
     ? {
         id: `primary-${card.id}`,
-        voiceUrl: card.voiceHref,
+        voiceUrl: normalizedVoiceHref,
         speaker: ownerName,
         message: card.title,
         avatarUrl: ownerAvatar,

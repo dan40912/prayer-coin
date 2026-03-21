@@ -9,6 +9,7 @@ import {
   useEffect,
   useMemo,
 } from "react";
+import { normalizeAudioUrl } from "@/lib/media-url";
 
 const AudioContext = createContext(null);
 const hasOwn = Object.prototype.hasOwnProperty;
@@ -16,13 +17,31 @@ const hasOwn = Object.prototype.hasOwnProperty;
 function getTrackKey(track) {
   if (!track) return null;
   if (track.id !== undefined && track.id !== null) return `id:${track.id}`;
-  if (track.voiceUrl) return `url:${track.voiceUrl}`;
+  const voiceUrl = normalizeAudioUrl(track.voiceUrl);
+  if (voiceUrl) return `url:${voiceUrl}`;
   return null;
 }
 
 function normalizeDuration(value) {
   if (!Number.isFinite(value) || value < 0) return 0;
   return value;
+}
+
+function sanitizeTrack(track) {
+  if (!track) return null;
+  const voiceUrl = normalizeAudioUrl(track.voiceUrl);
+  if (!voiceUrl) return null;
+  return { ...track, voiceUrl };
+}
+
+function shouldSkipToNextTrackOnPlayFailure(error) {
+  const name = String(error?.name || "");
+  const message = String(error?.message || "").toLowerCase();
+  if (name === "NotSupportedError") return true;
+  if (message.includes("not supported")) return true;
+  if (message.includes("no supported source")) return true;
+  if (message.includes("decode")) return true;
+  return false;
 }
 
 export function AudioProvider({ children }) {
@@ -75,8 +94,21 @@ export function AudioProvider({ children }) {
       playPromise
         .then(() => setIsPlaying(true))
         .catch((error) => {
-          shouldAutoPlayRef.current = false;
-          setIsPlaying(false);
+          if (shouldSkipToNextTrackOnPlayFailure(error)) {
+            setCurrentIndex((prevIndex) => {
+              const total = playlistRef.current.length;
+              if (total === 0) return -1;
+              if (prevIndex >= 0 && prevIndex < total - 1) {
+                shouldAutoPlayRef.current = true;
+                return prevIndex + 1;
+              }
+              shouldAutoPlayRef.current = false;
+              return prevIndex;
+            });
+          } else {
+            shouldAutoPlayRef.current = false;
+            setIsPlaying(false);
+          }
           console.error(errorLabel, error);
         });
       return;
@@ -168,36 +200,38 @@ export function AudioProvider({ children }) {
   }, [setDurationForTrack]);
 
   const playTrack = useCallback((track) => {
-    if (!track?.voiceUrl) return;
+    const nextTrack = sanitizeTrack(track);
+    if (!nextTrack) return;
 
     setPlaylist((prev) => {
-      const existingIndex = prev.findIndex(
+      const dedupedPrev = prev.map(sanitizeTrack).filter(Boolean);
+      const existingIndex = dedupedPrev.findIndex(
         (item) =>
-          (track.id && item.id === track.id) ||
-          (item.voiceUrl && item.voiceUrl === track.voiceUrl)
+          (nextTrack.id && item.id === nextTrack.id) ||
+          (item.voiceUrl && item.voiceUrl === nextTrack.voiceUrl)
       );
 
       if (existingIndex >= 0) {
         shouldAutoPlayRef.current = true;
         setCurrentIndex(existingIndex);
-        return prev;
+        return dedupedPrev;
       }
 
-      const deduped = prev.filter(
+      const deduped = dedupedPrev.filter(
         (item) =>
-          (track.id ? item.id !== track.id : true) &&
-          (item.voiceUrl ? item.voiceUrl !== track.voiceUrl : true)
+          (nextTrack.id ? item.id !== nextTrack.id : true) &&
+          (item.voiceUrl ? item.voiceUrl !== nextTrack.voiceUrl : true)
       );
       shouldAutoPlayRef.current = true;
       setCurrentIndex(0);
-      return [track, ...deduped];
+      return [nextTrack, ...deduped];
     });
     setIsExpanded(true);
   }, []);
 
   const setQueue = useCallback((tracks, startIndex = 0) => {
     const normalized = Array.isArray(tracks)
-      ? tracks.filter((track) => track?.voiceUrl)
+      ? tracks.map(sanitizeTrack).filter(Boolean)
       : [];
 
     setPlaylist(normalized);
@@ -246,7 +280,7 @@ export function AudioProvider({ children }) {
     if (!audio) return false;
     if (index < 0 || index >= tracks.length) return false;
 
-    const track = tracks[index];
+    const track = sanitizeTrack(tracks[index]);
     if (!track?.voiceUrl) return false;
     const targetKey = getTrackKey(track);
 
@@ -260,7 +294,7 @@ export function AudioProvider({ children }) {
     skipAutoPlayEffectRef.current = true;
 
     if (shouldSwitchTrack) {
-      audio.src = track.voiceUrl;
+      audio.src = normalizeAudioUrl(track.voiceUrl);
       loadedTrackKeyRef.current = targetKey;
       const knownDuration = normalizeDuration(trackDurationsRef.current[getTrackKey(track)]);
       setDuration(knownDuration);
@@ -423,8 +457,9 @@ export function AudioProvider({ children }) {
     const cleaners = [];
 
     playlist.forEach((track) => {
-      const key = getTrackKey(track);
-      if (!key || !track.voiceUrl) return;
+      const normalizedTrack = sanitizeTrack(track);
+      const key = getTrackKey(normalizedTrack);
+      if (!key || !normalizedTrack?.voiceUrl) return;
       if (hasOwn.call(trackDurationsRef.current, key)) return;
       if (probingKeysRef.current.has(key)) return;
 
@@ -447,7 +482,7 @@ export function AudioProvider({ children }) {
 
       probe.addEventListener("loadedmetadata", onMetadata);
       probe.addEventListener("error", onError);
-      probe.src = track.voiceUrl;
+      probe.src = normalizeAudioUrl(normalizedTrack.voiceUrl);
       probe.load();
 
       cleaners.push(() => {
@@ -465,12 +500,16 @@ export function AudioProvider({ children }) {
   // Handle track changes
   useEffect(() => {
     if (currentIndex >= 0 && playlist[currentIndex] && audioRef.current) {
-      const track = playlist[currentIndex];
+      const track = sanitizeTrack(playlist[currentIndex]);
+      if (!track) {
+        setIsPlaying(false);
+        return;
+      }
       const audio = audioRef.current;
       const targetKey = getTrackKey(track);
       const shouldSwitchTrack = loadedTrackKeyRef.current !== targetKey;
       if (shouldSwitchTrack) {
-        audio.src = track.voiceUrl;
+        audio.src = normalizeAudioUrl(track.voiceUrl);
         loadedTrackKeyRef.current = targetKey;
         const knownDuration = normalizeDuration(trackDurationsRef.current[getTrackKey(track)]);
         setDuration(knownDuration);
