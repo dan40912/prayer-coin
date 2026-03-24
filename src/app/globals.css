@@ -1924,22 +1924,42 @@ textarea.form-control:focus {
 }
 
 .dashboard-card__header {
+  position: static;
+  top: auto;
+  left: auto;
+  right: auto;
+  width: 100%;
+  z-index: auto;
+  background: transparent;
+  border-bottom: 0;
+  backdrop-filter: none;
   display: flex;
   justify-content: space-between;
   gap: 1rem;
   align-items: flex-start;
+  flex-wrap: wrap;
+  min-width: 0;
+}
+
+.dashboard-card__header > div {
+  flex: 1 1 220px;
+  min-width: 0;
 }
 
 .dashboard-card__header h2 {
   margin: 0 0 0.4rem;
   font-size: 1.4rem;
   color: #1d2150;
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 .dashboard-card__header p {
   margin: 0;
   color: #6c7299;
   font-size: 0.95rem;
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 .dashboard-card__image {
@@ -2129,6 +2149,18 @@ textarea.form-control:focus {
   display: grid;
   grid-template-columns: 260px 1fr;
   background: #f2f4ff;
+}
+
+.admin-shell header {
+  position: static;
+  top: auto;
+  left: auto;
+  right: auto;
+  width: auto;
+  z-index: auto;
+  background: transparent;
+  border-bottom: 0;
+  backdrop-filter: none;
 }
 
 .admin-shell__backdrop {

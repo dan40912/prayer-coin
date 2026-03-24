@@ -5,17 +5,19 @@ import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 
+import AdminRouteHints from "@/components/admin/AdminRouteHints";
+
 const ADMIN_RESTRICTED_PATHS = ["/admin/users", "/admin/wallet", "/admin/log", "/admin/settings"];
 
 const NAV_ITEMS = [
-  { href: "/admin/dashboard", label: "總覽", roles: ["SUPER", "ADMIN"] },
-  { href: "/admin/prayfor", label: "代禱牆管理", roles: ["SUPER", "ADMIN"] },
-  { href: "/admin/prayerresponse", label: "回應管理", roles: ["SUPER", "ADMIN"] },
-  { href: "/admin/content", label: "首頁 Banner", roles: ["SUPER", "ADMIN"] },
-  { href: "/admin/home-categories", label: "分類管理", roles: ["SUPER", "ADMIN"] },
-  { href: "/admin/wallet", label: "錢包與交易", roles: ["SUPER"] },
-  { href: "/admin/log", label: "操作紀錄", roles: ["SUPER"] },
-  { href: "/admin/settings", label: "系統設定", roles: ["SUPER"] },
+  { href: "/admin/dashboard", label: "儀表板", roles: ["SUPER", "ADMIN"] },
+  { href: "/admin/prayfor", label: "禱告事項", roles: ["SUPER", "ADMIN"] },
+  { href: "/admin/prayerresponse", label: "留言與錄音", roles: ["SUPER", "ADMIN"] },
+  { href: "/admin/content", label: "Banner 內容", roles: ["SUPER", "ADMIN"] },
+  { href: "/admin/home-categories", label: "首頁分類", roles: ["SUPER", "ADMIN"] },
+  { href: "/admin/wallet", label: "代幣管理", roles: ["SUPER"] },
+  { href: "/admin/log", label: "系統紀錄", roles: ["SUPER"] },
+  { href: "/admin/settings", label: "權限設定", roles: ["SUPER"] },
 ];
 
 async function fetchAdminSession() {
@@ -80,7 +82,7 @@ export default function AdminLayout({ children }) {
 
   const currentNavLabel = useMemo(() => {
     const active = visibleNavItems.find((item) => pathname.startsWith(item.href));
-    return active?.label || "管理後台";
+    return active?.label || "後台登入";
   }, [pathname, visibleNavItems]);
 
   const profileName = session?.username ?? "Admin";
@@ -99,7 +101,7 @@ export default function AdminLayout({ children }) {
   if (!isReady) {
     return (
       <main className="admin-shell admin-shell--loading">
-        <div className="admin-shell__loading">正在驗證管理員身份…</div>
+        <div className="admin-shell__loading">載入管理後台中...</div>
       </main>
     );
   }
@@ -116,7 +118,7 @@ export default function AdminLayout({ children }) {
 
       <aside className={`admin-shell__sidebar${sidebarOpen ? " is-open" : ""}`}>
         <div className="admin-shell__brand">
-                  <Image src="/img/logo.png" alt="Start Pray logo" width={42} height={42} />
+          <Image src="/img/logo.png" alt="Start Pray logo" width={42} height={42} />
           <div>
             <p>START PRAY</p>
             <span>Admin Console</span>
@@ -159,7 +161,7 @@ export default function AdminLayout({ children }) {
               type="button"
               className="admin-shell__menu-toggle"
               onClick={() => setSidebarOpen((prev) => !prev)}
-              aria-label="切換管理側欄"
+              aria-label="切換側邊欄"
               aria-expanded={sidebarOpen}
             >
               <span aria-hidden="true">☰</span>
@@ -171,12 +173,13 @@ export default function AdminLayout({ children }) {
           </div>
           <div className="admin-shell__topbar-actions">
             <Link href="/prayfor" className="button button--ghost" prefetch={false}>
-              回前台
+              前台首頁
             </Link>
           </div>
         </div>
 
         <div className="admin-shell__scroll">
+          <AdminRouteHints pathname={pathname} />
           <div className="admin-shell__content">{children}</div>
         </div>
       </div>

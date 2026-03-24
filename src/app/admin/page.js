@@ -23,7 +23,7 @@ export default function AdminLoginPage() {
           router.replace("/admin/dashboard");
         }
       } catch (err) {
-        console.error("檢查管理員 session 失敗", err);
+        // noop
       }
     };
 
@@ -67,10 +67,10 @@ export default function AdminLoginPage() {
     <main className="admin-auth admin-auth--simple">
       <section className="admin-auth__panel">
         <div className="admin-auth__brand">
-            <Image src="/img/logo.png" alt="Start Pray" width={56} height={56} className="admin-auth__logo" />
+          <Image src="/img/logo.png" alt="Start Pray" width={56} height={56} className="admin-auth__logo" />
           <div>
             <p className="admin-auth__eyebrow">START PRAY ADMIN</p>
-            <h1 className="admin-auth__title">管理後台登入</h1>
+            <h1 className="admin-auth__title">後台登入</h1>
             <p className="admin-auth__subtitle">請輸入帳號密碼與 2FA OTP 以繼續。</p>
           </div>
         </div>
@@ -105,13 +105,16 @@ export default function AdminLoginPage() {
           </div>
 
           <div className="admin-auth__form-group">
-            <label htmlFor="twoFactor">2FA OTP</label>
+            <label htmlFor="twoFactor">
+              2FA OTP
+              <span className="admin-auth__hint">Authenticator App 6 碼</span>
+            </label>
             <input
               id="twoFactor"
               type="text"
               inputMode="numeric"
               maxLength={6}
-              placeholder="6 位數 OTP"
+              placeholder="6 碼 OTP"
               value={twoFactor}
               onChange={(event) => setTwoFactor(event.target.value)}
               disabled={submitting}

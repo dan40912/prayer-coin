@@ -1,9 +1,13 @@
-﻿"use client";
+"use client";
 
 import { useEffect, useState } from "react";
+
+import AdminHintPanel from "@/components/admin/AdminHintPanel";
+import { useAdminFeedback } from "@/components/admin/useAdminFeedback";
 import { useDebouncedValue } from "@/hooks/useDebouncedValue";
 
 export default function AdminPrayerResponsePage() {
+  const { feedbackNode, confirmAction, notifyError, notifySuccess } = useAdminFeedback();
   const [responses, setResponses] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -14,33 +18,39 @@ export default function AdminPrayerResponsePage() {
     total: 0,
     totalPages: 1,
   });
+  const [actionId, setActionId] = useState(null);
   const debouncedSearch = useDebouncedValue(search, 400);
 
-  // 載入留言資料
   const loadResponses = async () => {
     try {
       setLoading(true);
+      setError("");
       const res = await fetch(
         `/api/admin/prayerresponse?search=${debouncedSearch}&status=${statusFilter}&page=${page}&limit=10`,
-        { cache: "no-store" }
+        { cache: "no-store" },
       );
       if (!res.ok) throw new Error("無法取得留言");
       const data = await res.json();
-      setResponses(data.data);
-      setPagination(data.pagination);
+      setResponses(data.data ?? []);
+      setPagination(data.pagination ?? { total: 0, totalPages: 1 });
     } catch (err) {
-      setError(err.message);
+      setError(err.message || "無法取得留言");
     } finally {
       setLoading(false);
     }
   };
 
-  // 切換封鎖狀態
   const handleToggleBlock = async (id, block) => {
-    const shouldContinue = confirm(block ? "確定要封鎖這則回應？" : "確定要解除封鎖這則回應？");
+    const shouldContinue = await confirmAction({
+      title: block ? "確認封鎖回應" : "確認解除封鎖",
+      message: block ? "封鎖後該留言將不再顯示。": "解除封鎖後該留言將回復顯示。",
+      confirmText: block ? "確認封鎖" : "確認解除",
+      tone: "warning",
+    });
     if (!shouldContinue) return;
 
     try {
+      setActionId(id);
       const res = await fetch(`/api/admin/prayerresponse/${id}/block`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
@@ -48,13 +58,17 @@ export default function AdminPrayerResponsePage() {
       });
       if (!res.ok) throw new Error("更新失敗");
       await loadResponses();
+      notifySuccess(block ? "已封鎖留言" : "已解除封鎖");
     } catch (err) {
-      alert("❌ " + err.message);
+      notifyError(err.message || "更新失敗");
+    } finally {
+      setActionId(null);
     }
   };
 
   useEffect(() => {
     loadResponses();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [page, debouncedSearch, statusFilter]);
 
   return (
@@ -66,11 +80,18 @@ export default function AdminPrayerResponsePage() {
         </div>
       </header>
 
+      <AdminHintPanel
+        title="審核提示"
+        tone="warning"
+        description="留言與錄音建議先看作者與內容上下文，再執行封鎖。"
+        items={["先用關鍵字搜尋定位事件。", "封鎖前請先確認檢舉次數與建立時間。"]}
+      />
+
       <section className="admin-section__card">
         <header className="admin-section__card-header">
           <div>
             <h2>留言清單</h2>
-            <p>管理所有祈禱回應與錄音。</p>
+            <p>管理祈禱回應與錄音內容。</p>
           </div>
           <div className="admin-section__filters">
             <input
@@ -140,8 +161,9 @@ export default function AdminPrayerResponsePage() {
                         <button
                           className="link-button"
                           onClick={() => handleToggleBlock(resp.id, !resp.isBlocked)}
+                          disabled={actionId === resp.id}
                         >
-                          {resp.isBlocked ? "解除封鎖" : "封鎖"}
+                          {actionId === resp.id ? "處理中..." : resp.isBlocked ? "解除封鎖" : "封鎖"}
                         </button>
                       </td>
                     </tr>
@@ -152,27 +174,22 @@ export default function AdminPrayerResponsePage() {
           </div>
         )}
 
-        {/* 分頁控制 */}
         <div className="pagination">
-          <button
-            disabled={page <= 1}
-            onClick={() => setPage((p) => Math.max(1, p - 1))}
-          >
+          <button disabled={page <= 1} onClick={() => setPage((p) => Math.max(1, p - 1))}>
             上一頁
           </button>
           <span>
-            第 {page} / {pagination.totalPages} 頁
+            第 {page} / {pagination.totalPages || 1} 頁
           </span>
           <button
-            disabled={page >= pagination.totalPages}
-            onClick={() =>
-              setPage((p) => Math.min(pagination.totalPages, p + 1))
-            }
+            disabled={page >= (pagination.totalPages || 1)}
+            onClick={() => setPage((p) => Math.min(pagination.totalPages || 1, p + 1))}
           >
             下一頁
           </button>
         </div>
       </section>
+      {feedbackNode}
     </div>
   );
 }

@@ -2,6 +2,9 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 
+import AdminHintPanel from "@/components/admin/AdminHintPanel";
+import { useAdminFeedback } from "@/components/admin/useAdminFeedback";
+
 const numberFormatter = new Intl.NumberFormat("zh-TW", { maximumFractionDigits: 0 });
 const percentFormatter = new Intl.NumberFormat("zh-TW", {
   style: "percent",
@@ -23,16 +26,25 @@ const INITIAL_METRICS = {
   averageWallet: 0,
 };
 
-const formatInteger = (value) =>
-  numberFormatter.format(Math.max(0, Math.round(Number.isFinite(value) ? value : Number(value) || 0)));
+function formatInteger(value) {
+  return numberFormatter.format(Math.max(0, Math.round(Number(value) || 0)));
+}
 
-const formatPercent = (value) =>
-  percentFormatter.format(Math.max(0, Number.isFinite(value) ? value : Number(value) || 0));
+function formatPercent(value) {
+  return percentFormatter.format(Math.max(0, Number(value) || 0));
+}
 
-const formatCurrency = (value) =>
-  currencyFormatter.format(Number.isFinite(value) ? value : Number(value) || 0);
+function formatCurrency(value) {
+  return currencyFormatter.format(Number(value) || 0);
+}
+
+function csvEscape(value) {
+  const text = value === null || value === undefined ? "" : String(value);
+  return `"${text.replace(/"/g, '""')}"`;
+}
 
 export default function AdminDashboardPage() {
+  const { feedbackNode, notifyError, notifySuccess } = useAdminFeedback();
   const [metrics, setMetrics] = useState(INITIAL_METRICS);
   const [metricsLoading, setMetricsLoading] = useState(true);
   const [metricsError, setMetricsError] = useState("");
@@ -67,7 +79,7 @@ export default function AdminDashboardPage() {
       ]);
 
       if (!overallRes.ok || !blockedRes.ok || !prayersRes.ok || !responsesRes.ok) {
-        throw new Error("載入儀表板指標失敗");
+        throw new Error("無法載入儀表板指標");
       }
 
       const [overallData, blockedData, prayersData, responsesData] = await Promise.all([
@@ -78,31 +90,24 @@ export default function AdminDashboardPage() {
       ]);
 
       const totalUsers = overallData.pagination?.total ?? overallData.summary?.totalUsers ?? 0;
-      const blockedUsers =
-        blockedData.pagination?.total ?? overallData.summary?.blockedUsers ?? 0;
+      const blockedUsers = blockedData.pagination?.total ?? overallData.summary?.blockedUsers ?? 0;
       const totalPrayers = prayersData.pagination?.total ?? 0;
       const totalResponses = responsesData.pagination?.total ?? 0;
-
       const averageWalletRaw =
         typeof overallData.summary?.averageWalletBalance === "number"
           ? overallData.summary.averageWalletBalance
           : 0;
-
-      const averageWallet = Number.isFinite(averageWalletRaw)
-        ? Math.round(averageWalletRaw * 100) / 100
-        : 0;
 
       setMetrics({
         totalUsers,
         blockedUsers,
         totalPrayers,
         totalResponses,
-        averageWallet,
+        averageWallet: Number.isFinite(averageWalletRaw) ? averageWalletRaw : 0,
       });
       setLastUpdated(new Date());
     } catch (error) {
-      console.error("載入儀表板指標失敗:", error);
-      setMetricsError(error.message || "載入儀表板指標失敗");
+      setMetricsError(error.message || "無法載入儀表板指標");
     } finally {
       setMetricsLoading(false);
     }
@@ -119,20 +124,14 @@ export default function AdminDashboardPage() {
         limit: "5",
       });
 
-      const res = await fetch(`/api/admin/users?${params.toString()}`, {
-        cache: "no-store",
-      });
-
-      if (!res.ok) {
-        throw new Error("無法取得高風險用戶清單");
-      }
+      const res = await fetch(`/api/admin/users?${params.toString()}`, { cache: "no-store" });
+      if (!res.ok) throw new Error("無法載入高風險使用者");
 
       const data = await res.json();
       const items = (data.data ?? []).filter((user) => (user.reportCount ?? 0) > 0);
       setHighRiskUsers(items);
     } catch (error) {
-      console.error("載入高風險用戶失敗:", error);
-      setHighRiskUsersError(error.message || "無法取得高風險用戶清單");
+      setHighRiskUsersError(error.message || "無法載入高風險使用者");
     } finally {
       setHighRiskUsersLoading(false);
     }
@@ -150,20 +149,14 @@ export default function AdminDashboardPage() {
         status: "active",
       });
 
-      const res = await fetch(`/api/admin/prayfor?${params.toString()}`, {
-        cache: "no-store",
-      });
-
-      if (!res.ok) {
-        throw new Error("無法取得禱告事項清單");
-      }
+      const res = await fetch(`/api/admin/prayfor?${params.toString()}`, { cache: "no-store" });
+      if (!res.ok) throw new Error("無法載入高風險禱告事項");
 
       const data = await res.json();
       const items = (data.data ?? []).filter((item) => !item.isBlocked);
       setHighRiskPrayers(items);
     } catch (error) {
-      console.error("載入禱告待審清單失敗:", error);
-      setHighRiskPrayersError(error.message || "無法取得禱告事項清單");
+      setHighRiskPrayersError(error.message || "無法載入高風險禱告事項");
     } finally {
       setHighRiskPrayersLoading(false);
     }
@@ -173,7 +166,7 @@ export default function AdminDashboardPage() {
     loadMetrics();
     loadHighRiskUsers();
     loadHighRiskPrayers();
-  }, [loadMetrics, loadHighRiskUsers, loadHighRiskPrayers]);
+  }, [loadMetrics, loadHighRiskPrayers, loadHighRiskUsers]);
 
   const handleBlockUser = async (userId, nextState) => {
     try {
@@ -183,14 +176,12 @@ export default function AdminDashboardPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ block: nextState }),
       });
-
-      if (!res.ok) {
-        throw new Error("更新用戶狀態失敗");
-      }
+      if (!res.ok) throw new Error("更新使用者狀態失敗");
 
       await Promise.all([loadHighRiskUsers(), loadMetrics()]);
+      notifySuccess(nextState ? "已封鎖使用者" : "已解除封鎖");
     } catch (error) {
-      alert(`⚠ ${error.message}`);
+      notifyError(error.message || "更新使用者狀態失敗");
     } finally {
       setUserActionId(null);
     }
@@ -204,14 +195,12 @@ export default function AdminDashboardPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ id: prayerId, block: true }),
       });
-
-      if (!res.ok) {
-        throw new Error("封鎖禱告事項失敗");
-      }
+      if (!res.ok) throw new Error("更新禱告事項狀態失敗");
 
       await loadHighRiskPrayers();
+      notifySuccess("已封鎖禱告事項");
     } catch (error) {
-      alert(`⚠ ${error.message}`);
+      notifyError(error.message || "更新禱告事項狀態失敗");
     } finally {
       setPrayerActionId(null);
     }
@@ -223,29 +212,22 @@ export default function AdminDashboardPage() {
     try {
       setExporting(true);
       const rows = [];
-
-      rows.push(["儀表板指標", "數值"]);
-      rows.push(["總註冊用戶數", metrics.totalUsers]);
-      rows.push(["封鎖用戶數", metrics.blockedUsers]);
-      rows.push([
-        "封鎖用戶比例",
-        metrics.totalUsers > 0
-          ? `${((metrics.blockedUsers / metrics.totalUsers) * 100).toFixed(1)}%`
-          : "0%",
-      ]);
-      rows.push(["總禱告事項數", metrics.totalPrayers]);
-      rows.push(["總禱告回應數", metrics.totalResponses]);
-      rows.push(["平均錢包餘額 (NT$)", metrics.averageWallet.toFixed(2)]);
+      rows.push(["儀表板概覽", "數值"]);
+      rows.push(["總使用者", metrics.totalUsers]);
+      rows.push(["封鎖使用者", metrics.blockedUsers]);
+      rows.push(["禱告事項數", metrics.totalPrayers]);
+      rows.push(["留言數", metrics.totalResponses]);
+      rows.push(["平均錢包餘額", metrics.averageWallet.toFixed(2)]);
 
       rows.push([]);
-      rows.push(["高風險用戶 Top 5"]);
+      rows.push(["高風險使用者 Top 5"]);
       rows.push(["姓名", "Email", "檢舉次數", "狀態"]);
       if (highRiskUsers.length === 0) {
-        rows.push(["目前無資料", "", "", ""]);
+        rows.push(["無資料", "", "", ""]);
       } else {
         highRiskUsers.forEach((user) => {
           rows.push([
-            user.name || "未設定",
+            user.name || "未命名",
             user.email,
             user.reportCount ?? 0,
             user.isBlocked ? "Blocked" : "Active",
@@ -254,33 +236,22 @@ export default function AdminDashboardPage() {
       }
 
       rows.push([]);
-      rows.push(["待審禱告事項 Top 5"]);
-      rows.push(["標題", "建立者", "檢舉次數", "狀態"]);
+      rows.push(["高風險禱告事項 Top 5"]);
+      rows.push(["標題", "作者", "檢舉次數", "狀態"]);
       if (highRiskPrayers.length === 0) {
-        rows.push(["目前無資料", "", "", ""]);
+        rows.push(["無資料", "", "", ""]);
       } else {
         highRiskPrayers.forEach((item) => {
           rows.push([
             item.title,
-            item.owner?.name || item.owner?.email || "未提供",
+            item.owner?.name || item.owner?.email || "匿名",
             item.reportCount ?? 0,
             item.isBlocked ? "Blocked" : "Active",
           ]);
         });
       }
 
-      const csv = rows
-        .map((row) =>
-          row
-            .map((cell) => {
-              const value = cell ?? "";
-              const text = typeof value === "number" ? value.toString() : String(value);
-              return `"${text.replace(/"/g, '""')}"`;
-            })
-            .join(",")
-        )
-        .join("\n");
-
+      const csv = rows.map((row) => row.map(csvEscape).join(",")).join("\n");
       const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
       const url = URL.createObjectURL(blob);
       const link = document.createElement("a");
@@ -290,90 +261,59 @@ export default function AdminDashboardPage() {
       link.click();
       link.remove();
       URL.revokeObjectURL(url);
+      notifySuccess("儀表板報表已匯出");
     } catch (error) {
-      console.error("匯出儀表板失敗:", error);
-      alert("⚠ 匯出失敗，請稍後再試");
+      notifyError("匯出失敗，請稍後再試");
     } finally {
       setExporting(false);
     }
   };
 
   const blockedRatio = useMemo(() => {
-    if (!metrics.totalUsers || metrics.totalUsers <= 0) return 0;
+    if (!metrics.totalUsers) return 0;
     return Math.min(Math.max(metrics.blockedUsers / metrics.totalUsers, 0), 1);
   }, [metrics.blockedUsers, metrics.totalUsers]);
 
-  const metricCards = useMemo(() => {
-    const walletValue = Number.isFinite(metrics.averageWallet)
-      ? Math.round(metrics.averageWallet * 100) / 100
-      : 0;
-
-    return [
-      {
-        id: "total-users",
-        label: "總註冊用戶數",
-        value: formatInteger(metrics.totalUsers),
-        footnote: "含所有狀態",
-      },
-      {
-        id: "blocked-ratio",
-        label: "封鎖用戶比例",
-        value: formatPercent(blockedRatio),
-        footnote: `${formatInteger(metrics.blockedUsers)} 人封鎖中`,
-      },
-      {
-        id: "total-prayers",
-        label: "總禱告事項數",
-        value: formatInteger(metrics.totalPrayers),
-        footnote: "PrayFor Cards",
-      },
-      {
-        id: "total-responses",
-        label: "總禱告回應數",
-        value: formatInteger(metrics.totalResponses),
-        footnote: "涵蓋全部回應狀態",
-      },
-      {
-        id: "average-wallet",
-        label: "平均用戶錢包餘額",
-        value: formatCurrency(walletValue),
-        footnote: walletValue > 0 ? "以新台幣計價" : "目前無有效餘額資料",
-      },
-    ];
-  }, [blockedRatio, metrics.averageWallet, metrics.blockedUsers, metrics.totalPrayers, metrics.totalResponses, metrics.totalUsers]);
+  const metricCards = useMemo(
+    () => [
+      { id: "total-users", label: "總使用者", value: formatInteger(metrics.totalUsers), footnote: "全站帳號數" },
+      { id: "blocked-ratio", label: "封鎖比例", value: formatPercent(blockedRatio), footnote: `${formatInteger(metrics.blockedUsers)} 人` },
+      { id: "total-prayers", label: "禱告事項", value: formatInteger(metrics.totalPrayers), footnote: "總卡片數" },
+      { id: "total-responses", label: "留言與錄音", value: formatInteger(metrics.totalResponses), footnote: "總回應數" },
+      { id: "average-wallet", label: "平均錢包餘額", value: formatCurrency(metrics.averageWallet), footnote: "系統內點數" },
+    ],
+    [blockedRatio, metrics.averageWallet, metrics.blockedUsers, metrics.totalPrayers, metrics.totalResponses, metrics.totalUsers],
+  );
 
   return (
     <div className="admin-section">
       <header className="admin-dashboard__header">
         <div>
-          <p className="admin-dashboard__eyebrow">START PRAY 後台</p>
+          <p className="admin-dashboard__eyebrow">START PRAY ADMIN</p>
           <h1>儀表板總覽</h1>
-          <p>即時掌握平台健康度，並快速處理需要注意的高風險項目。</p>
+          <p>快速檢視平台指標與高風險名單，作為日常巡檢入口。</p>
         </div>
         <div className="admin-dashboard__header-actions">
-          {lastUpdated ? (
-            <span className="admin-dashboard__timestamp">
-              最後更新：{lastUpdated.toLocaleString()}
-            </span>
-          ) : null}
-          <button
-            type="button"
-            className="button button--primary"
-            onClick={handleExport}
-            disabled={metricsLoading || exporting}
-          >
-            {exporting ? "匯出中…" : "匯出試算表"}
+          {lastUpdated ? <span className="admin-dashboard__timestamp">最後更新：{lastUpdated.toLocaleString()}</span> : null}
+          <button type="button" className="button button--primary" onClick={handleExport} disabled={metricsLoading || exporting}>
+            {exporting ? "匯出中..." : "匯出報表"}
           </button>
         </div>
       </header>
 
+      <AdminHintPanel
+        title="巡檢提示"
+        description="儀表板適合快速巡檢。若要大量處理，請進入對應管理頁操作。"
+        items={["先看高風險名單，再切到 Users / Prayfor 做細部處理。", "建議每日固定時間匯出報表留存。"]}
+      />
+
       <section className="admin-dashboard__kpis">
         {metricsLoading ? (
-          Array.from({ length: 4 }).map((_, index) => (
+          Array.from({ length: 5 }).map((_, index) => (
             <article key={index} className="dashboard-kpi admin-dashboard--loading">
-              <p className="dashboard-kpi__label">載入中…</p>
+              <p className="dashboard-kpi__label">載入中...</p>
               <div className="dashboard-kpi__value-row">
-                <span className="dashboard-kpi__value">—</span>
+                <span className="dashboard-kpi__value">--</span>
               </div>
               <p className="dashboard-kpi__footnote">&nbsp;</p>
             </article>
@@ -402,22 +342,17 @@ export default function AdminDashboardPage() {
         <article className="dashboard-card">
           <header className="dashboard-card__header">
             <div>
-              <h2>高風險用戶清單</h2>
-              <p>依檢舉次數排序的 Top 5，用於快速評估是否需要封鎖。</p>
+              <h2>高風險使用者</h2>
+              <p>依檢舉次數排序，最多顯示 5 筆。</p>
             </div>
           </header>
 
           {highRiskUsersLoading ? (
-            <p>載入中…</p>
+            <p>載入中...</p>
           ) : highRiskUsersError ? (
-            <div>
-              <p className="error">{highRiskUsersError}</p>
-              <button type="button" className="link-button" onClick={loadHighRiskUsers}>
-                重新載入
-              </button>
-            </div>
+            <p className="error">{highRiskUsersError}</p>
           ) : highRiskUsers.length === 0 ? (
-            <p>目前沒有需要關注的高風險用戶。</p>
+            <p>目前沒有高風險使用者。</p>
           ) : (
             <table className="admin-table">
               <thead>
@@ -432,7 +367,7 @@ export default function AdminDashboardPage() {
               <tbody>
                 {highRiskUsers.map((user) => (
                   <tr key={user.id}>
-                    <td>{user.name || "未設定"}</td>
+                    <td>{user.name || "未命名"}</td>
                     <td>{user.email}</td>
                     <td>{user.reportCount ?? 0}</td>
                     <td>
@@ -449,11 +384,7 @@ export default function AdminDashboardPage() {
                         onClick={() => handleBlockUser(user.id, !user.isBlocked)}
                         disabled={userActionId === user.id}
                       >
-                        {userActionId === user.id
-                          ? "處理中…"
-                          : user.isBlocked
-                          ? "解除封鎖"
-                          : "封鎖"}
+                        {userActionId === user.id ? "處理中..." : user.isBlocked ? "解除封鎖" : "封鎖"}
                       </button>
                     </td>
                   </tr>
@@ -466,28 +397,23 @@ export default function AdminDashboardPage() {
         <article className="dashboard-card">
           <header className="dashboard-card__header">
             <div>
-              <h2>待審禱告事項</h2>
-              <p>依檢舉次數排序的 Top 5，封鎖後將立即從前台下架。</p>
+              <h2>高風險禱告事項</h2>
+              <p>顯示檢舉量較高且尚未封鎖的內容。</p>
             </div>
           </header>
 
           {highRiskPrayersLoading ? (
-            <p>載入中…</p>
+            <p>載入中...</p>
           ) : highRiskPrayersError ? (
-            <div>
-              <p className="error">{highRiskPrayersError}</p>
-              <button type="button" className="link-button" onClick={loadHighRiskPrayers}>
-                重新載入
-              </button>
-            </div>
+            <p className="error">{highRiskPrayersError}</p>
           ) : highRiskPrayers.length === 0 ? (
-            <p>目前沒有需要處理的禱告事項。</p>
+            <p>目前沒有高風險禱告事項。</p>
           ) : (
             <table className="admin-table">
               <thead>
                 <tr>
                   <th>標題</th>
-                  <th>建立者</th>
+                  <th>作者</th>
                   <th>檢舉次數</th>
                   <th>狀態</th>
                   <th>操作</th>
@@ -497,7 +423,7 @@ export default function AdminDashboardPage() {
                 {highRiskPrayers.map((item) => (
                   <tr key={item.id}>
                     <td>{item.title}</td>
-                    <td>{item.owner?.name || item.owner?.email || "未提供"}</td>
+                    <td>{item.owner?.name || item.owner?.email || "匿名"}</td>
                     <td>{item.reportCount ?? 0}</td>
                     <td>
                       {item.isBlocked ? (
@@ -516,7 +442,7 @@ export default function AdminDashboardPage() {
                           onClick={() => handleBlockPrayer(item.id)}
                           disabled={prayerActionId === item.id}
                         >
-                          {prayerActionId === item.id ? "處理中…" : "封鎖"}
+                          {prayerActionId === item.id ? "處理中..." : "封鎖"}
                         </button>
                       )}
                     </td>
@@ -527,8 +453,7 @@ export default function AdminDashboardPage() {
           )}
         </article>
       </section>
+      {feedbackNode}
     </div>
   );
 }
-
-

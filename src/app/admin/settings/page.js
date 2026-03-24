@@ -1,6 +1,8 @@
 ﻿"use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
+import AdminHintPanel from "@/components/admin/AdminHintPanel";
+import { useAdminFeedback } from "@/components/admin/useAdminFeedback";
 
 const ROLE_OPTIONS = [
   { value: "SUPER", label: "超級管理員" },
@@ -8,6 +10,7 @@ const ROLE_OPTIONS = [
 ];
 
 export default function SettingsPage() {
+  const { feedbackNode, confirmAction, notifyError, notifySuccess, notifyInfo } = useAdminFeedback();
   const [accounts, setAccounts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -157,6 +160,7 @@ export default function SettingsPage() {
 
       const data = await response.json();
       setSiteSettings(data);
+      notifySuccess(data.maintenanceMode ? "已啟用維護模式" : "已關閉維護模式");
     } catch (err) {
       console.error("切換維護模式錯誤:", err);
       setSettingsError(err.message || "更新維護模式失敗");
@@ -201,6 +205,7 @@ export default function SettingsPage() {
 
       setForm({ username: "", password: "", role: form.role });
       await loadAccounts();
+      notifySuccess("管理員帳號已建立");
     } catch (err) {
       setFormError(err.message);
     } finally {
@@ -210,9 +215,19 @@ export default function SettingsPage() {
 
   const handleToggleActive = async (account) => {
     if (sessionRole !== "SUPER") {
-      alert("沒有權限");
+      notifyError("沒有權限執行此操作");
       return;
     }
+
+    const shouldContinue = await confirmAction({
+      title: account.isActive ? "確認停用管理員" : "確認啟用管理員",
+      message: account.isActive
+        ? `停用 ${account.username} 後將無法登入後台。`
+        : `啟用 ${account.username} 後將可登入後台。`,
+      confirmText: account.isActive ? "確認停用" : "確認啟用",
+      tone: "warning",
+    });
+    if (!shouldContinue) return;
 
     try {
       const response = await fetch(`/api/admin/accounts/${account.id}`, {
@@ -229,14 +244,20 @@ export default function SettingsPage() {
       }
 
       await loadAccounts();
+      notifySuccess(account.isActive ? "管理員已停用" : "管理員已啟用");
     } catch (err) {
-      alert(`⚠ ${err.message}`);
+      notifyError(err.message || "更新失敗");
     }
   };
 
   const handleChangeRole = async (account, role) => {
     if (sessionRole !== "SUPER") {
-      alert("沒有權限");
+      notifyError("沒有權限執行此操作");
+      return;
+    }
+
+    if (role === account.role) {
+      notifyInfo("角色未變更");
       return;
     }
 
@@ -255,8 +276,9 @@ export default function SettingsPage() {
       }
 
       await loadAccounts();
+      notifySuccess(`已更新 ${account.username} 角色為 ${role}`);
     } catch (err) {
-      alert(`⚠ ${err.message}`);
+      notifyError(err.message || "更新角色失敗");
     }
   };
 
@@ -275,6 +297,12 @@ export default function SettingsPage() {
           <p>管理可以登入系統後台的管理員帳號與權限角色。</p>
         </div>
       </header>
+      <AdminHintPanel
+        title="權限安全提示"
+        tone="warning"
+        description="停用管理員、調整角色與維護模式都屬於高風險設定。"
+        items={["變更角色前，先確認至少保留一位可用 SUPER。", "建議在低峰時段切換維護模式。"]}
+      />
 
       <section className="admin-section__card">
         <header className="admin-section__card-header">
@@ -453,6 +481,7 @@ export default function SettingsPage() {
           </div>
         </form>
       </section>
+      {feedbackNode}
     </div>
   );
 }

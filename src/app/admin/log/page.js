@@ -1,6 +1,7 @@
 ﻿"use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
+import AdminHintPanel from "@/components/admin/AdminHintPanel";
 
 const CATEGORY_OPTIONS = [
   { value: "all", label: "全部" },
@@ -166,6 +167,11 @@ export default function AdminLogPage() {
           重新整理
         </button>
       </header>
+      <AdminHintPanel
+        title="排查提示"
+        description="建議先按類型與等級縮小範圍，再使用關鍵字查詢 requestPath 或 action。"
+        items={["先看近期 CRITICAL / ERROR。", "定位後再到對應模組頁面處理。"]}
+      />
 
       <section className="admin-section__card">
         <div className="admin-dashboard__kpis" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))" }}>

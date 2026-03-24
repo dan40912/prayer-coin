@@ -1,6 +1,8 @@
 ﻿"use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
+import AdminHintPanel from "@/components/admin/AdminHintPanel";
+import { useAdminFeedback } from "@/components/admin/useAdminFeedback";
 
 const PAGE_SIZE = 20;
 
@@ -85,6 +87,7 @@ function formatStatus(status) {
 }
 
 export default function AdminWalletPage() {
+  const { feedbackNode, confirmAction, notifyError, notifySuccess } = useAdminFeedback();
   const [transactions, setTransactions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -355,7 +358,7 @@ export default function AdminWalletPage() {
   const handleUpdateStatus = useCallback(
     async (transaction, targetStatus) => {
       if (!canViewTransactions) {
-        alert("沒有權限執行此操作");
+        notifyError("沒有權限執行此操作");
         return;
       }
 
@@ -381,13 +384,14 @@ export default function AdminWalletPage() {
         }
 
         await loadTransactions();
+        notifySuccess("交易狀態已更新");
       } catch (err) {
-        alert(err.message || "更新狀態失敗");
+        notifyError(err.message || "更新狀態失敗");
       } finally {
         setActionId(null);
       }
     },
-    [canViewTransactions, loadTransactions, sessionRole],
+    [canViewTransactions, loadTransactions, notifyError, notifySuccess, sessionRole],
   );
 
   const handleRuleInputChange = useCallback((field, value) => {
@@ -590,10 +594,16 @@ export default function AdminWalletPage() {
                             type="button"
                             className="link-button"
                             onClick={() => {
-                              const confirmed = window.confirm("確定要將此提領標記為失敗並退回款項？");
-                              if (confirmed) {
-                                handleUpdateStatus(transaction, "FAILED");
-                              }
+                              confirmAction({
+                                title: "確認標記提領失敗",
+                                message: "系統會嘗試回補款項，請確認要繼續。",
+                                confirmText: "確認標記失敗",
+                                tone: "danger",
+                              }).then((confirmed) => {
+                                if (confirmed) {
+                                  handleUpdateStatus(transaction, "FAILED");
+                                }
+                              });
                             }}
                             disabled={actionId === transaction.id}
                           >
@@ -764,6 +774,12 @@ export default function AdminWalletPage() {
           <p>管理 Start Pray 代幣發放、提領與使用者餘額。</p>
         </div>
       </header>
+      <AdminHintPanel
+        title="帳務安全提示"
+        tone="warning"
+        description="交易狀態變更會影響帳務，請先確認交易類型與目標狀態。"
+        items={["提領改為失敗前，先確認是否需要回補。", "狀態更新後可立即到發送歷史複核。"]}
+      />
 
       <div className="admin-tabs">
         {availableTabs.map((tab) => (
@@ -782,6 +798,7 @@ export default function AdminWalletPage() {
       {canViewTransactions && activeTab === "history" && renderHistory()}
       {canManageRules && activeTab === "rules" && renderRules()}
       {sessionRole === "SUPER" && activeTab === "balances" && renderBalances()}
+      {feedbackNode}
     </div>
   );
 }
