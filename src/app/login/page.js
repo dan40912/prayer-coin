@@ -5,8 +5,8 @@ import { SiteFooter, SiteHeader } from "@/components/site-chrome";
 import LoginForm from "./LoginForm";
 
 export const metadata = {
-  title: "Start Pray | 登入",
-  description: "登入 Start Pray 會員中心，管理你的禱告內容與互動紀錄。"
+  title: "登入 | Start Pray 一起禱告吧",
+  description: "登入 Start Pray 會員中心，管理你的禱告內容、留言互動與個人資料。"
 };
 
 export default function LoginPage() {

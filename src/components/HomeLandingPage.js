@@ -24,8 +24,8 @@ function normalizeCta(cta, fallback) {
 }
 
 export const metadata = {
-  title: "Start Pray | 禱告牆",
-  description: "在 Start Pray 發布代禱需求、為他人代禱，並透過聲音回應彼此陪伴。",
+  title: "首頁 | Start Pray 一起禱告吧",
+  description: "在 Start Pray 發佈禱告需求、收到文字與語音回應，讓每一份需要都被看見與陪伴。",
 };
 
 export default async function HomeLandingPage() {

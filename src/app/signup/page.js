@@ -4,8 +4,8 @@ import { SiteFooter, SiteHeader } from "@/components/site-chrome";
 import SignupForm from "./SignupForm";
 
 export const metadata = {
-  title: "Start Pray | 註冊帳戶",
-  description: "把你的聲音分享出去，讓別人聽見並回應，在陪伴中得到力量。"
+  title: "註冊 | Start Pray 一起禱告吧",
+  description: "建立 Start Pray 帳號，開始發佈禱告內容並用文字或語音彼此陪伴。"
 };
 
 const stepItems = [

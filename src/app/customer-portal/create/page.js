@@ -27,10 +27,23 @@ const INITIAL_FORM = {
   voiceHref: "",
 };
 
-const MAX_UPLOAD_BYTES = 5 * 1024 * 1024;
+const MAX_UPLOAD_BYTES = 10 * 1024 * 1024;
 const MAX_GALLERY_IMAGES = 3;
 const DRAFT_STORAGE_KEY = "customer-portal-create-draft-v1";
 const AUTO_SAVE_DELAY_MS = 700;
+const UPLOADS_PREFIX = "/uploads/";
+
+function isInternalUploadUrl(value) {
+  return typeof value === "string" && value.startsWith(UPLOADS_PREFIX);
+}
+
+function normalizeUploadedImage(item) {
+  if (!item || typeof item !== "object") return null;
+  const url = typeof item.url === "string" ? item.url.trim() : "";
+  if (!isInternalUploadUrl(url)) return null;
+  const name = typeof item.name === "string" && item.name.trim() ? item.name.trim() : "uploaded-image";
+  return { url, name };
+}
 
 export default function CustomerPortalCreatePage() {
   const authUser = useAuthSession();
@@ -66,10 +79,17 @@ export default function CustomerPortalCreatePage() {
       );
       if (!hasDraftContent) return;
 
-      setForm((prev) => ({ ...prev, ...draft.form }));
-      if (Array.isArray(draft.uploadedImages)) {
-        setUploadedImages(draft.uploadedImages.slice(0, MAX_GALLERY_IMAGES));
-      }
+      const safeUploadedImages = Array.isArray(draft.uploadedImages)
+        ? draft.uploadedImages
+            .map(normalizeUploadedImage)
+            .filter(Boolean)
+            .slice(0, MAX_GALLERY_IMAGES)
+        : [];
+      const draftCover = typeof draft?.form?.image === "string" ? draft.form.image.trim() : "";
+      const safeCoverImage = isInternalUploadUrl(draftCover) ? draftCover : safeUploadedImages[0]?.url || "";
+
+      setForm((prev) => ({ ...prev, ...draft.form, image: safeCoverImage }));
+      setUploadedImages(safeUploadedImages);
       if (Number.isFinite(draft.categoryId)) {
         setCategoryId((prev) => prev ?? draft.categoryId);
       }
@@ -192,7 +212,7 @@ export default function CustomerPortalCreatePage() {
     try {
       for (const file of selected) {
         if (file.size > MAX_UPLOAD_BYTES) {
-          lastError = `${file.name} 超過 5MB 限制`;
+          lastError = `${file.name} 超過 10MB 限制`;
           continue;
         }
 
@@ -211,7 +231,10 @@ export default function CustomerPortalCreatePage() {
           }
 
           const result = await response.json();
-          const image = { url: result.url, name: file.name };
+          const image = normalizeUploadedImage({ url: result.url, name: file.name });
+          if (!image) {
+            throw new Error("上傳圖片來源不合法，請重新上傳");
+          }
           if (!uploadedBatch.some((item) => item.url === image.url)) {
             uploadedBatch.push(image);
             successCount += 1;
@@ -279,6 +302,10 @@ export default function CustomerPortalCreatePage() {
       setStatus({ type: "error", message: "請至少上傳一張圖片" });
       return;
     }
+    if (!isInternalUploadUrl(coverImage)) {
+      setStatus({ type: "error", message: "封面圖片需使用站內上傳檔案，不能使用外部網址" });
+      return;
+    }
 
     if (!form.description.trim()) {
       setStatus({ type: "error", message: "請至少填寫一段代禱內容" });
@@ -292,7 +319,7 @@ export default function CustomerPortalCreatePage() {
       .split("\n")
       .map((line) => line.trim())
       .filter(Boolean);
-    const galleryUrls = uploadedImages.map((item) => item.url).filter(Boolean);
+    const galleryUrls = uploadedImages.map((item) => item.url).filter(isInternalUploadUrl);
 
     const payload = {
       title: form.title.trim(),
@@ -399,7 +426,7 @@ export default function CustomerPortalCreatePage() {
             </label> */}
           </div>
 
-          <div className="customer-create__row customer-create__row--equal">
+          <div className="customer-create__row">
             <label>
               <span>分類 *</span>
               <select
@@ -415,16 +442,6 @@ export default function CustomerPortalCreatePage() {
                 ))}
               </select>
             </label>
-            <label>
-              <span>封面圖片 URL *</span>
-              <input
-                type="text"
-                value={form.image}
-                onChange={updateFormField("image")}
-                placeholder="可貼上圖片網址，或用下方上傳"
-                required
-              />
-            </label>
           </div>
 
           <div className="customer-create__row">
@@ -438,7 +455,7 @@ export default function CustomerPortalCreatePage() {
                 disabled={isUploadingImage || uploadedImages.length >= MAX_GALLERY_IMAGES}
               />
               <small className="cp-helper">
-                支援 JPG、PNG、WEBP，每張上限 5MB，最多 {MAX_GALLERY_IMAGES} 張。可先上傳後再選為封面。
+                支援 JPG、PNG、WEBP，每張上限 10MB，最多 {MAX_GALLERY_IMAGES} 張。圖片上傳後會壓縮儲存；不支援外部圖片網址。
               </small>
             </label>
             {uploadedImages.length ? (

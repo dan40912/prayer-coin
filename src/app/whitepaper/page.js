@@ -1,9 +1,8 @@
 ﻿import { SiteFooter, SiteHeader } from "@/components/site-chrome";
 
 export const metadata = {
-  title: "Start Pray | 白皮書與使用條款",
-  // 優化：強調解決「無聲的呼求」與「不知如何回應」的困境
-  description: "Start Pray 技術路線圖：從中心化到去中心化，逐步提升平台透明度、可信度與內容永久性。",
+  title: "白皮書與條款 | Start Pray 一起禱告吧",
+  description: "查看 Start Pray 的技術路線圖、平台治理方向與使用條款說明。",
 };
 
 

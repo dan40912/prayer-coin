@@ -18,8 +18,8 @@ const poppins = Poppins({
 });
 
 export const metadata = {
-  title: "Start Pray",
-  description: "Start Pray 讓你可以發布代禱需求，也可以用聲音回應別人的需要。",
+  title: "Start Pray 一起禱告吧",
+  description: "在 Start Pray 發佈禱告需求、收到文字與語音回應，讓每一份需要都被看見與陪伴。",
 };
 
 export const dynamic = "force-dynamic";

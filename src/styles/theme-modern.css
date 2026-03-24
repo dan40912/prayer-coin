@@ -66,6 +66,10 @@ body {
   min-height: 100vh;
   overflow-x: hidden;
   position: relative;
+  padding-bottom: 0;
+}
+
+body.has-global-player {
   padding-bottom: calc(140px + env(safe-area-inset-bottom)); /* leave space for global player */
 }
 
@@ -1819,7 +1823,7 @@ body.companion-mode-active .pdv2-comments-card .comment-item.is-companion-active
 }
 
 @media (max-width: 768px) {
-  body {
+  body.has-global-player {
     padding-bottom: calc(184px + env(safe-area-inset-bottom));
   }
 
@@ -2074,7 +2078,7 @@ body.companion-mode-active .pdv2-comments-card .comment-item.is-companion-active
 }
 
 @media (max-width: 520px) {
-  body {
+  body.has-global-player {
     padding-bottom: calc(172px + env(safe-area-inset-bottom));
   }
 

@@ -39,14 +39,33 @@ function getAuthorName(card) {
   return card?.owner?.name?.trim?.() || "匿名使用者";
 }
 
+function buildPrayerMetaDescription(description) {
+  const plain = sanitizeHtmlToPlainText(description).replace(/\s+/g, " ").trim();
+  if (!plain) {
+    return "讓我們一起禱告，願這份需要被看見並得到回應。";
+  }
+  const snippet = plain.length > 120 ? `${plain.slice(0, 120).trim()}...` : plain;
+  return `讓我們一起禱告，${snippet}`;
+}
+
 export async function generateMetadata({ params }) {
   const id = parseId(params?.id);
-  if (!id) return {};
+  if (!id) {
+    return {
+      title: "禱告內容 | Start Pray 一起禱告吧",
+      description: "讓我們一起禱告，願這份需要被看見並得到回應。",
+    };
+  }
   const card = await readHomeCard(id);
-  if (!card) return {};
+  if (!card) {
+    return {
+      title: "禱告內容 | Start Pray 一起禱告吧",
+      description: "讓我們一起禱告，願這份需要被看見並得到回應。",
+    };
+  }
   return {
-    title: `${card.title} - Start Pray`,
-    description: sanitizeHtmlToPlainText(card.description) || "Join us in prayer.",
+    title: "禱告內容 | Start Pray 一起禱告吧",
+    description: buildPrayerMetaDescription(card.description),
   };
 }
 

@@ -1,5 +1,10 @@
 ﻿import { SiteFooter, SiteHeader } from "@/components/site-chrome";
 
+export const metadata = {
+  title: "免責聲明 | Start Pray 一起禱告吧",
+  description: "查看 Start Pray 的服務定位、使用原則、責任限制與資料保護說明。",
+};
+
 const TERMS_SECTIONS = [
   {
     title: "服務定位",

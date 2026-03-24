@@ -1,9 +1,8 @@
 ﻿import { SiteFooter, SiteHeader } from "@/components/site-chrome";
 
 export const metadata = {
-  title: "Start Pray | 關於我們",
-  // 優化：強調解決「無聲的呼求」與「不知如何回應」的困境
-  description: "認識 Start Pray 的使命、核心價值與團隊故事。我們正在將無聲的禱告，轉化為可被看見、被回應的溫暖行動。"
+  title: "關於我們 | Start Pray 一起禱告吧",
+  description: "認識 Start Pray 的使命、核心價值與團隊故事，一起讓陪伴與守望持續發生。"
 };
 
 const coreValues = [

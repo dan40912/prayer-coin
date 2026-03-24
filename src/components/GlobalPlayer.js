@@ -12,6 +12,7 @@ const FALLBACK_EMPTY_HINT = "目前尚未加入播放音訊，點選播放清單
 const COMPANION_ACTIVE_CLASS = "is-companion-active";
 const COMPANION_BODY_CLASS = "companion-mode-active";
 const COMPANION_OVERLAY_CLASS = "companion-overlay-open";
+const GLOBAL_PLAYER_BODY_CLASS = "has-global-player";
 const COMPANION_JUMP_EVENT = "companion:jump";
 
 const COMPANION_BADGES = ["正在為你代禱", "給你鼓勵", "送上祝福"];
@@ -122,6 +123,14 @@ export default function GlobalPlayer() {
   const [activeCompanionIndex, setActiveCompanionIndex] = useState(-1);
   const [companionPhase, setCompanionPhase] = useState("idle");
   const [companionNotice, setCompanionNotice] = useState("");
+
+  useEffect(() => {
+    if (typeof document === "undefined") return undefined;
+    document.body.classList.add(GLOBAL_PLAYER_BODY_CLASS);
+    return () => {
+      document.body.classList.remove(GLOBAL_PLAYER_BODY_CLASS);
+    };
+  }, []);
   const [companionLoading, setCompanionLoading] = useState(false);
   const [overlayBackground, setOverlayBackground] = useState("");
 

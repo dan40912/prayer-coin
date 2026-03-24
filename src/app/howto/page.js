@@ -2,8 +2,8 @@
 
 // 調整標題與描述，移除代幣相關字眼
 export const metadata = {
-  title: "Start Pray | 使用說明",
-  description: "瞭解如何快速發起禱告需求、分享給守望夥伴，並追蹤回應進度與守望成果。"
+  title: "使用說明 | Start Pray 一起禱告吧",
+  description: "一步步學會發佈禱告、分享連結、收集留言與語音回應，快速開始守望。"
 };
 
 // 調整 heroChecklist 移除代幣回饋，強調行動與成效

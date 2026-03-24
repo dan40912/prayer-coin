@@ -6,8 +6,8 @@ import { readHomeCards } from "@/lib/homeCards";
 export const dynamic = "force-dynamic";
 
 export const metadata = {
-  title: "Start Pray | 禱告牆",
-  description: "搜尋與瀏覽代禱牆卡片。",
+  title: "禱告牆 | Start Pray 一起禱告吧",
+  description: "瀏覽最新禱告事項，透過留言與語音一起守望，讓需要得到真實回應。",
 };
 
 const WALL_CARD_LIMIT = 24;
