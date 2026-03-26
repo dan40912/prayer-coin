@@ -554,11 +554,22 @@ button {
 
 .section.home-explorer > * {
   position: relative;
-  z-index: 1;
   width: 100%;
   max-width: min(1320px, 100%);
   margin-left: auto;
   margin-right: auto;
+}
+
+.section.home-explorer > .home-explorer__header {
+  z-index: 30;
+}
+
+.section.home-explorer > .home-category-grid {
+  z-index: 0;
+}
+
+.section.home-explorer > .home-cards {
+  z-index: 1;
 }
 
 .home-explorer__header h2,
@@ -634,7 +645,7 @@ button {
   margin: 0;
   font-size: 1.18rem;
   font-weight: 800;
-  color: #ffffff;
+  color: #ffffff !important;
   letter-spacing: 0.01em;
   text-shadow: 0 3px 12px rgba(2, 8, 23, 0.56);
 }
@@ -643,7 +654,7 @@ button {
   margin: 0;
   font-size: 0.92rem;
   font-weight: 600;
-  color: #ffffff;
+  color: #ffffff !important;
   line-height: 1.45;
 }
 
@@ -656,7 +667,7 @@ button {
 
 .home-explorer__suggestions {
   top: calc(100% + 0.55rem);
-  z-index: 300;
+  z-index: 1200;
   max-height: min(320px, 52vh);
   overflow-y: auto;
   border: 1px solid rgba(148, 163, 184, 0.32);

@@ -6434,11 +6434,11 @@ header .nav-user {
 }
 
 .home-explorer__search-title {
-  color: #ffffff;
+  color: #ffffff !important;
 }
 
 .home-explorer__search-helper {
-  color: #ffffff;
+  color: #ffffff !important;
 }
 
 .home-explorer__search-input {
@@ -6505,7 +6505,7 @@ header .nav-user {
   background: rgba(255, 255, 255, 0.97);
   border: 1px solid var(--border-soft);
   box-shadow: 0 18px 36px -16px rgba(15, 23, 42, 0.28);
-  z-index: 300;
+  z-index: 1200;
 }
 
 .home-explorer__suggestion {

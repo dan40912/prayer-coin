@@ -1,6 +1,6 @@
 ﻿"use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 
 const initialForm = {
@@ -15,10 +15,160 @@ const initialForm = {
   acceptedTerms: false
 };
 
+const COUNTRY_CATALOG = [
+  { value: "台灣", english: "Taiwan", aliases: ["taiwan", "tw", "臺灣"] },
+  { value: "香港", english: "Hong Kong", aliases: ["hong kong", "hk"] },
+  { value: "澳門", english: "Macau", aliases: ["macau", "macao"] },
+  { value: "中國", english: "China", aliases: ["china", "cn", "中國大陸", "大陆", "mainland china"] },
+  { value: "新加坡", english: "Singapore", aliases: ["singapore", "sg"] },
+  { value: "馬來西亞", english: "Malaysia", aliases: ["malaysia", "my"] },
+  { value: "日本", english: "Japan", aliases: ["japan", "jp"] },
+  { value: "韓國", english: "South Korea", aliases: ["south korea", "korea", "kr", "republic of korea"] },
+  { value: "泰國", english: "Thailand", aliases: ["thailand", "th"] },
+  { value: "越南", english: "Vietnam", aliases: ["vietnam", "vn"] },
+  { value: "菲律賓", english: "Philippines", aliases: ["philippines", "ph"] },
+  { value: "印尼", english: "Indonesia", aliases: ["indonesia", "id"] },
+  { value: "汶萊", english: "Brunei", aliases: ["brunei", "bn"] },
+  { value: "柬埔寨", english: "Cambodia", aliases: ["cambodia", "kh"] },
+  { value: "寮國", english: "Laos", aliases: ["laos", "la"] },
+  { value: "緬甸", english: "Myanmar", aliases: ["myanmar", "burma", "mm"] },
+  { value: "東帝汶", english: "Timor-Leste", aliases: ["timor-leste", "east timor", "tl"] },
+  { value: "印度", english: "India", aliases: ["india", "in"] },
+  { value: "巴基斯坦", english: "Pakistan", aliases: ["pakistan", "pk"] },
+  { value: "孟加拉", english: "Bangladesh", aliases: ["bangladesh", "bd"] },
+  { value: "斯里蘭卡", english: "Sri Lanka", aliases: ["sri lanka", "lk"] },
+  { value: "尼泊爾", english: "Nepal", aliases: ["nepal", "np"] },
+  { value: "不丹", english: "Bhutan", aliases: ["bhutan", "bt"] },
+  { value: "馬爾地夫", english: "Maldives", aliases: ["maldives", "mv"] },
+  { value: "阿聯酋", english: "United Arab Emirates", aliases: ["united arab emirates", "uae", "ae"] },
+  { value: "沙烏地阿拉伯", english: "Saudi Arabia", aliases: ["saudi arabia", "sa"] },
+  { value: "卡達", english: "Qatar", aliases: ["qatar", "qa"] },
+  { value: "科威特", english: "Kuwait", aliases: ["kuwait", "kw"] },
+  { value: "阿曼", english: "Oman", aliases: ["oman", "om"] },
+  { value: "巴林", english: "Bahrain", aliases: ["bahrain", "bh"] },
+  { value: "以色列", english: "Israel", aliases: ["israel", "il"] },
+  { value: "約旦", english: "Jordan", aliases: ["jordan", "jo"] },
+  { value: "黎巴嫩", english: "Lebanon", aliases: ["lebanon", "lb"] },
+  { value: "土耳其", english: "Turkiye", aliases: ["turkiye", "turkey", "tr"] },
+  { value: "美國", english: "United States", aliases: ["united states", "usa", "us", "america"] },
+  { value: "加拿大", english: "Canada", aliases: ["canada", "ca"] },
+  { value: "墨西哥", english: "Mexico", aliases: ["mexico", "mx"] },
+  { value: "巴西", english: "Brazil", aliases: ["brazil", "br"] },
+  { value: "阿根廷", english: "Argentina", aliases: ["argentina", "ar"] },
+  { value: "智利", english: "Chile", aliases: ["chile", "cl"] },
+  { value: "哥倫比亞", english: "Colombia", aliases: ["colombia", "co"] },
+  { value: "秘魯", english: "Peru", aliases: ["peru", "pe"] },
+  { value: "厄瓜多", english: "Ecuador", aliases: ["ecuador", "ec"] },
+  { value: "玻利維亞", english: "Bolivia", aliases: ["bolivia", "bo"] },
+  { value: "巴拉圭", english: "Paraguay", aliases: ["paraguay", "py"] },
+  { value: "烏拉圭", english: "Uruguay", aliases: ["uruguay", "uy"] },
+  { value: "委內瑞拉", english: "Venezuela", aliases: ["venezuela", "ve"] },
+  { value: "哥斯大黎加", english: "Costa Rica", aliases: ["costa rica", "cr"] },
+  { value: "巴拿馬", english: "Panama", aliases: ["panama", "pa"] },
+  { value: "瓜地馬拉", english: "Guatemala", aliases: ["guatemala", "gt"] },
+  { value: "多明尼加", english: "Dominican Republic", aliases: ["dominican republic", "do"] },
+  { value: "古巴", english: "Cuba", aliases: ["cuba", "cu"] },
+  { value: "牙買加", english: "Jamaica", aliases: ["jamaica", "jm"] },
+  { value: "波多黎各", english: "Puerto Rico", aliases: ["puerto rico", "pr"] },
+  { value: "英國", english: "United Kingdom", aliases: ["united kingdom", "uk", "great britain", "gb"] },
+  { value: "愛爾蘭", english: "Ireland", aliases: ["ireland", "ie"] },
+  { value: "法國", english: "France", aliases: ["france", "fr"] },
+  { value: "德國", english: "Germany", aliases: ["germany", "de"] },
+  { value: "荷蘭", english: "Netherlands", aliases: ["netherlands", "holland", "nl"] },
+  { value: "比利時", english: "Belgium", aliases: ["belgium", "be"] },
+  { value: "盧森堡", english: "Luxembourg", aliases: ["luxembourg", "lu"] },
+  { value: "瑞士", english: "Switzerland", aliases: ["switzerland", "ch"] },
+  { value: "奧地利", english: "Austria", aliases: ["austria", "at"] },
+  { value: "西班牙", english: "Spain", aliases: ["spain", "es"] },
+  { value: "葡萄牙", english: "Portugal", aliases: ["portugal", "pt"] },
+  { value: "義大利", english: "Italy", aliases: ["italy", "it"] },
+  { value: "希臘", english: "Greece", aliases: ["greece", "gr"] },
+  { value: "丹麥", english: "Denmark", aliases: ["denmark", "dk"] },
+  { value: "挪威", english: "Norway", aliases: ["norway", "no"] },
+  { value: "瑞典", english: "Sweden", aliases: ["sweden", "se"] },
+  { value: "芬蘭", english: "Finland", aliases: ["finland", "fi"] },
+  { value: "冰島", english: "Iceland", aliases: ["iceland", "is"] },
+  { value: "波蘭", english: "Poland", aliases: ["poland", "pl"] },
+  { value: "捷克", english: "Czechia", aliases: ["czech republic", "czechia", "cz"] },
+  { value: "斯洛伐克", english: "Slovakia", aliases: ["slovakia", "sk"] },
+  { value: "匈牙利", english: "Hungary", aliases: ["hungary", "hu"] },
+  { value: "羅馬尼亞", english: "Romania", aliases: ["romania", "ro"] },
+  { value: "保加利亞", english: "Bulgaria", aliases: ["bulgaria", "bg"] },
+  { value: "克羅埃西亞", english: "Croatia", aliases: ["croatia", "hr"] },
+  { value: "斯洛維尼亞", english: "Slovenia", aliases: ["slovenia", "si"] },
+  { value: "愛沙尼亞", english: "Estonia", aliases: ["estonia", "ee"] },
+  { value: "拉脫維亞", english: "Latvia", aliases: ["latvia", "lv"] },
+  { value: "立陶宛", english: "Lithuania", aliases: ["lithuania", "lt"] },
+  { value: "烏克蘭", english: "Ukraine", aliases: ["ukraine", "ua"] },
+  { value: "俄羅斯", english: "Russia", aliases: ["russia", "ru"] },
+  { value: "澳洲", english: "Australia", aliases: ["australia", "au"] },
+  { value: "紐西蘭", english: "New Zealand", aliases: ["new zealand", "nz"] },
+  { value: "南非", english: "South Africa", aliases: ["south africa", "za"] },
+  { value: "奈及利亞", english: "Nigeria", aliases: ["nigeria", "ng"] },
+  { value: "肯亞", english: "Kenya", aliases: ["kenya", "ke"] },
+  { value: "坦尚尼亞", english: "Tanzania", aliases: ["tanzania", "tz"] },
+  { value: "衣索比亞", english: "Ethiopia", aliases: ["ethiopia", "et"] },
+  { value: "摩洛哥", english: "Morocco", aliases: ["morocco", "ma"] },
+  { value: "阿爾及利亞", english: "Algeria", aliases: ["algeria", "dz"] },
+  { value: "突尼西亞", english: "Tunisia", aliases: ["tunisia", "tn"] },
+  { value: "埃及", english: "Egypt", aliases: ["egypt", "eg"] },
+  { value: "其他", english: "Other", aliases: ["other"] }
+];
+
+const POPULAR_COUNTRIES = [
+  "台灣",
+  "香港",
+  "中國",
+  "新加坡",
+  "馬來西亞",
+  "日本",
+  "韓國",
+  "美國",
+  "加拿大",
+  "澳洲",
+  "英國"
+];
+
+const normalizeLookupKey = (value) =>
+  String(value ?? "")
+    .trim()
+    .normalize("NFKC")
+    .toLowerCase();
+
+const COUNTRY_LOOKUP = COUNTRY_CATALOG.reduce((map, item) => {
+  map.set(normalizeLookupKey(item.value), item.value);
+  map.set(normalizeLookupKey(item.english), item.value);
+  item.aliases.forEach((alias) => map.set(normalizeLookupKey(alias), item.value));
+  return map;
+}, new Map());
+
+function normalizeCountryInput(value) {
+  const normalizedKey = normalizeLookupKey(value);
+  if (!normalizedKey) {
+    return "";
+  }
+  return COUNTRY_LOOKUP.get(normalizedKey) || String(value).trim();
+}
+
 export default function SignupForm() {
   const router = useRouter();
   const [form, setForm] = useState(initialForm);
   const [status, setStatus] = useState({ state: "idle", message: "" });
+  const countrySuggestions = useMemo(() => {
+    const keyword = normalizeLookupKey(form.country);
+    if (!keyword) {
+      return COUNTRY_CATALOG;
+    }
+    return COUNTRY_CATALOG.filter((item) => {
+      if (normalizeLookupKey(item.value).includes(keyword)) {
+        return true;
+      }
+      if (normalizeLookupKey(item.english).includes(keyword)) {
+        return true;
+      }
+      return item.aliases.some((alias) => normalizeLookupKey(alias).includes(keyword));
+    });
+  }, [form.country]);
 
   useEffect(() => {
     if (status.state === "success") {
@@ -34,6 +184,24 @@ export default function SignupForm() {
     setForm((prev) => ({ ...prev, [field]: value }));
   };
 
+  const applyCountry = (value) => {
+    setForm((prev) => ({ ...prev, country: normalizeCountryInput(value) }));
+  };
+
+  const handleCountryChange = (event) => {
+    setForm((prev) => ({ ...prev, country: event.target.value }));
+  };
+
+  const handleCountryBlur = () => {
+    setForm((prev) => {
+      const normalized = normalizeCountryInput(prev.country);
+      if (normalized === prev.country) {
+        return prev;
+      }
+      return { ...prev, country: normalized };
+    });
+  };
+
   const handleSubmit = async (event) => {
     event.preventDefault();
     setStatus({ state: "loading", message: "" });
@@ -44,7 +212,8 @@ export default function SignupForm() {
     .replace(/\s+/g, "") // 移除所有空白
     .toLowerCase();
 
-	  const formToSend = { ...form, username: normalizedUsername };
+    const normalizedCountry = normalizeCountryInput(form.country);
+    const formToSend = { ...form, username: normalizedUsername, country: normalizedCountry };
     try {
       const response = await fetch("/api/auth/signup", {
         method: "POST",
@@ -127,41 +296,35 @@ export default function SignupForm() {
           <label className="form-label" htmlFor="country">
             居住區域 <span className="optional-badge">選填</span>
           </label>
-          <select
-            className="form-select"
+          <input
+            className="form-control"
+            type="text"
             id="country"
+            list="country-options"
             value={form.country}
-            onChange={updateField("country")}
-          >
-            <option value="">
-              暫不填寫
-            </option>
-            <option>台灣</option>
-            <option>香港</option>
-            <option>中國</option>
-            <option>新加坡</option>
-            <option>馬來西亞</option>
-            <option>美國</option>
-            <option>澳門</option>
-            <option>印尼</option>
-            <option>泰國</option>
-            <option>越南</option>
-            <option>菲律賓</option>
-            <option>汶萊</option>
-            <option>柬埔寨</option>
-            <option>寮國</option>
-            <option>緬甸</option>
-            <option>加拿大</option>
-            <option>紐西蘭</option>
-            <option>英國</option>
-            <option>法國</option>
-            <option>加拿大</option>
-            <option>南非</option>
-            <option>巴西</option>
-            <option>阿根廷</option>
-            <option>其他</option>
-          </select>
-          <span className="form-helper">只用於內容在地化推薦，不影響帳號建立。</span>
+            onChange={handleCountryChange}
+            onBlur={handleCountryBlur}
+            placeholder="可輸入中文或英文，例如：台灣 / Taiwan / Japan"
+            autoComplete="country-name"
+          />
+          <datalist id="country-options">
+            {countrySuggestions.map((item) => (
+              <option key={item.value} value={item.value} label={item.english} />
+            ))}
+          </datalist>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: "0.45rem", marginTop: "0.55rem" }}>
+            {POPULAR_COUNTRIES.map((country) => (
+              <button
+                key={country}
+                type="button"
+                className="home-explorer__suggestion-tag"
+                onClick={() => applyCountry(country)}
+              >
+                {country}
+              </button>
+            ))}
+          </div>
+          <span className="form-helper">支援中英文輸入，離開欄位後會自動轉成標準國家名稱。</span>
         </div>
       </div>
 
