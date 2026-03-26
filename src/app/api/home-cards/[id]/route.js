@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
-import { updateHomeCard } from "@/lib/homeCards";
+
+import prisma from "@/lib/prisma";
 
 function sanitizeUpdatePayload(body) {
   if (!body || typeof body !== "object") {
@@ -7,24 +8,23 @@ function sanitizeUpdatePayload(body) {
   }
 
   const tags = Array.isArray(body.tags)
-    ? body.tags.map((tag) => tag.trim()).filter(Boolean)
+    ? body.tags.map((tag) => String(tag).trim()).filter(Boolean)
     : [];
 
   const meta = Array.isArray(body.meta)
-    ? body.meta.map((line) => line.trim()).filter(Boolean)
+    ? body.meta.map((line) => String(line).trim()).filter(Boolean)
     : [];
 
   return {
-  
-    slug: body.slug?.trim(),
+    slug: body.slug?.trim() || null,
     image: body.image?.trim() || "",
     alt: body.alt?.trim() || "",
     title: body.title?.trim() || "",
     description: body.description?.trim() || "",
     tags,
     meta,
-    detailsHref: body.detailsHref?.trim(),
-    voiceHref: payload.voiceHref?.trim() || "TEMP_VOICE_URL"
+    detailsHref: body.detailsHref?.trim() || "",
+    voiceHref: body.voiceHref?.trim() || "",
   };
 }
 
@@ -38,12 +38,16 @@ export async function PUT(request, { params }) {
     const body = await request.json();
     const payload = sanitizeUpdatePayload(body);
 
-    const updated = await updateHomeCard(id, payload);
+    const updated = await prisma.homePrayerCard.update({
+      where: { id },
+      data: payload,
+    });
+
     return NextResponse.json(updated, { status: 200 });
   } catch (error) {
     return NextResponse.json(
       { message: error.message || "Failed to update card" },
-      { status: 400 }
+      { status: 400 },
     );
   }
 }
