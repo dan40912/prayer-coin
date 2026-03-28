@@ -1,9 +1,11 @@
-﻿import { NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 
+import { ensureActiveCustomer } from "@/lib/customer-access";
 import prisma from "@/lib/prisma";
-import { readSessionUser, requireSessionUser } from "@/lib/server-session";
+import { requireSessionUser } from "@/lib/server-session";
 
 const MAX_BIO_LENGTH = 360;
+const BSC_ADDRESS_REGEX = /^0x[a-fA-F0-9]{40}$/;
 
 function buildSelectFields() {
   return {
@@ -13,6 +15,8 @@ function buildSelectFields() {
     username: true,
     bio: true,
     avatarUrl: true,
+    bscAddress: true,
+    isAddressVerified: true,
     walletBalance: true,
     isBlocked: true,
     createdAt: true,
@@ -68,6 +72,23 @@ function sanitizeProfilePayload(body) {
     }
   }
 
+  if (Object.prototype.hasOwnProperty.call(body, "bscAddress")) {
+    if (body.bscAddress === null || body.bscAddress === undefined) {
+      result.bscAddress = null;
+    } else if (typeof body.bscAddress === "string") {
+      const normalized = body.bscAddress.trim();
+      if (!normalized) {
+        result.bscAddress = null;
+      } else if (BSC_ADDRESS_REGEX.test(normalized)) {
+        result.bscAddress = normalized;
+      } else {
+        throw new Error("BSC address must be a valid 0x wallet address.");
+      }
+    } else {
+      throw new Error("BSC address must be a string value.");
+    }
+  }
+
   if (Object.keys(result).length === 0) {
     throw new Error("Nothing to update.");
   }
@@ -75,45 +96,33 @@ function sanitizeProfilePayload(body) {
   return result;
 }
 
-async function findUserForSession(session) {
-  if (!session?.id && !session?.email) {
-    return null;
-  }
-
-  const select = buildSelectFields();
-
-  if (session.id) {
-    const userById = await prisma.user.findUnique({ where: { id: session.id }, select });
-    if (userById) {
-      return userById;
-    }
-  }
-
-  if (session.email) {
-    const userByEmail = await prisma.user.findUnique({ where: { email: session.email }, select });
-    if (userByEmail) {
-      return userByEmail;
-    }
-  }
-
-  return null;
+async function findUserById(userId) {
+  if (!userId) return null;
+  return prisma.user.findUnique({
+    where: { id: userId },
+    select: buildSelectFields(),
+  });
 }
 
 export async function GET() {
   try {
-    const session = readSessionUser();
-    if (!session?.id && !session?.email) {
-      return NextResponse.json({ message: "Please sign in." }, { status: 401 });
-    }
+    const session = requireSessionUser();
+    const user = await ensureActiveCustomer(session.userId);
 
-    const user = await findUserForSession(session);
-
-    if (!user) {
+    const profile = await findUserById(user.id);
+    if (!profile) {
       return NextResponse.json({ message: "User not found." }, { status: 404 });
     }
 
-    return NextResponse.json(user);
+    return NextResponse.json(profile);
   } catch (error) {
+    if (error?.code === "UNAUTHENTICATED") {
+      return NextResponse.json({ message: "Please sign in." }, { status: 401 });
+    }
+    if (error?.code === "ACCOUNT_BLOCKED") {
+      return NextResponse.json({ message: "Your account is blocked." }, { status: 403 });
+    }
+
     console.error("GET /api/customer/profile error:", error);
     return NextResponse.json({ message: "Failed to load profile." }, { status: 500 });
   }
@@ -122,10 +131,12 @@ export async function GET() {
 export async function PATCH(request) {
   try {
     const session = requireSessionUser();
+    const user = await ensureActiveCustomer(session.userId);
+
     const payload = await request.json().catch(() => null);
     const updates = sanitizeProfilePayload(payload);
 
-    const targetUser = await findUserForSession(session);
+    const targetUser = await findUserById(user.id);
     if (!targetUser) {
       return NextResponse.json({ message: "User not found." }, { status: 404 });
     }
@@ -141,9 +152,12 @@ export async function PATCH(request) {
     if (error?.code === "UNAUTHENTICATED") {
       return NextResponse.json({ message: "Please sign in." }, { status: 401 });
     }
+    if (error?.code === "ACCOUNT_BLOCKED") {
+      return NextResponse.json({ message: "Your account is blocked." }, { status: 403 });
+    }
 
     const message = error instanceof Error ? error.message : "Failed to update profile.";
-    const status = /provide|string|shorter|Nothing/.test(message) ? 400 : 500;
+    const status = /provide|string|shorter|Nothing|BSC/i.test(message) ? 400 : 500;
 
     console.error("PATCH /api/customer/profile error:", error);
     return NextResponse.json({ message }, { status });

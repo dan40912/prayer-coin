@@ -128,8 +128,6 @@ export default function Comments({ requestId, ownerId = null }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  const [openMenuId, setOpenMenuId] = useState(null);
-  const menuRefs = useRef(new Map());
   const [reportTarget, setReportTarget] = useState(null);
   const [reportReason, setReportReason] = useState("");
   const [reportRemarks, setReportRemarks] = useState("");
@@ -143,21 +141,6 @@ export default function Comments({ requestId, ownerId = null }) {
   const reportPreviewMessage = reportTarget?.message
     ? `${reportTarget.message.slice(0, 200)}${reportTarget.message.length > 200 ? '...' : ''}`
     : "";
-
-  const setMenuRef = useCallback((id, node) => {
-    if (!menuRefs.current) {
-      menuRefs.current = new Map();
-    }
-    if (node) {
-      menuRefs.current.set(id, node);
-    } else {
-      menuRefs.current.delete(id);
-    }
-  }, []);
-
-  const toggleMenu = useCallback((id) => {
-    setOpenMenuId((prev) => (prev === id ? null : id));
-  }, []);
 
   const closeReportModal = useCallback(() => {
     if (reportSubmitting) return;
@@ -174,7 +157,6 @@ export default function Comments({ requestId, ownerId = null }) {
       setActionNoticeType("error");
       return;
     }
-    setOpenMenuId(null);
     setReportTarget(response);
     setReportReason("");
     setReportRemarks("");
@@ -184,7 +166,6 @@ export default function Comments({ requestId, ownerId = null }) {
 
   const handleShareResponse = useCallback(async (response) => {
     if (typeof window === "undefined") return;
-    setOpenMenuId(null);
     const baseUrl = window.location.href.split("#")[0];
     const shareUrl = `${baseUrl}#prayer-response-${response.id}`;
     const shareText = response.message
@@ -332,22 +313,8 @@ export default function Comments({ requestId, ownerId = null }) {
   }, [requestId]);
 
   useEffect(() => {
-    if (!openMenuId) return;
-    const handlePointerDown = (event) => {
-      const menuNode = menuRefs.current?.get(openMenuId);
-      if (!menuNode || menuNode.contains(event.target)) {
-        return;
-      }
-      setOpenMenuId(null);
-    };
-    document.addEventListener("pointerdown", handlePointerDown);
-    return () => document.removeEventListener("pointerdown", handlePointerDown);
-  }, [openMenuId]);
-
-  useEffect(() => {
     const handleKeydown = (event) => {
       if (event.key === "Escape") {
-        setOpenMenuId(null);
         if (reportTarget && !reportSubmitting) {
           closeReportModal();
         }
@@ -786,44 +753,30 @@ export default function Comments({ requestId, ownerId = null }) {
                             <strong>{name}</strong>
                           )}
                         </div>
-                        <div className="comment-item__actions">
+                        <div className="comment-item__meta-actions">
                           {response.reportCount > 0 ? (
                             <span
-                                className="comment-item__report-badge"
-                                title={`被檢舉 ${response.reportCount} 次`}
+                              className="comment-item__report-badge"
+                              title={`被檢舉 ${response.reportCount} 次`}
                             >
-                                檢舉 × {response.reportCount}
+                              檢舉 × {response.reportCount}
                             </span>
                           ) : null}
-                          <div
-                            className={`comment-item__action-menu${openMenuId === response.id ? " is-open" : ""}`}
-                            ref={(node) => setMenuRef(response.id, node)}
-                          >
+                          <div className="comment-item__actions">
                             <button
-                                type="button"
-                                className="comment-item__menu-trigger"
-                                aria-haspopup="true"
-                                aria-expanded={openMenuId === response.id}
-                                aria-controls={`comment-action-menu-${response.id}`}
-                                onClick={() => toggleMenu(response.id)}
+                              type="button"
+                              className="comment-item__action-btn comment-item__action-btn--share"
+                              onClick={() => handleShareResponse(response)}
                             >
-                                ⋯
+                              分享
                             </button>
-                            {openMenuId === response.id ? (
-                                <div className="comment-item__menu" id={`comment-action-menu-${response.id}`} role="menu">
-                                  <button type="button" role="menuitem" onClick={() => handleShareResponse(response)}>
-                                    分享
-                                  </button>
-                                  <button
-                                    type="button"
-                                    role="menuitem"
-                                    className="danger"
-                                    onClick={() => openReportModal(response)}
-                                  >
-                                    檢舉
-                                  </button>
-                                </div>
-                            ) : null}
+                            <button
+                              type="button"
+                              className="comment-item__action-btn comment-item__action-btn--report"
+                              onClick={() => openReportModal(response)}
+                            >
+                              檢舉
+                            </button>
                           </div>
                         </div>
                     </div>
@@ -978,3 +931,4 @@ export default function Comments({ requestId, ownerId = null }) {
     </section>
   );
 }
+

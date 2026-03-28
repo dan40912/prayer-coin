@@ -4,7 +4,9 @@ const CARD_DEFAULT_INCLUDE = {
   category: true,
   owner: {
     select: {
-      name: true
+      name: true,
+      username: true,
+      avatarUrl: true,
     }
   },
   _count: {
@@ -98,16 +100,9 @@ export async function readHomeCard(id) {
 }
 
 export async function createHomeCard(payload = {}) {
-
-  const cardOwnerId = payload.ownerId; 
-
-   if (!cardOwnerId || typeof cardOwnerId !== 'string') {
-      // ?寞??函? Prisma Schema嚗wnerId ??String?嚗?閮?NULL
-      // 雿??POST 頝舐撘瑕閬?摰????剁??隞仿ㄐ?府?舫蝳行扳炎?乓?
-      // 撱箄降: 憒??其縑隞?sanitizeCreatePayload嚗ㄐ?臭誑蝪∪???
-      console.warn("Owner ID missing or invalid in payload for DB creation.");
-      // ?箔?靽桀儔?桀???ReferenceError嚗????嗉身??undefined/null 隞亙??Schema
-      // 雿祕??嚗??府??sanitizeCreatePayload 銝剖停撌脩?瑼Ｘ??
+  const cardOwnerId = payload.ownerId;
+  if (!cardOwnerId || typeof cardOwnerId !== "string") {
+    throw new Error("Owner ID is required");
   }
 
   return prisma.homePrayerCard.create({
@@ -122,9 +117,7 @@ export async function createHomeCard(payload = {}) {
       detailsHref: payload.detailsHref || "",
       voiceHref: payload.voiceHref || "", // 蝣箔??ㄐ銝?雿輻 TEMP_VOICE_URL
       categoryId: Number(payload.categoryId),
-      
-      // ??靽格迤嚗蝙??payload.ownerId嚗?銝摰儔??cardOwnerId 霈
-      ownerId: cardOwnerId, 
+      ownerId: cardOwnerId,
     },
     include: CARD_DEFAULT_INCLUDE
   });

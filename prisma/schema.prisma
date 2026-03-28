@@ -214,6 +214,7 @@ enum RewardStatus {
 enum TransactionType {
   EARN_PRAYER
   EARN_RESPONSE
+  ADMIN_GRANT
   WITHDRAW
   DONATE
 }

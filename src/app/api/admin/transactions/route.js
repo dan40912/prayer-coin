@@ -1,10 +1,11 @@
 ﻿import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { logSystemError } from "@/lib/logger";
+import { requireAdmin, roleSet } from "@/lib/admin-route-auth";
 
-const SESSION_HEADER = "x-admin-role";
+const SUPER_ONLY = roleSet("SUPER");
 
-const VALID_TYPES = new Set(["EARN_PRAYER", "EARN_RESPONSE", "WITHDRAW", "DONATE"]);
+const VALID_TYPES = new Set(["EARN_PRAYER", "EARN_RESPONSE", "ADMIN_GRANT", "WITHDRAW", "DONATE"]);
 const VALID_STATUS = new Set(["PENDING", "PROCESSING_CHAIN", "COMPLETED", "FAILED"]);
 const SORTABLE_FIELDS = {
   createdAt: { createdAt: "desc" },
@@ -49,10 +50,8 @@ function getOrder(sortKey, orderParam) {
 }
 
 export async function GET(request) {
-  const role = request.headers.get(SESSION_HEADER) ?? "";
-  if (role !== "SUPER") {
-    return NextResponse.json({ message: "Forbidden" }, { status: 403 });
-  }
+  const { error } = requireAdmin(request, SUPER_ONLY);
+  if (error) return error;
 
   const url = new URL(request.url);
   const { searchParams } = url;

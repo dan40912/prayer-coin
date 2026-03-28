@@ -327,7 +327,6 @@ export default function CustomerPortalCreatePage() {
       image: coverImage,
       alt: form.alt.trim(),
       description: form.description,
-      ownerId: authUser.id,
       tags: form.tags
         .split(",")
         .map((tag) => tag.trim())
@@ -814,4 +813,5 @@ export default function CustomerPortalCreatePage() {
     </>
   );
 }
+
 

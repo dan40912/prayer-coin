@@ -16,6 +16,7 @@ const STATUS_OPTIONS = [
 
 const TYPE_OPTIONS = [
   { value: "all", label: "全部類型" },
+  { value: "ADMIN_GRANT", label: "手動發幣" },
   { value: "WITHDRAW", label: "提領" },
   { value: "EARN_PRAYER", label: "禱卡獎勵" },
   { value: "EARN_RESPONSE", label: "錄音獎勵" },
@@ -30,6 +31,7 @@ const STATUS_LABELS = {
 };
 
 const TYPE_LABELS = {
+  ADMIN_GRANT: "手動發幣",
   WITHDRAW: "提領",
   EARN_PRAYER: "禱卡獎勵",
   EARN_RESPONSE: "錄音獎勵",
@@ -78,6 +80,10 @@ function formatTokenAmount(amount) {
   return numberFormatter.format(Number(amount ?? 0));
 }
 
+function formatTokenValue(amount) {
+  return formatTokenAmount(amount);
+}
+
 function formatType(type) {
   return TYPE_LABELS[type] ?? type;
 }
@@ -114,6 +120,10 @@ export default function AdminWalletPage() {
   const [balances, setBalances] = useState([]);
   const [balancesLoading, setBalancesLoading] = useState(false);
   const [balancesError, setBalancesError] = useState("");
+  const [grantForm, setGrantForm] = useState({ userId: "", amount: "", note: "" });
+  const [grantSubmitting, setGrantSubmitting] = useState(false);
+  const [grantError, setGrantError] = useState("");
+  const [grantFeedback, setGrantFeedback] = useState("");
 
   useEffect(() => {
     let active = true;
@@ -300,7 +310,7 @@ export default function AdminWalletPage() {
 
   useEffect(() => {
     if (!sessionChecked || sessionRole !== "SUPER") return;
-    if (activeTab === "balances") {
+    if (activeTab === "balances" || activeTab === "overview") {
       loadBalances();
     }
   }, [sessionChecked, sessionRole, activeTab, loadBalances]);
@@ -331,7 +341,11 @@ export default function AdminWalletPage() {
       {
         id: "processed-total",
         label: "已發放獎勵",
-        value: formatAmount((totalsByType.earn_prayer || 0) + (totalsByType.earn_response || 0)),
+        value: formatAmount(
+          (totalsByType.earn_prayer || 0) +
+          (totalsByType.earn_response || 0) +
+          (totalsByType.admin_grant || 0),
+        ),
       },
     ];
   }, [summary]);
@@ -398,6 +412,61 @@ export default function AdminWalletPage() {
     setRuleForm((prev) => ({ ...prev, [field]: value }));
     setRuleFeedback("");
   }, []);
+
+  const handleGrantFieldChange = useCallback((field, value) => {
+    setGrantForm((prev) => ({ ...prev, [field]: value }));
+    setGrantError("");
+    setGrantFeedback("");
+  }, []);
+
+  const handleSubmitGrant = useCallback(async (event) => {
+    event.preventDefault();
+    if (!canViewTransactions) {
+      setGrantError("沒有權限發送代幣");
+      return;
+    }
+
+    const amount = Number(grantForm.amount);
+    if (!grantForm.userId.trim()) {
+      setGrantError("請輸入使用者 ID");
+      return;
+    }
+    if (!Number.isFinite(amount) || amount <= 0) {
+      setGrantError("請輸入正確的代幣數量");
+      return;
+    }
+
+    try {
+      setGrantSubmitting(true);
+      setGrantError("");
+      setGrantFeedback("");
+
+      const response = await fetch("/api/admin/transactions/grant", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          userId: grantForm.userId.trim(),
+          amount,
+          note: grantForm.note.trim(),
+        }),
+      });
+
+      if (!response.ok) {
+        const data = await response.json().catch(() => ({}));
+        throw new Error(data.message || "發幣失敗");
+      }
+
+      await Promise.all([loadTransactions(), loadBalances()]);
+      setGrantForm({ userId: "", amount: "", note: "" });
+      setGrantFeedback("發幣成功，已更新餘額與交易紀錄。");
+      notifySuccess("手動發幣完成");
+    } catch (err) {
+      setGrantError(err.message || "發幣失敗");
+      notifyError(err.message || "發幣失敗");
+    } finally {
+      setGrantSubmitting(false);
+    }
+  }, [canViewTransactions, grantForm.amount, grantForm.note, grantForm.userId, loadBalances, loadTransactions, notifyError, notifySuccess]);
 
   const handleRuleSubmit = useCallback(
     async (event) => {
@@ -485,6 +554,65 @@ export default function AdminWalletPage() {
             <strong> {rewardRule.allowedReports}</strong> 次。
           </p>
         </div>
+      ) : null}
+
+      {canViewTransactions ? (
+        <form className="admin-form admin-grant-form" onSubmit={handleSubmitGrant}>
+          <h3>手動發送代幣</h3>
+          <div className="admin-form__row admin-form__row--equal">
+            <label className="admin-form__field">
+              <span>使用者 ID</span>
+              <input
+                type="text"
+                value={grantForm.userId}
+                onChange={(event) => handleGrantFieldChange("userId", event.target.value)}
+                list="admin-grant-user-list"
+                placeholder="貼上 userId 或從清單選擇"
+                required
+              />
+            </label>
+            <label className="admin-form__field">
+              <span>代幣數量</span>
+              <input
+                type="number"
+                min="0.01"
+                step="0.01"
+                value={grantForm.amount}
+                onChange={(event) => handleGrantFieldChange("amount", event.target.value)}
+                required
+              />
+            </label>
+          </div>
+          <label className="admin-form__field">
+            <span>備註</span>
+            <input
+              type="text"
+              value={grantForm.note}
+              onChange={(event) => handleGrantFieldChange("note", event.target.value)}
+              placeholder="例如：客服補發、活動獎勵"
+              maxLength={300}
+            />
+          </label>
+
+          {balances.length ? (
+            <datalist id="admin-grant-user-list">
+              {balances.map((user) => (
+                <option key={user.id} value={user.id}>
+                  {(user.name || user.email) ?? user.id}
+                </option>
+              ))}
+            </datalist>
+          ) : null}
+
+          {grantError ? <p className="error">{grantError}</p> : null}
+          {grantFeedback ? <p className="success">{grantFeedback}</p> : null}
+
+          <div className="admin-form__actions">
+            <button type="submit" className="button button--primary" disabled={grantSubmitting}>
+              {grantSubmitting ? "發送中..." : "發送代幣"}
+            </button>
+          </div>
+        </form>
       ) : null}
     </section>
   );
@@ -596,7 +724,7 @@ export default function AdminWalletPage() {
                             onClick={() => {
                               confirmAction({
                                 title: "確認標記提領失敗",
-                                message: "系統會嘗試回補款項，請確認要繼續。",
+                                message: "此操作只會改狀態，不會扣款。",
                                 confirmText: "確認標記失敗",
                                 tone: "danger",
                               }).then((confirmed) => {
@@ -778,7 +906,7 @@ export default function AdminWalletPage() {
         title="帳務安全提示"
         tone="warning"
         description="交易狀態變更會影響帳務，請先確認交易類型與目標狀態。"
-        items={["提領改為失敗前，先確認是否需要回補。", "狀態更新後可立即到發送歷史複核。"]}
+        items={["提領在標記完成時才會扣款。", "狀態更新後可立即到發送歷史複核。"]}
       />
 
       <div className="admin-tabs">

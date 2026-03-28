@@ -355,6 +355,94 @@
   gap: var(--space-sm);
 }
 
+.cp-helper {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 0.92rem;
+  line-height: 1.5;
+}
+
+.cp-withdraw {
+  display: grid;
+  gap: var(--space-lg);
+}
+
+.cp-withdraw__grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-lg);
+}
+
+.cp-withdraw__card {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 20px;
+  padding: var(--space-lg);
+  display: grid;
+  gap: var(--space-md);
+}
+
+.cp-withdraw__card h3 {
+  margin: 0;
+}
+
+.cp-withdraw__address-row {
+  display: flex;
+  gap: var(--space-sm);
+}
+
+.cp-withdraw__address-row input,
+.cp-withdraw__form input {
+  width: 100%;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: var(--radius-lg);
+  color: var(--text-main);
+  padding: 0.78rem 0.9rem;
+}
+
+.cp-withdraw__form {
+  display: grid;
+  gap: var(--space-md);
+}
+
+.cp-withdraw__form label {
+  display: grid;
+  gap: 0.45rem;
+}
+
+.cp-withdraw__form label span {
+  font-size: 0.92rem;
+  color: rgba(255, 255, 255, 0.82);
+}
+
+.cp-withdraw__table-wrap {
+  overflow-x: auto;
+}
+
+.cp-withdraw__table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 680px;
+}
+
+.cp-withdraw__table th,
+.cp-withdraw__table td {
+  text-align: left;
+  padding: 0.72rem 0.6rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  font-size: 0.9rem;
+}
+
+.cp-withdraw__table th {
+  color: rgba(255, 255, 255, 0.78);
+  font-weight: 600;
+}
+
+.cp-withdraw__table td {
+  color: rgba(255, 255, 255, 0.88);
+}
+
 /* ------------------------------------------
    OVERCOMER PROFILE (USE CUSTOMER THEME)
 ------------------------------------------ */
@@ -520,6 +608,9 @@
   .cp-card__cover {
     max-height: 240px;
   }
+  .cp-withdraw__grid {
+    grid-template-columns: 1fr;
+  }
 }
 
 @media (max-width: 640px) {
@@ -541,6 +632,12 @@
   }
   .cp-profile__actions {
     justify-content: center;
+  }
+  .cp-withdraw__address-row {
+    flex-direction: column;
+  }
+  .cp-withdraw__table {
+    min-width: 560px;
   }
   .customer-create {
     padding: 5rem 1.25rem 7rem;

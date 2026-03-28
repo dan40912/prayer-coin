@@ -2,23 +2,18 @@
 import prisma from "@/lib/prisma";
 import bcrypt from "bcryptjs";
 import { logAdminAction } from "@/lib/logger";
+import { requireAdmin, roleSet } from "@/lib/admin-route-auth";
 
-const SESSION_HEADER = "x-admin-role";
+const SUPER_ONLY = roleSet("SUPER");
 const ALLOWED_ROLES = new Set(["SUPER", "ADMIN"]);
-
-function ensureSuperRole(request) {
-  const role = request.headers.get(SESSION_HEADER) ?? "";
-  return role === "SUPER";
-}
 
 function sanitizeUsername(username) {
   return username?.trim().toLowerCase();
 }
 
 export async function GET(request) {
-  if (!ensureSuperRole(request)) {
-    return NextResponse.json({ message: "Forbidden" }, { status: 403 });
-  }
+  const { error } = requireAdmin(request, SUPER_ONLY);
+  if (error) return error;
 
   try {
     const accounts = await prisma.adminAccount.findMany({
@@ -42,9 +37,8 @@ export async function GET(request) {
 }
 
 export async function POST(request) {
-  if (!ensureSuperRole(request)) {
-    return NextResponse.json({ message: "Forbidden" }, { status: 403 });
-  }
+  const { error, session } = requireAdmin(request, SUPER_ONLY);
+  if (error) return error;
 
   try {
     const body = await request.json();
@@ -87,6 +81,8 @@ export async function POST(request) {
     await logAdminAction({
       action: "admin.create",
       message: `新增管理員 ${account.username}`,
+      actorId: session.adminId,
+      actorEmail: session.username,
       targetType: "AdminAccount",
       targetId: account.id,
       metadata: { role: account.role },

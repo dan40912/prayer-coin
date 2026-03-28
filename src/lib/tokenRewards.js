@@ -23,6 +23,17 @@ function ensureDecimal(value) {
   return new Prisma.Decimal(0);
 }
 
+function getPositiveInteger(value, fallback) {
+  const numeric = Number(value);
+  if (!Number.isFinite(numeric) || numeric <= 0) return fallback;
+  return Math.floor(numeric);
+}
+
+export function computeRewardEligibleAt(observationDays, now = new Date()) {
+  const days = getPositiveInteger(observationDays, DEFAULT_RULE.observationDays);
+  return new Date(now.getTime() + days * 24 * 60 * 60 * 1000);
+}
+
 export async function readTokenRewardRule() {
   let record = await prisma.tokenRewardRule.findUnique({ where: { id: RULE_ID } });
 
@@ -67,7 +78,7 @@ export async function updateTokenRewardRule({ rewardTokens, observationDays, all
 
 export async function processPendingResponseRewardsForUser(userId) {
   if (!userId) {
-    return { processed: 0 };
+    return { processed: 0, rewarded: 0, blocked: 0 };
   }
 
   const rule = await readTokenRewardRule();
@@ -82,35 +93,45 @@ export async function processPendingResponseRewardsForUser(userId) {
       id: true,
       reportCount: true,
       isBlocked: true,
-      tokensAwarded: true,
-      homeCardId: true,
     },
   });
 
   if (!eligibleResponses.length) {
-    return { processed: 0 };
+    return { processed: 0, rewarded: 0, blocked: 0 };
   }
 
-  let processed = 0;
+  let rewarded = 0;
+  let blocked = 0;
   const rewardAmount = ensureDecimal(rule.rewardTokens ?? DEFAULT_RULE.rewardTokens);
   const allowedReports = Number(rule.allowedReports ?? DEFAULT_RULE.allowedReports);
 
   for (const response of eligibleResponses) {
     await prisma.$transaction(async (tx) => {
-      if (response.isBlocked || response.reportCount > allowedReports) {
-        await tx.prayerResponse.update({
-          where: { id: response.id },
+      const blockedByRisk = response.isBlocked || response.reportCount > allowedReports;
+      if (blockedByRisk) {
+        const blockResult = await tx.prayerResponse.updateMany({
+          where: {
+            id: response.id,
+            rewardStatus: "PENDING",
+          },
           data: {
             rewardStatus: "BLOCKED",
             rewardEvaluatedAt: now,
             isSettled: true,
           },
         });
-        return false;
+        blocked += blockResult.count;
+        return;
       }
 
-      await tx.prayerResponse.update({
-        where: { id: response.id },
+      const claim = await tx.prayerResponse.updateMany({
+        where: {
+          id: response.id,
+          rewardStatus: "PENDING",
+          rewardEligibleAt: { not: null, lte: now },
+          isBlocked: false,
+          reportCount: { lte: allowedReports },
+        },
         data: {
           rewardStatus: "REWARDED",
           rewardEvaluatedAt: now,
@@ -118,6 +139,8 @@ export async function processPendingResponseRewardsForUser(userId) {
           tokensAwarded: { increment: rewardAmount },
         },
       });
+
+      if (!claim.count) return;
 
       await tx.user.update({
         where: { id: userId },
@@ -134,18 +157,20 @@ export async function processPendingResponseRewardsForUser(userId) {
           amount: rewardAmount,
           relatedResponseId: response.id,
           metadata: {
-            ruleVersion: 1,
+            ruleVersion: 2,
             ruleObservationDays: rule.observationDays,
             ruleAllowedReports: allowedReports,
           },
         },
       });
 
-      return true;
+      rewarded += 1;
     });
-
-    processed += 1;
   }
 
-  return { processed };
+  return {
+    processed: rewarded + blocked,
+    rewarded,
+    blocked,
+  };
 }

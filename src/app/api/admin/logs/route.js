@@ -1,5 +1,6 @@
 ﻿import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
+import { requireAdmin } from "@/lib/admin-route-auth";
 
 const CATEGORY_MAP = {
   system: "SYSTEM",
@@ -24,6 +25,9 @@ function clampLimit(value) {
 }
 
 export async function GET(request) {
+  const { error } = requireAdmin(request);
+  if (error) return error;
+
   try {
     const { searchParams } = new URL(request.url);
     const categoryParam = searchParams.get("category")?.toLowerCase() ?? "all";

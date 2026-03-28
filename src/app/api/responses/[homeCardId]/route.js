@@ -1,16 +1,36 @@
-import prisma from "@/lib/prisma";
+﻿import prisma from "@/lib/prisma";
 import { NextResponse } from "next/server";
 import { normalizeAudioUrl } from "@/lib/media-url";
 
-export async function GET(req, { params }) {
-  const { homeCardId } = params;
+const SAFE_RESPONSE_SELECT = {
+  id: true,
+  message: true,
+  voiceUrl: true,
+  isAnonymous: true,
+  isBlocked: true,
+  reportCount: true,
+  createdAt: true,
+  responder: {
+    select: {
+      name: true,
+      avatarUrl: true,
+    },
+  },
+};
+
+export async function GET(_req, { params }) {
+  const homeCardId = Number(params?.homeCardId);
+  if (!Number.isInteger(homeCardId)) {
+    return NextResponse.json({ error: "Invalid homeCardId" }, { status: 400 });
+  }
 
   try {
     const responses = await prisma.prayerResponse.findMany({
-      where: { homeCardId: Number(homeCardId),isBlocked: false, },
+      where: { homeCardId, isBlocked: false },
       orderBy: { createdAt: "desc" },
-      include: { responder: true }, // 把使用者帶出來 (如果不是匿名)
+      select: SAFE_RESPONSE_SELECT,
     });
+
     return NextResponse.json(
       responses.map((response) => ({
         ...response,
@@ -19,7 +39,7 @@ export async function GET(req, { params }) {
       { status: 200 }
     );
   } catch (err) {
-    console.error("❌ Failed to fetch responses:", err);
+    console.error("Failed to fetch responses:", err);
     return NextResponse.json({ error: "Failed to fetch" }, { status: 500 });
   }
 }

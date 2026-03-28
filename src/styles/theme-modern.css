@@ -2324,3 +2324,111 @@ footer .footer-bottom a:hover {
 .bg-legal-links .link-arrow {
   color: #8cc3ff;
 }
+
+/* Frontend phase-1 polish */
+.home-trust-section {
+  background: linear-gradient(145deg, rgba(8, 18, 35, 0.95), rgba(15, 30, 53, 0.92));
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  box-shadow: 0 24px 44px -30px rgba(2, 8, 23, 0.8);
+}
+
+.home-trust-section__head {
+  display: grid;
+  gap: 0.45rem;
+  margin-bottom: 1rem;
+}
+
+.home-trust-section__head h2 {
+  margin: 0;
+  color: #f8fbff;
+  font-size: clamp(1.35rem, 2.2vw, 1.8rem);
+}
+
+.home-trust-section__head p {
+  margin: 0;
+  color: rgba(203, 213, 225, 0.88);
+}
+
+.home-trust-section__grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.9rem;
+}
+
+.home-trust-section__card {
+  border: 1px solid rgba(148, 163, 184, 0.24);
+  border-radius: 14px;
+  background: rgba(15, 27, 47, 0.7);
+  padding: 0.92rem 0.95rem;
+  display: grid;
+  gap: 0.45rem;
+}
+
+.home-trust-section__card h3 {
+  margin: 0;
+  color: #eff6ff;
+  font-size: 1rem;
+}
+
+.home-trust-section__card p {
+  margin: 0;
+  color: rgba(203, 213, 225, 0.86);
+  font-size: 0.9rem;
+  line-height: 1.55;
+}
+
+.home-trust-section__card a {
+  color: #8cc3ff;
+  font-size: 0.86rem;
+  font-weight: 600;
+}
+
+.home-guide-steps {
+  margin-top: 1rem;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.7rem;
+}
+
+.home-guide-steps__item {
+  border: 1px solid rgba(148, 163, 184, 0.22);
+  border-radius: 12px;
+  background: rgba(8, 17, 33, 0.55);
+  padding: 0.68rem 0.75rem;
+  display: flex;
+  gap: 0.55rem;
+  align-items: flex-start;
+}
+
+.home-guide-steps__item span {
+  flex-shrink: 0;
+  width: 1.45rem;
+  height: 1.45rem;
+  border-radius: 999px;
+  display: grid;
+  place-items: center;
+  font-size: 0.78rem;
+  font-weight: 700;
+  background: rgba(59, 130, 246, 0.26);
+  color: #dbeafe;
+}
+
+.home-guide-steps__item p {
+  margin: 0;
+  color: rgba(226, 232, 240, 0.92);
+  font-size: 0.86rem;
+  line-height: 1.45;
+}
+
+.home-cards__header h3,
+.pdv2-comments-head h2,
+.pdv2-related-head h2 {
+  letter-spacing: 0.01em;
+}
+
+@media (max-width: 960px) {
+  .home-trust-section__grid,
+  .home-guide-steps {
+    grid-template-columns: 1fr;
+  }
+}

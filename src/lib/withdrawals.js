@@ -1,0 +1,3 @@
+export const WITHDRAW_CHAIN = "BSC";
+export const WITHDRAW_MIN_AMOUNT = 10;
+export const WITHDRAW_BLOCKING_STATUSES = ["PENDING", "PROCESSING_CHAIN"];

@@ -1,7 +1,9 @@
-import { NextResponse } from "next/server";
+﻿import { NextResponse } from "next/server";
 
 import fallbackCards from "@/data/homeCards.json";
+import { ensureActiveCustomer } from "@/lib/customer-access";
 import { createHomeCard, readHomeCards } from "@/lib/homeCards";
+import { requireSessionUser } from "@/lib/server-session";
 
 const GALLERY_PREFIX = "gallery::";
 const UPLOADS_PREFIX = "/uploads/";
@@ -21,10 +23,6 @@ function sanitizeCreatePayload(body) {
 
   if (!body.categoryId) {
     throw new Error("categoryId is required");
-  }
-
-  if (!body.ownerId || typeof body.ownerId !== "string") {
-    throw new Error("Owner ID is required");
   }
 
   const image = typeof body.image === "string" ? body.image.trim() : "";
@@ -57,7 +55,6 @@ function sanitizeCreatePayload(body) {
     detailsHref: body.detailsHref?.trim(),
     voiceHref: body.voiceHref?.trim(),
     categoryId: Number(body.categoryId),
-    ownerId: body.ownerId,
   };
 }
 
@@ -173,11 +170,23 @@ export async function GET(request) {
 
 export async function POST(request) {
   try {
+    const session = requireSessionUser();
+    const user = await ensureActiveCustomer(session.userId);
     const body = await request.json();
     const payload = sanitizeCreatePayload(body);
-    const created = await createHomeCard(payload);
+    const created = await createHomeCard({
+      ...payload,
+      ownerId: user.id,
+    });
     return NextResponse.json(created, { status: 201 });
   } catch (error) {
+    if (error?.code === "UNAUTHENTICATED") {
+      return NextResponse.json({ message: "Please sign in." }, { status: 401 });
+    }
+    if (error?.code === "ACCOUNT_BLOCKED") {
+      return NextResponse.json({ message: "Your account is blocked." }, { status: 403 });
+    }
+
     console.error("--- CREATE CARD ERROR ---");
     console.error(error);
     console.error("-------------------------");

@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
@@ -33,8 +33,8 @@ export default function CustomerPortalEditPage() {
     const loadData = async () => {
       try {
         const [cardsRes, categoriesRes] = await Promise.all([
-          fetch("/api/home-cards", { cache: "no-store" }),
-          fetch("/api/admin/home-categories", { cache: "no-store" })
+          fetch("/api/customer/cards", { cache: "no-store" }),
+          fetch("/api/home-categories", { cache: "no-store" })
         ]);
 
         if (!cardsRes.ok) throw new Error("無法載入卡片資料");
@@ -99,7 +99,7 @@ export default function CustomerPortalEditPage() {
         throw new Error("請選擇分類");
       }
 
-      const response = await fetch(`/api/home-cards/${card.id}`, {
+      const response = await fetch(`/api/customer/cards/${card.id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload)
@@ -324,3 +324,4 @@ export default function CustomerPortalEditPage() {
     </main><SiteFooter /></>
   );
 }
+

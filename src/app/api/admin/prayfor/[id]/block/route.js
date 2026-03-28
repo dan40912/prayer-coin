@@ -2,8 +2,12 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { logAdminAction, logSystemError } from "@/lib/logger";
+import { requireAdmin } from "@/lib/admin-route-auth";
 
 export async function PATCH(request, { params }) {
+  const { error, session } = requireAdmin(request);
+  if (error) return error;
+
   try {
     const { id } = params;
     const { block } = await request.json();
@@ -17,6 +21,8 @@ export async function PATCH(request, { params }) {
     await logAdminAction({
       action: block ? "prayer.block" : "prayer.unblock",
       message: `更新禱告項目 ${numericId} 狀態為 ${block ? "Blocked" : "Active"}`,
+      actorId: session.adminId,
+      actorEmail: session.username,
       targetType: "HomePrayerCard",
       targetId: String(numericId),
       requestPath: request.url,

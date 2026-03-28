@@ -1,6 +1,7 @@
 ﻿import { NextResponse } from "next/server";
 
 import prisma from "@/lib/prisma";
+import { ensureActiveCustomer } from "@/lib/customer-access";
 import { requireSessionUser } from "@/lib/server-session";
 
 const VALID_REASONS = new Set([
@@ -16,6 +17,7 @@ const VALID_REASONS = new Set([
 export async function POST(request) {
   try {
     const session = requireSessionUser();
+    const user = await ensureActiveCustomer(session.userId);
 
     const payload = await request.json().catch(() => null);
     const reason = payload?.reason;
@@ -45,8 +47,8 @@ export async function POST(request) {
           level: "WARNING",
           message: `使用者檢舉 ${targetUsername || targetUserId || "未知使用者"}`,
           action: "overcomer/report",
-          actorId: session.id ?? null,
-          actorEmail: session.email ?? null,
+          actorId: user.id,
+          actorEmail: user.email ?? null,
           targetType: "user",
           targetId: targetUserId,
           requestPath: "/api/overcomer/report",
@@ -70,6 +72,9 @@ export async function POST(request) {
   } catch (error) {
     if (error?.code === "UNAUTHENTICATED") {
       return NextResponse.json({ message: "請先登入後再檢舉。" }, { status: 401 });
+    }
+    if (error?.code === "ACCOUNT_BLOCKED") {
+      return NextResponse.json({ message: "帳號已被停用，無法執行此操作。" }, { status: 403 });
     }
 
     console.error("POST /api/overcomer/report error", error);

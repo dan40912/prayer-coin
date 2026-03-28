@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 
+import { ensureActiveCustomer } from "@/lib/customer-access";
 import prisma from "@/lib/prisma";
 import { requireSessionUser } from "@/lib/server-session";
 
@@ -59,6 +60,8 @@ export async function PATCH(request, { params }) {
 
   try {
     const session = requireSessionUser();
+    const user = await ensureActiveCustomer(session.userId);
+
     const payload = await request.json().catch(() => null);
     if (!payload || typeof payload !== "object") {
       return NextResponse.json(
@@ -69,7 +72,7 @@ export async function PATCH(request, { params }) {
 
     const { response: ownershipResponse } = await findOwnedResponse(
       responseId,
-      session.id,
+      user.id,
     );
     if (ownershipResponse) {
       return ownershipResponse;
@@ -98,6 +101,9 @@ export async function PATCH(request, { params }) {
     if (error?.code === "UNAUTHENTICATED") {
       return NextResponse.json({ message: "Please sign in." }, { status: 401 });
     }
+    if (error?.code === "ACCOUNT_BLOCKED") {
+      return NextResponse.json({ message: "Your account is blocked." }, { status: 403 });
+    }
 
     console.error("PATCH /api/customer/responses/[id] error:", error);
     return NextResponse.json(
@@ -106,4 +112,3 @@ export async function PATCH(request, { params }) {
     );
   }
 }
-

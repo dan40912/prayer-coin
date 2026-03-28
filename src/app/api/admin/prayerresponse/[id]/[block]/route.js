@@ -1,8 +1,12 @@
-// ./src/app/api/admin/prayerresponse/[id]/block/route.js
+﻿// ./src/app/api/admin/prayerresponse/[id]/block/route.js
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
+import { requireAdmin } from "@/lib/admin-route-auth";
 
 export async function PATCH(request, { params }) {
+  const { error } = requireAdmin(request);
+  if (error) return error;
+
   try {
     const { id } = params; // URL /api/admin/prayerresponse/[id]/block
     const { block } = await request.json();
@@ -18,7 +22,7 @@ export async function PATCH(request, { params }) {
 
     return NextResponse.json(updated);
   } catch (error) {
-    console.error("❌ PATCH /api/admin/prayerresponse/[id]/block error:", error);
+    console.error("PATCH /api/admin/prayerresponse/[id]/block error:", error);
     return NextResponse.json({ message: "更新失敗" }, { status: 500 });
   }
 }

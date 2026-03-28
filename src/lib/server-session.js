@@ -1,28 +1,31 @@
 ﻿import { cookies } from "next/headers";
 
-import { AUTH_COOKIE_KEY } from "@/lib/auth-storage";
+import { CUSTOMER_SESSION_COOKIE, verifyCustomerSessionToken } from "@/lib/customer-session";
 
-function parseSessionCookie(rawValue) {
-  if (!rawValue) return null;
+function normalizeSessionPayload(payload) {
+  if (!payload || typeof payload !== "object") return null;
+  if (!payload.userId) return null;
 
-  try {
-    const decoded = decodeURIComponent(rawValue);
-    const parsed = JSON.parse(decoded);
-    if (parsed && typeof parsed === "object") {
-      return parsed;
-    }
-  } catch (error) {
-    console.warn("server-session: failed to parse session cookie", error);
-  }
-  return null;
+  return {
+    id: payload.userId,
+    userId: payload.userId,
+    email: payload.email ?? null,
+    name: payload.name ?? null,
+    username: payload.username ?? null,
+    exp: payload.exp ?? null,
+  };
 }
 
 export function readSessionUser() {
   try {
     const cookieStore = cookies();
-    const raw = cookieStore.get(AUTH_COOKIE_KEY)?.value;
-    return parseSessionCookie(raw);
+    const token = cookieStore.get(CUSTOMER_SESSION_COOKIE)?.value;
+    const payload = verifyCustomerSessionToken(token);
+    return normalizeSessionPayload(payload);
   } catch (error) {
+    if (error?.digest === "DYNAMIC_SERVER_USAGE") {
+      return null;
+    }
     console.warn("server-session: unable to read cookies", error);
     return null;
   }
@@ -30,7 +33,7 @@ export function readSessionUser() {
 
 export function requireSessionUser() {
   const session = readSessionUser();
-  if (!session?.id) {
+  if (!session?.userId) {
     const error = new Error("UNAUTHENTICATED");
     error.code = "UNAUTHENTICATED";
     throw error;

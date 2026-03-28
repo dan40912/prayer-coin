@@ -1,5 +1,6 @@
-import { NextResponse } from "next/server";
+﻿import { NextResponse } from "next/server";
 import { updateCategory } from "@/lib/homeCategories";
+import { requireAdmin } from "@/lib/admin-route-auth";
 
 function sanitizePayload(body) {
   if (!body || typeof body !== "object") {
@@ -11,11 +12,14 @@ function sanitizePayload(body) {
     slug: body.slug,
     description: body.description,
     sortOrder: body.sortOrder,
-    isActive: body.isActive
+    isActive: body.isActive,
   };
 }
 
 export async function PUT(request, { params }) {
+  const { error } = requireAdmin(request);
+  if (error) return error;
+
   try {
     const id = Number.parseInt(params.id, 10);
     if (!Number.isFinite(id)) {

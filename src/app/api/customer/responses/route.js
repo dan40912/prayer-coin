@@ -1,8 +1,9 @@
-﻿import { NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 
+import { ensureActiveCustomer } from "@/lib/customer-access";
 import prisma from "@/lib/prisma";
-import { processPendingResponseRewardsForUser } from "@/lib/tokenRewards";
 import { requireSessionUser } from "@/lib/server-session";
+import { processPendingResponseRewardsForUser } from "@/lib/tokenRewards";
 
 const RESPONSE_SELECT = {
   id: true,
@@ -30,12 +31,13 @@ const RESPONSE_SELECT = {
 export async function GET() {
   try {
     const session = requireSessionUser();
+    const user = await ensureActiveCustomer(session.userId);
 
-    await processPendingResponseRewardsForUser(session.id);
+    await processPendingResponseRewardsForUser(user.id);
 
     const responses = await prisma.prayerResponse.findMany({
       where: {
-        responderId: session.id,
+        responderId: user.id,
         homeCardId: { not: null },
       },
       orderBy: { createdAt: "desc" },
@@ -43,7 +45,7 @@ export async function GET() {
     });
 
     const wallet = await prisma.user.findUnique({
-      where: { id: session.id },
+      where: { id: user.id },
       select: { walletBalance: true },
     });
 
@@ -54,6 +56,9 @@ export async function GET() {
   } catch (error) {
     if (error?.code === "UNAUTHENTICATED") {
       return NextResponse.json({ message: "Please sign in." }, { status: 401 });
+    }
+    if (error?.code === "ACCOUNT_BLOCKED") {
+      return NextResponse.json({ message: "Your account is blocked." }, { status: 403 });
     }
 
     console.error("GET /api/customer/responses error:", error);

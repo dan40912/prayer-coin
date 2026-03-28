@@ -1,5 +1,6 @@
-import { NextResponse } from "next/server";
+﻿import { NextResponse } from "next/server";
 import { createCategory, readAllCategories } from "@/lib/homeCategories";
+import { requireAdmin } from "@/lib/admin-route-auth";
 
 function sanitizePayload(body) {
   if (!body || typeof body !== "object") {
@@ -15,16 +16,22 @@ function sanitizePayload(body) {
     slug: body.slug?.trim(),
     description: body.description?.trim(),
     sortOrder: Number.isFinite(body.sortOrder) ? body.sortOrder : 0,
-    isActive: body.isActive !== false
+    isActive: body.isActive !== false,
   };
 }
 
-export async function GET() {
+export async function GET(request) {
+  const { error } = requireAdmin(request);
+  if (error) return error;
+
   const categories = await readAllCategories();
   return NextResponse.json(categories, { status: 200 });
 }
 
 export async function POST(request) {
+  const { error } = requireAdmin(request);
+  if (error) return error;
+
   try {
     const body = await request.json();
     const payload = sanitizePayload(body);

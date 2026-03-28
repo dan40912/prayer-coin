@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
@@ -79,10 +79,17 @@ export function SiteHeader({ activePath, hideAuthActions = false }) {
     closeMenu();
   }, [current, closeMenu]);
 
-  const handleLogout = useCallback(() => {
+  const handleLogout = useCallback(async () => {
     closeMenu();
-    clearAuthSession();
-    router.push("/prayfor");
+    try {
+      await fetch("/api/auth/logout", { method: "POST" });
+      await fetch("/api/customer/session", { method: "DELETE" });
+    } catch {
+      // noop
+    } finally {
+      clearAuthSession();
+      router.push("/prayfor");
+    }
   }, [closeMenu, router]);
 
   return (

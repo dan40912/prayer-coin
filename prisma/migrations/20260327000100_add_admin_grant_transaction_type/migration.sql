@@ -1,0 +1,3 @@
+-- AlterTable
+ALTER TABLE `token_transaction`
+    MODIFY `type` ENUM('EARN_PRAYER', 'EARN_RESPONSE', 'ADMIN_GRANT', 'WITHDRAW', 'DONATE') NOT NULL;

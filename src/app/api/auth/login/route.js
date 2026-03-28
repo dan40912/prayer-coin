@@ -2,6 +2,10 @@
 import bcrypt from "bcryptjs";
 
 import prisma from "@/lib/prisma";
+import {
+  createCustomerSessionToken,
+  setCustomerSessionCookie,
+} from "@/lib/customer-session";
 
 export async function POST(request) {
   try {
@@ -34,8 +38,11 @@ export async function POST(request) {
     if (!isValid) {
       return NextResponse.json({ message: "帳號或密碼不正確" }, { status: 401 });
     }
+    if (user.isBlocked) {
+      return NextResponse.json({ message: "帳號已被停用" }, { status: 403 });
+    }
 
-    return NextResponse.json({
+    const response = NextResponse.json({
       user: {
         id: user.id,
         email: user.email,
@@ -46,6 +53,11 @@ export async function POST(request) {
         bio: user.bio,
       },
     });
+
+    const sessionToken = createCustomerSessionToken(user);
+    setCustomerSessionCookie(response, sessionToken);
+
+    return response;
   } catch (error) {
     console.error("POST /api/auth/login 發生錯誤", error);
     return NextResponse.json({ message: "登入時發生錯誤" }, { status: 500 });

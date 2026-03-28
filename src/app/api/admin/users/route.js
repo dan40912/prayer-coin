@@ -1,6 +1,7 @@
-import { NextResponse } from "next/server";
+﻿import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { logSystemError } from "@/lib/logger";
+import { requireAdmin } from "@/lib/admin-route-auth";
 
 const ALLOWED_SORT_FIELDS = {
   createdAt: "createdAt",
@@ -27,6 +28,9 @@ function toNumber(value) {
 }
 
 export async function GET(request) {
+  const { error } = requireAdmin(request);
+  if (error) return error;
+
   try {
     const { searchParams } = new URL(request.url);
     const search = searchParams.get("search")?.trim() ?? "";
@@ -124,7 +128,7 @@ export async function GET(request) {
       metadata: { query: Object.fromEntries(new URL(request.url).searchParams.entries()) },
     });
 
-    console.error("❌ /api/admin/users 發生錯誤:", err);
+    console.error("/api/admin/users 發生錯誤:", err);
     return NextResponse.json(
       { message: "無法取得使用者列表", error: err.message },
       { status: 500 }

@@ -1,16 +1,10 @@
 ﻿import { NextResponse } from "next/server";
 
 import prisma from "@/lib/prisma";
+import { requireAdmin } from "@/lib/admin-route-auth";
 
-const SESSION_HEADER = "x-admin-role";
-const ALLOWED_ROLES = new Set(["SUPER", "ADMIN"]);
 const DEFAULT_LIMIT = 20;
 const MAX_LIMIT = 100;
-
-function hasAccess(request) {
-  const role = request.headers.get(SESSION_HEADER) ?? "";
-  return ALLOWED_ROLES.has(role);
-}
 
 function clampPage(value) {
   const parsed = Number.parseInt(value ?? "1", 10);
@@ -24,9 +18,8 @@ function clampLimit(value) {
 }
 
 export async function GET(request) {
-  if (!hasAccess(request)) {
-    return NextResponse.json({ message: "Forbidden" }, { status: 403 });
-  }
+  const { error } = requireAdmin(request);
+  if (error) return error;
 
   const url = new URL(request.url);
   const { searchParams } = url;

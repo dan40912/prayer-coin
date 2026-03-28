@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 
+import { ensureActiveCustomer } from "@/lib/customer-access";
 import prisma from "@/lib/prisma";
 import { requireSessionUser } from "@/lib/server-session";
 
@@ -95,6 +96,11 @@ async function getOwnedCard(cardId, userId) {
   return { card };
 }
 
+async function requireActiveCustomerUser() {
+  const session = requireSessionUser();
+  return ensureActiveCustomer(session.userId);
+}
+
 export async function GET(request, { params }) {
   const cardId = Number.parseInt(params?.id ?? "", 10);
   if (!Number.isFinite(cardId)) {
@@ -102,14 +108,17 @@ export async function GET(request, { params }) {
   }
 
   try {
-    const session = requireSessionUser();
-    const { response, card } = await getOwnedCard(cardId, session.id);
+    const user = await requireActiveCustomerUser();
+    const { response, card } = await getOwnedCard(cardId, user.id);
     if (response) return response;
 
     return NextResponse.json(card);
   } catch (error) {
     if (error?.code === "UNAUTHENTICATED") {
       return NextResponse.json({ message: "Please sign in." }, { status: 401 });
+    }
+    if (error?.code === "ACCOUNT_BLOCKED") {
+      return NextResponse.json({ message: "Your account is blocked." }, { status: 403 });
     }
 
     console.error("GET /api/customer/cards/[id] error:", error);
@@ -127,13 +136,13 @@ export async function PATCH(request, { params }) {
   }
 
   try {
-    const session = requireSessionUser();
+    const user = await requireActiveCustomerUser();
     const payload = await request.json().catch(() => null);
     if (!payload || typeof payload !== "object") {
       return NextResponse.json({ message: "Please provide the fields to update." }, { status: 400 });
     }
 
-    const { response } = await getOwnedCard(cardId, session.id);
+    const { response } = await getOwnedCard(cardId, user.id);
     if (response) return response;
 
     const data = {};
@@ -159,6 +168,9 @@ export async function PATCH(request, { params }) {
     if (error?.code === "UNAUTHENTICATED") {
       return NextResponse.json({ message: "Please sign in." }, { status: 401 });
     }
+    if (error?.code === "ACCOUNT_BLOCKED") {
+      return NextResponse.json({ message: "Your account is blocked." }, { status: 403 });
+    }
 
     console.error("PATCH /api/customer/cards/[id] error:", error);
     return NextResponse.json(
@@ -175,11 +187,11 @@ export async function PUT(request, { params }) {
   }
 
   try {
-    const session = requireSessionUser();
+    const user = await requireActiveCustomerUser();
     const body = await request.json().catch(() => null);
     const updates = sanitizeUpdatePayload(body);
 
-    const { response } = await getOwnedCard(cardId, session.id);
+    const { response } = await getOwnedCard(cardId, user.id);
     if (response) return response;
 
     const updated = await prisma.homePrayerCard.update({
@@ -207,6 +219,9 @@ export async function PUT(request, { params }) {
     if (error?.code === "UNAUTHENTICATED") {
       return NextResponse.json({ message: "Please sign in." }, { status: 401 });
     }
+    if (error?.code === "ACCOUNT_BLOCKED") {
+      return NextResponse.json({ message: "Your account is blocked." }, { status: 403 });
+    }
 
     const message = error instanceof Error ? error.message : "Failed to update prayer card.";
     const status = /required|invalid|provide|title|category/i.test(message) ? 400 : 500;
@@ -223,8 +238,8 @@ export async function DELETE(request, { params }) {
   }
 
   try {
-    const session = requireSessionUser();
-    const { response } = await getOwnedCard(cardId, session.id);
+    const user = await requireActiveCustomerUser();
+    const { response } = await getOwnedCard(cardId, user.id);
     if (response) return response;
 
     await prisma.homePrayerCard.delete({ where: { id: cardId } });
@@ -232,6 +247,9 @@ export async function DELETE(request, { params }) {
   } catch (error) {
     if (error?.code === "UNAUTHENTICATED") {
       return NextResponse.json({ message: "Please sign in." }, { status: 401 });
+    }
+    if (error?.code === "ACCOUNT_BLOCKED") {
+      return NextResponse.json({ message: "Your account is blocked." }, { status: 403 });
     }
 
     console.error("DELETE /api/customer/cards/[id] error:", error);

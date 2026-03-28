@@ -1,6 +1,7 @@
 ﻿import { NextResponse } from "next/server";
 
 import prisma from "@/lib/prisma";
+import { ensureActiveCustomer } from "@/lib/customer-access";
 import { requireSessionUser } from "@/lib/server-session";
 import { REPORT_REASON_SET } from "@/constants/reportReasons";
 
@@ -12,6 +13,7 @@ function normalizeRemarks(value) {
 export async function POST(request) {
   try {
     const session = requireSessionUser();
+    const user = await ensureActiveCustomer(session.userId);
 
     const payload = await request.json().catch(() => null);
     const cardIdRaw = payload?.cardId;
@@ -39,7 +41,7 @@ export async function POST(request) {
       return NextResponse.json({ message: "找不到這則禱告事項" }, { status: 404 });
     }
 
-    const reporterId = session.id;
+    const reporterId = user.id;
 
     await prisma.$transaction(async (tx) => {
       const existing = await tx.homePrayerCardReport.findUnique({
@@ -82,7 +84,7 @@ export async function POST(request) {
           message: `使用者檢舉禱告事項 ${cardId}`,
           action: "prayfor/report",
           actorId: reporterId,
-          actorEmail: session.email ?? null,
+          actorEmail: user.email ?? null,
           targetType: "home_prayer_card",
           targetId: String(cardId),
           requestPath: "/api/prayfor/report",
@@ -99,6 +101,9 @@ export async function POST(request) {
   } catch (error) {
     if (error?.code === "UNAUTHENTICATED") {
       return NextResponse.json({ message: "請先登入後再檢舉" }, { status: 401 });
+    }
+    if (error?.code === "ACCOUNT_BLOCKED") {
+      return NextResponse.json({ message: "帳號已被停用，無法執行此操作" }, { status: 403 });
     }
 
     console.error("POST /api/prayfor/report error", error);

@@ -2,19 +2,14 @@
 import prisma from "@/lib/prisma";
 import bcrypt from "bcryptjs";
 import { logAdminAction } from "@/lib/logger";
+import { requireAdmin, roleSet } from "@/lib/admin-route-auth";
 
-const SESSION_HEADER = "x-admin-role";
+const SUPER_ONLY = roleSet("SUPER");
 const ALLOWED_ROLES = new Set(["SUPER", "ADMIN"]);
 
-function ensureSuperRole(request) {
-  const role = request.headers.get(SESSION_HEADER) ?? "";
-  return role === "SUPER";
-}
-
 export async function PATCH(request, { params }) {
-  if (!ensureSuperRole(request)) {
-    return NextResponse.json({ message: "Forbidden" }, { status: 403 });
-  }
+  const { error, session } = requireAdmin(request, SUPER_ONLY);
+  if (error) return error;
 
   const { id } = params;
   if (!id) {
@@ -91,6 +86,8 @@ export async function PATCH(request, { params }) {
     await logAdminAction({
       action: "admin.update",
       message: `更新管理員 ${updated.username}`,
+      actorId: session.adminId,
+      actorEmail: session.username,
       targetType: "AdminAccount",
       targetId: updated.id,
       metadata,

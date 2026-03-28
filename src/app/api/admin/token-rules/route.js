@@ -2,22 +2,11 @@
 
 import { logAdminAction } from "@/lib/logger";
 import { readTokenRewardRule, updateTokenRewardRule } from "@/lib/tokenRewards";
-
-const SESSION_HEADER = "x-admin-role";
-const ALLOWED_ROLES = new Set(["SUPER", "ADMIN"]);
-
-function resolveAdminRole(request) {
-  return request.headers.get(SESSION_HEADER) ?? "";
-}
-
-function hasAccess(request) {
-  return ALLOWED_ROLES.has(resolveAdminRole(request));
-}
+import { requireAdmin } from "@/lib/admin-route-auth";
 
 export async function GET(request) {
-  if (!hasAccess(request)) {
-    return NextResponse.json({ message: "Forbidden" }, { status: 403 });
-  }
+  const { error } = requireAdmin(request);
+  if (error) return error;
 
   try {
     const rule = await readTokenRewardRule();
@@ -41,12 +30,11 @@ export async function GET(request) {
 }
 
 export async function PATCH(request) {
-  if (!hasAccess(request)) {
-    return NextResponse.json({ message: "Forbidden" }, { status: 403 });
-  }
+  const { error, session } = requireAdmin(request);
+  if (error) return error;
 
   try {
-    const role = resolveAdminRole(request);
+    const role = session.role;
     const payload = await request.json().catch(() => null);
 
     if (!payload || typeof payload !== "object") {
@@ -68,6 +56,8 @@ export async function PATCH(request) {
     await logAdminAction({
       action: "token-rules.update",
       message: "Updated token reward rules",
+      actorId: session.adminId,
+      actorEmail: session.username,
       metadata: {
         rewardTokens: normalized.rewardTokens,
         observationDays: normalized.observationDays,

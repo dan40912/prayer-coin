@@ -61,22 +61,6 @@ function buildPrimaryTrack(card) {
   };
 }
 
-function buildResponseTrack(response, card, index) {
-  if (!response?.voiceUrl) return null;
-  const speaker = response.isAnonymous
-    ? "匿名代禱者"
-    : response.responder?.name || response.responder?.email || `回應者 ${index + 1}`;
-
-  return {
-    id: `card-${card?.id}-response-${response.id ?? index}`,
-    voiceUrl: response.voiceUrl,
-    speaker,
-    message: response.message?.trim() || "",
-    avatarUrl: response.responder?.avatarUrl?.trim?.() || "",
-    requestTitle: card?.title || "禱告錄音",
-  };
-}
-
 function dedupeTracks(tracks) {
   const source = Array.isArray(tracks) ? tracks : [];
   const seen = new Set();
@@ -275,6 +259,14 @@ export default function HomePrayerExplorer({
     void handleCategorySelect(POPULAR_SLUG);
   };
 
+  const handleRetryLoad = () => {
+    if (trimmedQuery) {
+      handleSearchSubmit();
+      return;
+    }
+    void handleCategorySelect(activeCategory || POPULAR_SLUG);
+  };
+
   const handleSearchSubmit = () => {
     const query = trimmedQuery;
     if (!query) return;
@@ -324,54 +316,9 @@ export default function HomePrayerExplorer({
   };
 
   useEffect(() => {
-    if (displayIsLoading && !queueCards.length) return undefined;
-
-    let cancelled = false;
-    const controller = new AbortController();
-
-    const buildQueueFromCards = async () => {
-      if (!queueCards.length) {
-        setQueue([], -1);
-        return;
-      }
-
-      const tracks = queueCards.map(buildPrimaryTrack).filter(Boolean);
-      const responseTracksByCard = await Promise.all(
-        queueCards.map(async (card) => {
-          if (!card?.id) return [];
-          try {
-            const response = await fetch(`/api/responses/${card.id}`, {
-              cache: "no-store",
-              signal: controller.signal,
-            });
-            if (!response.ok) return [];
-            const data = await response.json();
-            if (!Array.isArray(data)) return [];
-            return data
-              .map((item, index) => buildResponseTrack(item, card, index))
-              .filter(Boolean);
-          } catch (error) {
-            if (error?.name === "AbortError") throw error;
-            console.warn("[HomePrayerExplorer] preload responses failed", card?.id, error);
-            return [];
-          }
-        })
-      );
-
-      if (cancelled) return;
-      const merged = dedupeTracks([...tracks, ...responseTracksByCard.flat()]);
-      setQueue(merged, -1);
-    };
-
-    buildQueueFromCards().catch((error) => {
-      if (error?.name === "AbortError") return;
-      console.warn("[HomePrayerExplorer] preload queue failed", error);
-    });
-
-    return () => {
-      cancelled = true;
-      controller.abort();
-    };
+    if (displayIsLoading && !queueCards.length) return;
+    const tracks = dedupeTracks(queueCards.map(buildPrimaryTrack));
+    setQueue(tracks, -1);
   }, [displayIsLoading, queueCards, queueSignature, setQueue]);
 
   const headingText = isShowingSearchResults
@@ -532,6 +479,11 @@ export default function HomePrayerExplorer({
           <h3>{headingText}</h3>
           {displayIsLoading ? <span className="home-cards__status">載入中...</span> : null}
           {displayError ? <span className="home-cards__status error">{displayError}</span> : null}
+          {displayError ? (
+            <button type="button" className="home-explorer__action-btn home-explorer__action-btn--ghost" onClick={handleRetryLoad}>
+              重新整理
+            </button>
+          ) : null}
         </div>
 
         <div className="home-card-grid">

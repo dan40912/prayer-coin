@@ -2,7 +2,6 @@
 export const AUTH_STORAGE_KEY = "pc-auth-user";
 export const AUTH_COOKIE_KEY = "pc-auth";
 export const AUTH_CHANGE_EVENT = "pc-auth-changed";
-const COOKIE_MAX_AGE = 7 * 24 * 60 * 60; // 7 days
 
 function safeParse(json) {
   try {
@@ -13,49 +12,25 @@ function safeParse(json) {
   }
 }
 
-function readCookieValue(name) {
-  if (typeof document === "undefined") return null;
-  const pattern = new RegExp(`(?:^|; )${name}=([^;]*)`);
-  const match = document.cookie.match(pattern);
-  return match ? decodeURIComponent(match[1]) : null;
-}
-
 export function readAuthSession() {
   if (typeof window === "undefined") return null;
 
-  // 先讀 localStorage
   const stored = window.localStorage?.getItem(AUTH_STORAGE_KEY);
-  if (stored) {
-    const parsed = safeParse(stored);
-    if (parsed) return parsed;
-  }
+  if (!stored) return null;
 
-  // 再讀 cookie
-  const cookieValue = readCookieValue(AUTH_COOKIE_KEY);
-  if (!cookieValue) return null;
-
-  return safeParse(cookieValue);
+  return safeParse(stored);
 }
 
 export function saveAuthSession(user) {
   if (typeof window === "undefined") return;
   const payload = JSON.stringify(user);
 
-  // 存到 localStorage
   try {
     window.localStorage.setItem(AUTH_STORAGE_KEY, payload);
   } catch (error) {
     console.warn("auth-storage: unable to save to localStorage", error);
   }
 
-  // 存到 cookie
-  if (typeof document !== "undefined") {
-    document.cookie = `${AUTH_COOKIE_KEY}=${encodeURIComponent(
-      payload
-    )}; path=/; max-age=${COOKIE_MAX_AGE}; sameSite=Lax`;
-  }
-
-  // 觸發事件（跨 tab & hook 能監聽到）
   window.dispatchEvent(new Event(AUTH_CHANGE_EVENT));
 }
 
@@ -64,9 +39,12 @@ export function clearAuthSession() {
     window.localStorage.removeItem(AUTH_STORAGE_KEY);
   }
 
+  // Cleanup legacy non-httpOnly cookie from old auth implementation.
   if (typeof document !== "undefined") {
     document.cookie = `${AUTH_COOKIE_KEY}=; path=/; max-age=0; sameSite=Lax`;
   }
 
-  window.dispatchEvent(new Event(AUTH_CHANGE_EVENT));
+  if (typeof window !== "undefined") {
+    window.dispatchEvent(new Event(AUTH_CHANGE_EVENT));
+  }
 }

@@ -1,49 +1,77 @@
-import { NextResponse } from "next/server";
-import prisma from "@/lib/prisma";
+﻿import { NextResponse } from "next/server";
+
+import { requireAdmin } from "@/lib/admin-route-auth";
+import { writeBanner } from "@/lib/banner";
+
+function toAdminPayload(banner) {
+  return {
+    id: 1,
+    eyebrow: banner?.eyebrow ?? "",
+    headline: banner?.headline ?? "",
+    subheadline: banner?.subheadline ?? "",
+    description: banner?.description ?? "",
+    primaryCtaLabel: banner?.primaryCta?.label ?? "",
+    primaryCtaHref: banner?.primaryCta?.href ?? "",
+    secondaryCtaLabel: banner?.secondaryCta?.label ?? "",
+    secondaryCtaHref: banner?.secondaryCta?.href ?? "",
+    heroImage: banner?.heroImage ?? "",
+  };
+}
+
+function fromAdminPayload(body) {
+  return {
+    eyebrow: body?.eyebrow ?? "",
+    headline: body?.headline ?? "",
+    subheadline: body?.subheadline ?? "",
+    description: body?.description ?? "",
+    primaryCta: {
+      label: body?.primaryCtaLabel ?? "",
+      href: body?.primaryCtaHref ?? "",
+    },
+    secondaryCta: body?.secondaryCtaLabel && body?.secondaryCtaHref
+      ? {
+          label: body.secondaryCtaLabel,
+          href: body.secondaryCtaHref,
+        }
+      : null,
+    heroImage: body?.heroImage ?? "",
+  };
+}
 
 // PATCH /api/admin/banners/:id
 export async function PATCH(req, { params }) {
+  const { error } = requireAdmin(req);
+  if (error) return error;
+
   try {
     const id = Number(params.id);
-    if (isNaN(id)) {
-      return NextResponse.json({ message: "❌ 無效的 ID" }, { status: 400 });
+    if (!Number.isInteger(id) || id !== 1) {
+      return NextResponse.json({ message: "Invalid banner id" }, { status: 400 });
     }
 
     const body = await req.json();
-
-    const updated = await prisma.siteBanner.update({
-      where: { id },
-      data: {
-        eyebrow: body.eyebrow,
-        headline: body.headline,
-        subheadline: body.subheadline,
-        description: body.description,
-        primaryCtaLabel: body.primaryCtaLabel,
-        primaryCtaHref: body.primaryCtaHref,
-        secondaryCtaLabel: body.secondaryCtaLabel,
-        secondaryCtaHref: body.secondaryCtaHref,
-        heroImage: body.heroImage,
-      },
-    });
-
-    return NextResponse.json(updated);
+    const saved = await writeBanner(fromAdminPayload(body));
+    return NextResponse.json(toAdminPayload(saved));
   } catch (error) {
-    console.error("❌ PATCH /api/admin/banners/:id error:", error);
+    console.error("PATCH /api/admin/banners/:id error:", error);
     return NextResponse.json({ message: "更新失敗" }, { status: 500 });
   }
 }
-export async function DELETE(request) {
+
+export async function DELETE(request, { params }) {
+  const { error } = requireAdmin(request);
+  if (error) return error;
+
   try {
-    const { id } = await request.json();
-    if (!id) return NextResponse.json({ message: "缺少 ID" }, { status: 400 });
+    const id = Number(params?.id);
+    if (!Number.isInteger(id) || id !== 1) {
+      return NextResponse.json({ message: "Invalid banner id" }, { status: 400 });
+    }
 
-    await prisma.siteBanner.delete({
-      where: { id: Number(id) },
-    });
-
-    return NextResponse.json({ message: "刪除成功" });
+    const reset = await writeBanner({});
+    return NextResponse.json({ message: "已重置", banner: toAdminPayload(reset) });
   } catch (error) {
-    console.error("❌ DELETE /api/admin/banner error:", error);
+    console.error("DELETE /api/admin/banner error:", error);
     return NextResponse.json({ message: "刪除失敗" }, { status: 500 });
   }
 }

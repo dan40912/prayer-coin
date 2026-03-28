@@ -1,8 +1,12 @@
-// ./src/app/api/admin/prayerresponse/route.js
+﻿// ./src/app/api/admin/prayerresponse/route.js
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
+import { requireAdmin } from "@/lib/admin-route-auth";
 
 export async function GET(request) {
+  const { error } = requireAdmin(request);
+  if (error) return error;
+
   try {
     const { searchParams } = new URL(request.url);
     const search = searchParams.get("search") || "";
@@ -56,7 +60,7 @@ export async function GET(request) {
       },
     });
   } catch (error) {
-    console.error("❌ GET /api/admin/prayerresponse error:", error);
-    return NextResponse.json({ message: "無法取得留言" }, { status: 500 });
+    console.error("GET /api/admin/prayerresponse error:", error);
+    return NextResponse.json({ message: "無法取得回應列表" }, { status: 500 });
   }
 }

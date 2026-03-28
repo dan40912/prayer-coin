@@ -1,4 +1,6 @@
 ﻿import { NextResponse } from "next/server";
+
+import { requireAdmin } from "@/lib/admin-route-auth";
 import { readBanner, writeBanner } from "@/lib/banner";
 
 function validatePayload(payload) {
@@ -45,17 +47,20 @@ export async function GET() {
 }
 
 export async function PUT(request) {
+  const { error } = requireAdmin(request);
+  if (error) return error;
+
   try {
     const body = await request.json();
-    const error = validatePayload(body);
+    const validationError = validatePayload(body);
 
-    if (error) {
-      return NextResponse.json({ message: error }, { status: 400 });
+    if (validationError) {
+      return NextResponse.json({ message: validationError }, { status: 400 });
     }
 
     const updated = await writeBanner(body);
     return NextResponse.json(updated, { status: 200 });
-  } catch (error) {
+  } catch (caughtError) {
     return NextResponse.json({ message: "Failed to update banner" }, { status: 500 });
   }
 }

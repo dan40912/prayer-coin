@@ -1,24 +1,12 @@
-import { NextResponse } from "next/server";
+﻿import { NextResponse } from "next/server";
 
 import { logAdminAction } from "@/lib/logger";
 import { readSiteSettings, setMaintenanceMode } from "@/lib/siteSettings";
-
-const SESSION_HEADER = "x-admin-role";
-const ALLOWED_ROLES = new Set(["SUPER", "ADMIN"]);
-
-function resolveAdminRole(request) {
-  return request.headers.get(SESSION_HEADER) ?? "";
-}
-
-function ensureAdminAccess(request) {
-  const role = resolveAdminRole(request);
-  return ALLOWED_ROLES.has(role);
-}
+import { requireAdmin } from "@/lib/admin-route-auth";
 
 export async function GET(request) {
-  if (!ensureAdminAccess(request)) {
-    return NextResponse.json({ message: "Forbidden" }, { status: 403 });
-  }
+  const { error } = requireAdmin(request);
+  if (error) return error;
 
   try {
     const settings = await readSiteSettings();
@@ -30,11 +18,10 @@ export async function GET(request) {
 }
 
 export async function PATCH(request) {
-  if (!ensureAdminAccess(request)) {
-    return NextResponse.json({ message: "Forbidden" }, { status: 403 });
-  }
+  const { error, session } = requireAdmin(request);
+  if (error) return error;
 
-  const role = resolveAdminRole(request);
+  const role = session.role;
 
   try {
     const payload = await request.json().catch(() => null);
@@ -52,6 +39,8 @@ export async function PATCH(request) {
     await logAdminAction({
       action: maintenanceMode ? "maintenance.enable" : "maintenance.disable",
       message: maintenanceMode ? "Enabled maintenance mode" : "Disabled maintenance mode",
+      actorId: session.adminId,
+      actorEmail: session.username,
       requestPath: request.url,
       metadata: { maintenanceMode, role },
     });

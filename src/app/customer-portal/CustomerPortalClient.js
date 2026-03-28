@@ -9,6 +9,7 @@ import Link from "next/link";
 
 
 import { SiteHeader, SiteFooter } from "@/components/site-chrome";
+import CustomerWithdrawPanel from "@/components/customer/CustomerWithdrawPanel";
 
 import { useAuthSession } from "@/hooks/useAuthSession";
 
@@ -955,6 +956,9 @@ export default function CustomerPortalPage() {
                   <span>發佈時間：{publishedAt}</span>
                   <span>檢舉數：{reportCount}</span>
                   <span>獎勵狀態：{REWARD_STATUS_LABELS[reply.rewardStatus] ?? "審核中"}</span>
+                  {reply.rewardStatus === "PENDING" && reply.rewardEligibleAt ? (
+                    <span>預計結算：{formatTime(reply.rewardEligibleAt)}</span>
+                  ) : null}
                   {reply.rewardStatus === "REWARDED" ? (
                     <span>累計獎勵：{formatTokenValue(reply.tokensAwarded)} 代幣</span>
                   ) : null}
@@ -1154,6 +1158,8 @@ export default function CustomerPortalPage() {
             
 
 
+
+            <CustomerWithdrawPanel profile={profile} onProfileUpdate={setProfile} />
 
             <section className="cp-section cp-section--cards">
 

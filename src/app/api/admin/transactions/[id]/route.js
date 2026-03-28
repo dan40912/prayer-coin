@@ -1,8 +1,10 @@
 ﻿import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { logAdminAction, logSystemError } from "@/lib/logger";
+import { requireAdmin, roleSet } from "@/lib/admin-route-auth";
 
 const VALID_STATUS = new Set(["PENDING", "PROCESSING_CHAIN", "COMPLETED", "FAILED"]);
+const SUPER_ONLY = roleSet("SUPER");
 
 function toNumber(value) {
   if (value === null || value === undefined) return 0;
@@ -20,7 +22,26 @@ function toNumber(value) {
   return Number(value);
 }
 
+function validateWithdrawTransition(currentStatus, nextStatus) {
+  if (nextStatus === "PROCESSING_CHAIN" && currentStatus !== "PENDING") {
+    return "Withdraw can move to PROCESSING_CHAIN only from PENDING.";
+  }
+
+  if (nextStatus === "COMPLETED" && !["PENDING", "PROCESSING_CHAIN"].includes(currentStatus)) {
+    return "Withdraw can move to COMPLETED only from PENDING or PROCESSING_CHAIN.";
+  }
+
+  if (nextStatus === "FAILED" && !["PENDING", "PROCESSING_CHAIN"].includes(currentStatus)) {
+    return "Withdraw can move to FAILED only from PENDING or PROCESSING_CHAIN.";
+  }
+
+  return null;
+}
+
 export async function PATCH(request, { params }) {
+  const { error, session } = requireAdmin(request, SUPER_ONLY);
+  if (error) return error;
+
   const { id } = params;
 
   if (!id) {
@@ -69,6 +90,13 @@ export async function PATCH(request, { params }) {
       return NextResponse.json(existing);
     }
 
+    if (existing.type === "WITHDRAW") {
+      const transitionError = validateWithdrawTransition(existing.status, nextStatus);
+      if (transitionError) {
+        return NextResponse.json({ message: transitionError }, { status: 400 });
+      }
+    }
+
     const updateData = {
       status: nextStatus,
       updatedAt: new Date(),
@@ -78,18 +106,75 @@ export async function PATCH(request, { params }) {
       updateData.txHash = txHash;
     }
 
-    if (existing.type === "WITHDRAW" && nextStatus === "FAILED" && existing.status !== "FAILED") {
+    if (existing.type === "WITHDRAW" && nextStatus === "COMPLETED" && existing.status !== "COMPLETED") {
       await prisma.$transaction(async (tx) => {
-        await tx.tokenTransaction.update({
+        const latestTransaction = await tx.tokenTransaction.findUnique({
           where: { id },
+          select: {
+            id: true,
+            userId: true,
+            amount: true,
+            status: true,
+            type: true,
+          },
+        });
+
+        if (!latestTransaction) {
+          const missingTransactionError = new Error("TRANSACTION_NOT_FOUND");
+          missingTransactionError.code = "TRANSACTION_NOT_FOUND";
+          throw missingTransactionError;
+        }
+
+        if (latestTransaction.type !== "WITHDRAW") {
+          const invalidTypeError = new Error("INVALID_TRANSACTION_TYPE");
+          invalidTypeError.code = "INVALID_TRANSACTION_TYPE";
+          throw invalidTypeError;
+        }
+
+        if (!["PENDING", "PROCESSING_CHAIN"].includes(latestTransaction.status)) {
+          const transitionConflictError = new Error("WITHDRAW_STATE_CONFLICT");
+          transitionConflictError.code = "WITHDRAW_STATE_CONFLICT";
+          throw transitionConflictError;
+        }
+
+        const user = await tx.user.findUnique({
+          where: { id: latestTransaction.userId },
+          select: { id: true, walletBalance: true },
+        });
+
+        if (!user) {
+          const missingUserError = new Error("USER_NOT_FOUND");
+          missingUserError.code = "USER_NOT_FOUND";
+          throw missingUserError;
+        }
+
+        if (user.walletBalance.lt(latestTransaction.amount)) {
+          const insufficientBalanceError = new Error("INSUFFICIENT_BALANCE");
+          insufficientBalanceError.code = "INSUFFICIENT_BALANCE";
+          throw insufficientBalanceError;
+        }
+
+        const updatedResult = await tx.tokenTransaction.updateMany({
+          where: {
+            id,
+            status: {
+              in: ["PENDING", "PROCESSING_CHAIN"],
+            },
+          },
           data: updateData,
         });
 
+        if (updatedResult.count !== 1) {
+          const transitionConflictError = new Error("WITHDRAW_STATE_CONFLICT");
+          transitionConflictError.code = "WITHDRAW_STATE_CONFLICT";
+          throw transitionConflictError;
+        }
+
         await tx.user.update({
-          where: { id: existing.userId },
+          where: { id: latestTransaction.userId },
           data: {
             walletBalance: {
-              increment: existing.amount,
+              decrement: latestTransaction.amount,
             },
           },
         });
@@ -104,6 +189,8 @@ export async function PATCH(request, { params }) {
     await logAdminAction({
       action: "transaction.update",
       message: `Updated transaction ${id} status to ${nextStatus}`,
+      actorId: session.adminId,
+      actorEmail: session.username,
       targetType: "TokenTransaction",
       targetId: id,
       requestPath: request.url,
@@ -137,6 +224,29 @@ export async function PATCH(request, { params }) {
       gasFee: refreshed.gasFee !== null ? toNumber(refreshed.gasFee) : null,
     });
   } catch (error) {
+    if (error?.code === "INSUFFICIENT_BALANCE") {
+      return NextResponse.json({ message: "Insufficient user balance for withdrawal." }, { status: 409 });
+    }
+
+    if (error?.code === "WITHDRAW_STATE_CONFLICT") {
+      return NextResponse.json(
+        { message: "Withdrawal status changed by another admin. Please refresh and try again." },
+        { status: 409 },
+      );
+    }
+
+    if (error?.code === "USER_NOT_FOUND") {
+      return NextResponse.json({ message: "User not found." }, { status: 404 });
+    }
+
+    if (error?.code === "TRANSACTION_NOT_FOUND") {
+      return NextResponse.json({ message: "Transaction not found." }, { status: 404 });
+    }
+
+    if (error?.code === "INVALID_TRANSACTION_TYPE") {
+      return NextResponse.json({ message: "Invalid transaction type for this operation." }, { status: 400 });
+    }
+
     await logSystemError({
       message: `Failed to update transaction ${id}`,
       error,

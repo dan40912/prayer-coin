@@ -63,6 +63,38 @@ export default async function HomeLandingPage() {
           </div>
         </section>
 
+        <section className="section home-trust-section" id="trust-snapshot">
+          <div className="section__container">
+            <div className="home-trust-section__head">
+              <h2>你可以先看見信任基礎，再決定是否參與</h2>
+              <p>我們先公開規則與邊界，讓每位使用者知道平台如何保護內容與互動品質。</p>
+            </div>
+            <div className="home-trust-section__grid">
+              <article className="home-trust-section__card">
+                <h3>社群規範</h3>
+                <p>明確禁止騷擾、詐騙、仇恨內容與冒名行為。</p>
+                <Link href="/disclaimer" prefetch={false}>
+                  查看規範
+                </Link>
+              </article>
+              <article className="home-trust-section__card">
+                <h3>資料最小揭露</h3>
+                <p>前台只顯示必要公開資訊，敏感欄位不會外露。</p>
+                <Link href="/whitepaper" prefetch={false}>
+                  查看條款
+                </Link>
+              </article>
+              <article className="home-trust-section__card">
+                <h3>檢舉與封鎖</h3>
+                <p>支援檢舉流程與管理後台封鎖機制，降低風險擴散。</p>
+                <Link href="/howto" prefetch={false}>
+                  了解處理流程
+                </Link>
+              </article>
+            </div>
+          </div>
+        </section>
+
         <section className="section bg-light-flow" id="entry-flows">
           <div className="section__container">
             <h2>三條最短路徑</h2>
@@ -88,6 +120,20 @@ export default async function HomeLandingPage() {
                   查看使用方式
                 </Link>
               </article>
+            </div>
+            <div className="home-guide-steps">
+              <div className="home-guide-steps__item">
+                <span>1</span>
+                <p>先看規則與範例，確認這裡適合你的需求。</p>
+              </div>
+              <div className="home-guide-steps__item">
+                <span>2</span>
+                <p>發佈代禱內容時先說明背景、目前狀態與盼望。</p>
+              </div>
+              <div className="home-guide-steps__item">
+                <span>3</span>
+                <p>收到回應後可持續更新，讓代禱者知道後續進展。</p>
+              </div>
             </div>
           </div>
         </section>

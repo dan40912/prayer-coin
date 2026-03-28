@@ -2,9 +2,13 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { logAdminAction, logSystemError } from "@/lib/logger";
+import { requireAdmin } from "@/lib/admin-route-auth";
 
 // 取得禱告卡片列表，支援搜尋、狀態篩選與排序
 export async function GET(request) {
+  const { error } = requireAdmin(request);
+  if (error) return error;
+
   try {
     const { searchParams } = new URL(request.url);
     const search = searchParams.get("search") || "";
@@ -72,6 +76,9 @@ export async function GET(request) {
 
 // 更新禱告項目狀態
 export async function PATCH(request) {
+  const { error, session } = requireAdmin(request);
+  if (error) return error;
+
   try {
     const { id, block } = await request.json();
 
@@ -88,6 +95,8 @@ export async function PATCH(request) {
     await logAdminAction({
       action: block ? "prayer.block" : "prayer.unblock",
       message: `更新禱告項目 ${numericId} 狀態為 ${block ? "Blocked" : "Active"}`,
+      actorId: session.adminId,
+      actorEmail: session.username,
       targetType: "HomePrayerCard",
       targetId: String(numericId),
       requestPath: request.url,
