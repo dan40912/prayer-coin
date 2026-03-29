@@ -331,8 +331,7 @@ export default function HomePrayerExplorer({
     <section className="section home-explorer">
       <div className="home-explorer__header">
         <div className="home-explorer__intro">
-          <span className="badge-soft home-explorer__badge">PRAYER DISCOVERY</span>
-          <p className="home-explorer__intro-text">先搜尋，再快速找到你願意代禱的主題。</p>
+         
         </div>
         <div className="home-explorer__search-card">
           <div className="home-explorer__search-head">

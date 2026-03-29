@@ -1,7 +1,7 @@
 "use client";
 
 export default function AdminHintPanel({
-  title = "操作提示",
+  title = "Tips",
   description = "",
   items = [],
   tone = "info",
@@ -26,3 +26,4 @@ export default function AdminHintPanel({
     </section>
   );
 }
+

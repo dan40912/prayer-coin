@@ -56,10 +56,10 @@ export function useAdminFeedback() {
         }
 
         return {
-          title: options.title || "確認操作",
-          message: options.message || "你確定要執行這個操作嗎？",
-          confirmText: options.confirmText || "確認",
-          cancelText: options.cancelText || "取消",
+          title: options.title || "Please Confirm",
+          message: options.message || "This action may affect live content. Continue?",
+          confirmText: options.confirmText || "Confirm",
+          cancelText: options.cancelText || "Cancel",
           tone: options.tone || "warning",
           resolve,
         };
@@ -67,17 +67,14 @@ export function useAdminFeedback() {
     });
   }, []);
 
-  const closeConfirm = useCallback(
-    (accepted) => {
-      setConfirmState((prev) => {
-        if (prev?.resolve) {
-          prev.resolve(Boolean(accepted));
-        }
-        return null;
-      });
-    },
-    [],
-  );
+  const closeConfirm = useCallback((accepted) => {
+    setConfirmState((prev) => {
+      if (prev?.resolve) {
+        prev.resolve(Boolean(accepted));
+      }
+      return null;
+    });
+  }, []);
 
   useEffect(() => {
     return () => {
@@ -105,7 +102,7 @@ export function useAdminFeedback() {
               <button
                 type="button"
                 className="admin-toast__close"
-                aria-label="關閉提示"
+                aria-label="Close notice"
                 onClick={() => dismissToast(toast.id)}
               >
                 ×
@@ -146,3 +143,4 @@ export function useAdminFeedback() {
     notifyWarning,
   };
 }
+

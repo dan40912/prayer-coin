@@ -104,6 +104,7 @@ const USER_SELECT_FIELDS = {
   isBlocked: true,
   reportCount: true,
   walletBalance: true,
+  createdAt: true,
   updatedAt: true,
 };
 

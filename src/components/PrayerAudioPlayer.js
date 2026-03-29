@@ -32,7 +32,12 @@ export default function PrayerAudioPlayer({ requestId, initialTrack = null, pray
     }
     const data = await res.json();
     return data
-      .filter((item) => item?.voiceUrl)
+      .filter(
+        (item) =>
+          item?.voiceUrl &&
+          !item.isBlocked &&
+          Number(item.reportCount ?? 0) === 0
+      )
       .map((item, index) => ({
         id: item.id ?? `response-${index}`,
         voiceUrl: item.voiceUrl,

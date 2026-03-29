@@ -26,7 +26,7 @@ export async function GET(_req, { params }) {
 
   try {
     const responses = await prisma.prayerResponse.findMany({
-      where: { homeCardId, isBlocked: false },
+      where: { homeCardId, isBlocked: false, reportCount: 0 },
       orderBy: { createdAt: "desc" },
       select: SAFE_RESPONSE_SELECT,
     });

@@ -50,6 +50,11 @@ function normalizeResponseTrack(item, index, prayerTitle) {
   };
 }
 
+function isValidResponse(item) {
+  if (!item || item.isBlocked) return false;
+  return Number(item.reportCount ?? 0) === 0;
+}
+
 export default function VoiceWallPlayer({ requestId, prayerTitle = "", initialTrack = null }) {
   const { setQueue } = useAudio();
   const audioRef = useRef(null);
@@ -82,6 +87,7 @@ export default function VoiceWallPlayer({ requestId, prayerTitle = "", initialTr
       const primary = normalizePrimaryTrack(initialTrack, prayerTitle);
       const responses = Array.isArray(data)
         ? data
+            .filter(isValidResponse)
             .map((item, index) => normalizeResponseTrack(item, index, prayerTitle))
             .filter(Boolean)
         : [];

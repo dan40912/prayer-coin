@@ -1,4 +1,3 @@
-// src/app/api/admin/users/[id]/block/route.js
 import { NextResponse } from "next/server";
 
 import { readAdminSessionFromRequest } from "@/lib/admin-session";
@@ -23,7 +22,7 @@ export async function PATCH(request, { params }) {
     });
 
     if (!user) {
-      return NextResponse.json({ message: "使用者不存在" }, { status: 404 });
+      return NextResponse.json({ message: "User not found" }, { status: 404 });
     }
 
     const nextBlockedState = typeof body.block === "boolean" ? body.block : !user.isBlocked;
@@ -36,7 +35,7 @@ export async function PATCH(request, { params }) {
 
     await logAdminAction({
       action: updated.isBlocked ? "user.block" : "user.unblock",
-      message: `調整用戶 ${id} 狀態為 ${updated.isBlocked ? "Blocked" : "Active"}`,
+      message: `Updated user ${id} status to ${updated.isBlocked ? "Blocked" : "Active"}`,
       actorId: session.adminId,
       actorEmail: session.username,
       targetType: "User",
@@ -51,16 +50,16 @@ export async function PATCH(request, { params }) {
     return NextResponse.json(updated);
   } catch (err) {
     await logSystemError({
-      message: `切換用戶 ${params?.id ?? ""} 狀態失敗`,
+      message: `Failed to update user status: ${params?.id ?? ""}`,
       error: err,
       requestPath: request.url,
       metadata: { userId: params?.id },
     });
 
-    console.error("❌ 切換使用者狀態失敗:", err);
     return NextResponse.json(
-      { message: "更新使用者狀態失敗", error: err.message },
+      { message: "Failed to update user status", error: err?.message ?? "Unknown error" },
       { status: 500 },
     );
   }
 }
+

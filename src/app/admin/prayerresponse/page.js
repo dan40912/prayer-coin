@@ -1,102 +1,345 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 
+import AdminLinkedUserEditor from "@/components/admin/AdminLinkedUserEditor";
 import AdminHintPanel from "@/components/admin/AdminHintPanel";
 import { useAdminFeedback } from "@/components/admin/useAdminFeedback";
 import { useDebouncedValue } from "@/hooks/useDebouncedValue";
 
+function createEmptyForm() {
+  return {
+    message: "",
+    voiceUrl: "",
+    isAnonymous: false,
+    isBlocked: false,
+  };
+}
+
+function mapDetailToForm(detail) {
+  return {
+    message: detail?.message || "",
+    voiceUrl: detail?.voiceUrl || "",
+    isAnonymous: Boolean(detail?.isAnonymous),
+    isBlocked: Boolean(detail?.isBlocked),
+  };
+}
+
 export default function AdminPrayerResponsePage() {
   const { feedbackNode, confirmAction, notifyError, notifySuccess } = useAdminFeedback();
+
   const [responses, setResponses] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [page, setPage] = useState(1);
-  const [pagination, setPagination] = useState({
-    total: 0,
-    totalPages: 1,
-  });
+  const [pagination, setPagination] = useState({ total: 0, totalPages: 1 });
   const [actionId, setActionId] = useState(null);
+
+  const [editorOpen, setEditorOpen] = useState(false);
+  const [editorId, setEditorId] = useState(null);
+  const [editorLoading, setEditorLoading] = useState(false);
+  const [editorSaving, setEditorSaving] = useState(false);
+  const [editorError, setEditorError] = useState("");
+  const [detail, setDetail] = useState(null);
+  const [form, setForm] = useState(createEmptyForm());
+  const [originalForm, setOriginalForm] = useState(createEmptyForm());
+  const [linkedUserEditor, setLinkedUserEditor] = useState({ id: null, role: "回覆者" });
+
   const debouncedSearch = useDebouncedValue(search, 400);
 
-  const loadResponses = async () => {
+  const loadResponses = useCallback(async () => {
     try {
       setLoading(true);
       setError("");
-      const res = await fetch(
-        `/api/admin/prayerresponse?search=${debouncedSearch}&status=${statusFilter}&page=${page}&limit=10`,
-        { cache: "no-store" },
-      );
-      if (!res.ok) throw new Error("無法取得留言");
+      const params = new URLSearchParams({
+        search: debouncedSearch,
+        status: statusFilter,
+        page: String(page),
+        limit: "10",
+      });
+
+      const res = await fetch(`/api/admin/prayerresponse?${params.toString()}`, {
+        cache: "no-store",
+      });
+
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.message || "無法取得回應列表");
+      }
+
       const data = await res.json();
       setResponses(data.data ?? []);
       setPagination(data.pagination ?? { total: 0, totalPages: 1 });
     } catch (err) {
-      setError(err.message || "無法取得留言");
+      setError(err.message || "無法取得回應列表");
     } finally {
       setLoading(false);
     }
-  };
+  }, [debouncedSearch, page, statusFilter]);
 
-  const handleToggleBlock = async (id, block) => {
-    const shouldContinue = await confirmAction({
-      title: block ? "確認封鎖回應" : "確認解除封鎖",
-      message: block ? "封鎖後該留言將不再顯示。": "解除封鎖後該留言將回復顯示。",
-      confirmText: block ? "確認封鎖" : "確認解除",
-      tone: "warning",
-    });
-    if (!shouldContinue) return;
+  const closeEditorWithoutConfirm = useCallback(() => {
+    setEditorOpen(false);
+    setEditorId(null);
+    setEditorLoading(false);
+    setEditorSaving(false);
+    setEditorError("");
+    setDetail(null);
+    setForm(createEmptyForm());
+    setOriginalForm(createEmptyForm());
+  }, []);
+
+  const isDirty = useMemo(() => JSON.stringify(form) !== JSON.stringify(originalForm), [form, originalForm]);
+
+  const requestCloseEditor = useCallback(async () => {
+    if (editorSaving) return;
+
+    if (isDirty) {
+      const shouldClose = await confirmAction({
+        title: "尚未儲存變更",
+        message: "你有尚未儲存的內容，確定要關閉編輯視窗嗎？",
+        confirmText: "關閉",
+        cancelText: "繼續編輯",
+        tone: "warning",
+      });
+
+      if (!shouldClose) return;
+    }
+
+    closeEditorWithoutConfirm();
+  }, [closeEditorWithoutConfirm, confirmAction, editorSaving, isDirty]);
+
+  const openEditor = useCallback(async (id) => {
+    setEditorOpen(true);
+    setEditorId(id);
+    setEditorLoading(true);
+    setEditorSaving(false);
+    setEditorError("");
 
     try {
-      setActionId(id);
-      const res = await fetch(`/api/admin/prayerresponse/${id}/block`, {
+      const res = await fetch(`/api/admin/prayerresponse/${id}`, { cache: "no-store" });
+
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.message || "無法取得回應詳情");
+      }
+
+      const nextDetail = await res.json();
+      const nextForm = mapDetailToForm(nextDetail);
+      setDetail(nextDetail);
+      setForm(nextForm);
+      setOriginalForm(nextForm);
+    } catch (err) {
+      setEditorError(err.message || "無法取得回應詳情");
+    } finally {
+      setEditorLoading(false);
+    }
+  }, []);
+
+  const openLinkedUser = useCallback((userId, role = "回覆者") => {
+    if (!userId) {
+      notifyError("找不到使用者 ID");
+      return;
+    }
+    setLinkedUserEditor({ id: userId, role });
+  }, [notifyError]);
+
+  const closeLinkedUser = useCallback(() => {
+    setLinkedUserEditor({ id: null, role: "回覆者" });
+  }, []);
+
+  const handleLinkedUserUpdated = useCallback((updatedUser) => {
+    if (!updatedUser?.id) return;
+
+    setResponses((prev) =>
+      prev.map((item) =>
+        item.responder?.id === updatedUser.id
+          ? {
+              ...item,
+              responder: {
+                ...item.responder,
+                id: updatedUser.id,
+                name: updatedUser.name,
+                email: updatedUser.email,
+                username: updatedUser.username,
+                avatarUrl: updatedUser.avatarUrl,
+              },
+            }
+          : item,
+      ),
+    );
+
+    setDetail((prev) =>
+      prev?.responder?.id === updatedUser.id
+        ? {
+            ...prev,
+            responder: {
+              ...prev.responder,
+              id: updatedUser.id,
+              name: updatedUser.name,
+              email: updatedUser.email,
+              username: updatedUser.username,
+              avatarUrl: updatedUser.avatarUrl,
+            },
+          }
+        : prev,
+    );
+  }, []);
+
+  const handleToggleBlock = useCallback(
+    async (id, block) => {
+      const shouldContinue = await confirmAction({
+        title: block ? "確認封鎖回應" : "確認解除封鎖",
+        message: block ? "封鎖後前台不會顯示此回應，是否繼續？" : "解除封鎖後前台會重新顯示此回應，是否繼續？",
+        confirmText: block ? "封鎖" : "解除封鎖",
+        tone: "warning",
+      });
+
+      if (!shouldContinue) return;
+
+      try {
+        setActionId(id);
+        const res = await fetch(`/api/admin/prayerresponse/${id}/block`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ block }),
+        });
+
+        if (!res.ok) {
+          const data = await res.json().catch(() => ({}));
+          throw new Error(data.message || "更新狀態失敗");
+        }
+
+        const updated = await res.json();
+        setResponses((prev) => prev.map((item) => (item.id === updated.id ? { ...item, ...updated } : item)));
+        notifySuccess(block ? "已封鎖回應" : "已解除封鎖");
+
+        if (detail?.id === updated.id) {
+          setDetail((prev) => ({ ...prev, isBlocked: Boolean(updated.isBlocked) }));
+          setForm((prev) => ({ ...prev, isBlocked: Boolean(updated.isBlocked) }));
+          setOriginalForm((prev) => ({ ...prev, isBlocked: Boolean(updated.isBlocked) }));
+        }
+      } catch (err) {
+        notifyError(err.message || "更新狀態失敗");
+      } finally {
+        setActionId(null);
+      }
+    },
+    [confirmAction, detail?.id, notifyError, notifySuccess],
+  );
+
+  const handleEditField = useCallback((key, value) => {
+    setForm((prev) => ({
+      ...prev,
+      [key]: value,
+    }));
+  }, []);
+
+  const handleSaveEditor = useCallback(async () => {
+    if (!editorId) return;
+
+    if (!form.message.trim()) {
+      notifyError("回應內容為必填");
+      return;
+    }
+
+    const payload = {
+      message: form.message,
+      voiceUrl: form.voiceUrl,
+      isAnonymous: Boolean(form.isAnonymous),
+      isBlocked: Boolean(form.isBlocked),
+    };
+
+    try {
+      setEditorSaving(true);
+      const res = await fetch(`/api/admin/prayerresponse/${editorId}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ block }),
+        body: JSON.stringify(payload),
       });
-      if (!res.ok) throw new Error("更新失敗");
-      await loadResponses();
-      notifySuccess(block ? "已封鎖留言" : "已解除封鎖");
+
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.message || "更新回應失敗");
+      }
+
+      const updated = await res.json();
+      const nextForm = mapDetailToForm(updated);
+      setDetail(updated);
+      setForm(nextForm);
+      setOriginalForm(nextForm);
+      setResponses((prev) =>
+        prev.map((item) =>
+          item.id === updated.id
+            ? {
+                ...item,
+                message: updated.message,
+                voiceUrl: updated.voiceUrl,
+                isAnonymous: updated.isAnonymous,
+                isBlocked: updated.isBlocked,
+                reportCount: updated.reportCount,
+                responder: updated.responder || item.responder,
+                homeCard: updated.homeCard || item.homeCard,
+              }
+            : item,
+        ),
+      );
+      notifySuccess("回應已更新");
     } catch (err) {
-      notifyError(err.message || "更新失敗");
+      notifyError(err.message || "更新回應失敗");
     } finally {
-      setActionId(null);
+      setEditorSaving(false);
     }
-  };
+  }, [editorId, form, notifyError, notifySuccess]);
 
   useEffect(() => {
     loadResponses();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [page, debouncedSearch, statusFilter]);
+  }, [loadResponses]);
+
+  useEffect(() => {
+    if (!editorOpen) return;
+
+    const handleKeyDown = (event) => {
+      if (event.key === "Escape") {
+        event.preventDefault();
+        requestCloseEditor();
+      }
+    };
+
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [editorOpen, requestCloseEditor]);
 
   return (
     <div className="admin-section">
       <header className="admin-section__header">
         <div>
-          <p className="admin-section__eyebrow">內容治理</p>
-          <h1>留言與錄音管理</h1>
+          <p className="admin-section__eyebrow">內容管理</p>
+          <h1>留言與錄音</h1>
         </div>
       </header>
 
       <AdminHintPanel
-        title="審核提示"
+        title="管理提醒"
         tone="warning"
-        description="留言與錄音建議先看作者與內容上下文，再執行封鎖。"
-        items={["先用關鍵字搜尋定位事件。", "封鎖前請先確認檢舉次數與建立時間。"]}
+        description="每筆回應都可透過點擊 ID 開啟預覽與編輯，支援文字、音檔與封鎖狀態同步維護。"
+        items={[
+          "檢查前台定位連結可快速定位到對應回應。",
+          "無音檔時會自動降級顯示，不影響其他資訊編輯。",
+        ]}
       />
 
       <section className="admin-section__card">
         <header className="admin-section__card-header">
           <div>
-            <h2>留言清單</h2>
-            <p>管理祈禱回應與錄音內容。</p>
+            <h2>回應列表</h2>
+            <p>可依關鍵字與狀態篩選。</p>
           </div>
           <div className="admin-section__filters">
             <input
               type="search"
-              placeholder="搜尋留言內容或作者"
+              placeholder="搜尋回應、回應者"
               value={search}
               onChange={(e) => {
                 setSearch(e.target.value);
@@ -110,9 +353,9 @@ export default function AdminPrayerResponsePage() {
                 setPage(1);
               }}
             >
-              <option value="all">所有狀態</option>
+              <option value="all">全部</option>
               <option value="active">啟用中</option>
-              <option value="blocked">已封鎖</option>
+              <option value="blocked">封鎖中</option>
             </select>
           </div>
         </header>
@@ -126,12 +369,13 @@ export default function AdminPrayerResponsePage() {
             <table className="admin-table">
               <thead>
                 <tr>
-                  <th>作者</th>
+                  <th>ID</th>
+                  <th>回應者</th>
                   <th>Email</th>
-                  <th>留言</th>
-                  <th>對應卡片</th>
+                  <th>內容</th>
+                  <th>所屬禱告</th>
                   <th>狀態</th>
-                  <th>檢舉次數</th>
+                  <th>檢舉數</th>
                   <th>建立時間</th>
                   <th>操作</th>
                 </tr>
@@ -139,18 +383,35 @@ export default function AdminPrayerResponsePage() {
               <tbody>
                 {responses.length === 0 ? (
                   <tr>
-                    <td colSpan={8}>目前沒有留言</td>
+                    <td colSpan={9}>目前沒有回應資料</td>
                   </tr>
                 ) : (
                   responses.map((resp) => (
                     <tr key={resp.id}>
-                      <td>{resp.responder?.name || "匿名"}</td>
+                      <td>
+                        <button type="button" className="link-button" onClick={() => openEditor(resp.id)}>
+                          {resp.id}
+                        </button>
+                      </td>
+                      <td>
+                        {resp.responder?.id ? (
+                          <button
+                            type="button"
+                            className="link-button"
+                            onClick={() => openLinkedUser(resp.responder.id, "回覆者")}
+                          >
+                            {resp.responder?.name || "匿名"}
+                          </button>
+                        ) : (
+                          resp.responder?.name || "匿名"
+                        )}
+                      </td>
                       <td>{resp.responder?.email || "-"}</td>
                       <td>{resp.message}</td>
-                      <td>{resp.homeCard?.title || "—"}</td>
+                      <td>{resp.homeCard?.title || "未綁定禱告"}</td>
                       <td>
                         {resp.isBlocked ? (
-                          <span className="status-badge status-badge--blocked">已封鎖</span>
+                          <span className="status-badge status-badge--blocked">封鎖中</span>
                         ) : (
                           <span className="status-badge status-badge--active">啟用中</span>
                         )}
@@ -179,7 +440,7 @@ export default function AdminPrayerResponsePage() {
             上一頁
           </button>
           <span>
-            第 {page} / {pagination.totalPages || 1} 頁
+            {page} / {pagination.totalPages || 1}
           </span>
           <button
             disabled={page >= (pagination.totalPages || 1)}
@@ -189,6 +450,143 @@ export default function AdminPrayerResponsePage() {
           </button>
         </div>
       </section>
+
+      {editorOpen ? (
+        <div className="admin-editor" role="dialog" aria-modal="true" aria-label="回應編輯">
+          <div className="admin-editor__backdrop" onClick={requestCloseEditor} />
+          <section className="admin-editor__dialog">
+            <header className="admin-editor__header">
+              <div>
+                <p className="admin-editor__eyebrow">回應管理</p>
+                <h3>{editorId ? `回應 #${editorId}` : "回應"}</h3>
+              </div>
+              <button type="button" className="button button--ghost" onClick={requestCloseEditor} disabled={editorSaving}>
+                關閉
+              </button>
+            </header>
+
+            {editorLoading ? (
+              <p className="admin-editor__status">載入中...</p>
+            ) : editorError ? (
+              <div className="admin-editor__status admin-editor__status--error">
+                <p>{editorError}</p>
+                <button type="button" className="button button--ghost" onClick={() => openEditor(editorId)}>
+                  重新載入
+                </button>
+              </div>
+            ) : (
+              <>
+                <section className="admin-editor__preview">
+                  <div className="admin-editor__preview-content admin-editor__preview-content--full">
+                    <h4>回應預覽</h4>
+                    <p>{detail?.message || "（無文字內容）"}</p>
+
+                    {detail?.voiceUrl ? (
+                      <audio controls preload="none" src={detail.voiceUrl} className="admin-editor__audio" />
+                    ) : (
+                      <p className="admin-editor__muted">此回應沒有音檔。</p>
+                    )}
+
+                    <div className="admin-editor__preview-meta">
+                      <span>
+                        回應者：{detail?.responder?.name || detail?.responder?.email || "匿名"}
+                        {detail?.responder?.id ? (
+                          <button
+                            type="button"
+                            className="link-button admin-editor__inline-action"
+                            onClick={() => openLinkedUser(detail.responder.id, "回覆者")}
+                          >
+                            編輯回覆者
+                          </button>
+                        ) : null}
+                      </span>
+                      <span>所屬禱告：{detail?.homeCard?.title || "未綁定"}</span>
+                      <span>檢舉數：{detail?.reportCount ?? 0}</span>
+                      <span>建立：{detail?.createdAt ? new Date(detail.createdAt).toLocaleString() : "-"}</span>
+                    </div>
+
+                    {detail?.homeCard?.id ? (
+                      <a
+                        className="admin-editor__preview-link"
+                        href={`/prayfor/${detail.homeCard.id}#prayer-response-${detail.id}`}
+                        target="_blank"
+                        rel="noreferrer"
+                      >
+                        開啟前台定位連結
+                      </a>
+                    ) : null}
+                  </div>
+                </section>
+
+                <section className="admin-editor__form">
+                  <div className="admin-editor__grid">
+                    <label className="admin-editor__field admin-editor__field--full">
+                      <span>回應文字</span>
+                      <textarea
+                        rows={4}
+                        value={form.message}
+                        onChange={(event) => handleEditField("message", event.target.value)}
+                        placeholder="請輸入回應內容"
+                      />
+                    </label>
+
+                    <label className="admin-editor__field admin-editor__field--full">
+                      <span>音檔 URL</span>
+                      <input
+                        type="url"
+                        value={form.voiceUrl}
+                        onChange={(event) => handleEditField("voiceUrl", event.target.value)}
+                        placeholder="https://..."
+                      />
+                    </label>
+                  </div>
+
+                  <div className="admin-editor__checkbox-group">
+                    <label className="admin-editor__checkbox">
+                      <input
+                        type="checkbox"
+                        checked={form.isAnonymous}
+                        onChange={(event) => handleEditField("isAnonymous", event.target.checked)}
+                      />
+                      <span>匿名回應</span>
+                    </label>
+
+                    <label className="admin-editor__checkbox">
+                      <input
+                        type="checkbox"
+                        checked={form.isBlocked}
+                        onChange={(event) => handleEditField("isBlocked", event.target.checked)}
+                      />
+                      <span>封鎖此回應</span>
+                    </label>
+                  </div>
+                </section>
+
+                <footer className="admin-editor__actions">
+                  <button type="button" className="button button--ghost" onClick={requestCloseEditor} disabled={editorSaving}>
+                    取消
+                  </button>
+                  <button type="button" className="button button--primary" onClick={handleSaveEditor} disabled={editorSaving}>
+                    {editorSaving ? "儲存中..." : "儲存變更"}
+                  </button>
+                </footer>
+              </>
+            )}
+          </section>
+        </div>
+      ) : null}
+
+      <AdminLinkedUserEditor
+        open={Boolean(linkedUserEditor.id)}
+        userId={linkedUserEditor.id}
+        roleLabel={linkedUserEditor.role}
+        confirmAction={confirmAction}
+        notifyError={notifyError}
+        notifySuccess={notifySuccess}
+        onClose={closeLinkedUser}
+        onUpdated={handleLinkedUserUpdated}
+      />
+
       {feedbackNode}
     </div>
   );

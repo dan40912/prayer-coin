@@ -163,10 +163,10 @@ export default async function PrayerDetailPage({ params }) {
               </div>
 
               <div className="pdv2-meta-row">
-                <span>更新日期：{updatedDisplay}</span>
+                {/* <span>更新日期：{updatedDisplay}</span> */}
                 <span>建立日期：{createdDisplay}</span>
                 <span>上傳者：{ownerName}</span>
-                <span>回應數：{responseCount}</span>
+                {/* <span>回應數：{responseCount}</span> */}
               </div>
             </div>
           </article>

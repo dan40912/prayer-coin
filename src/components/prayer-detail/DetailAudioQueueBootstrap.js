@@ -40,6 +40,11 @@ function normalizeResponseTrack(item, index, prayerTitle, fallbackCoverImage = "
   };
 }
 
+function isValidResponse(item) {
+  if (!item || item.isBlocked) return false;
+  return Number(item.reportCount ?? 0) === 0;
+}
+
 function dedupeTracks(tracks) {
   const seenIds = new Set();
   const seenVoiceUrls = new Set();
@@ -80,6 +85,7 @@ export default function DetailAudioQueueBootstrap({
 
       const responseTracks = Array.isArray(data)
         ? data
+            .filter(isValidResponse)
             .map((item, index) => normalizeResponseTrack(item, index, prayerTitle, primaryTrack?.coverImage || ""))
             .filter(Boolean)
         : [];

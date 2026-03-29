@@ -23,7 +23,7 @@ export default async function PrayforWallPage() {
       <SiteHeader activePath="/prayfor" />
 
       <main>
-        <section className="section" id="wall">
+        <section>
           <HomePrayerExplorer
             initialCategories={categories}
             initialCards={topCards}

@@ -13,6 +13,7 @@ import { normalizeAudioUrl } from "@/lib/media-url";
 
 const AudioContext = createContext(null);
 const hasOwn = Object.prototype.hasOwnProperty;
+const END_EPSILON_SECONDS = 0.12;
 
 function getTrackKey(track) {
   if (!track) return null;
@@ -25,6 +26,22 @@ function getTrackKey(track) {
 function normalizeDuration(value) {
   if (!Number.isFinite(value) || value < 0) return 0;
   return value;
+}
+
+function isTrackAtEnd(audio) {
+  if (!audio) return false;
+  const total = normalizeDuration(audio.duration);
+  if (total <= 0) return false;
+  const current = normalizeDuration(audio.currentTime);
+  return current >= Math.max(total - END_EPSILON_SECONDS, 0);
+}
+
+function clampTrackSeekOffset(value, trackDuration, allowTrackEnd = false) {
+  const safeDuration = normalizeDuration(trackDuration);
+  if (safeDuration <= 0) return Math.max(value, 0);
+  const bounded = Math.min(Math.max(value, 0), safeDuration);
+  if (allowTrackEnd) return bounded;
+  return Math.min(bounded, Math.max(safeDuration - END_EPSILON_SECONDS, 0));
 }
 
 function sanitizeTrack(track) {
@@ -48,6 +65,7 @@ export function AudioProvider({ children }) {
   const [playlist, setPlaylist] = useState([]);
   const [currentIndex, setCurrentIndex] = useState(-1);
   const [isPlaying, setIsPlaying] = useState(false);
+  const [isQueueEnded, setIsQueueEnded] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
   const [progress, setProgress] = useState(0);
   const [duration, setDuration] = useState(0);
@@ -83,6 +101,7 @@ export function AudioProvider({ children }) {
     skipAutoPlayEffectRef.current = false;
     loadedTrackKeyRef.current = null;
     setIsPlaying(false);
+    setIsQueueEnded(false);
     setProgress(0);
     setDuration(0);
   }, []);
@@ -92,7 +111,10 @@ export function AudioProvider({ children }) {
     const playPromise = audio.play();
     if (playPromise && typeof playPromise.then === "function") {
       playPromise
-        .then(() => setIsPlaying(true))
+        .then(() => {
+          setIsPlaying(true);
+          setIsQueueEnded(false);
+        })
         .catch((error) => {
           if (shouldSkipToNextTrackOnPlayFailure(error)) {
             setCurrentIndex((prevIndex) => {
@@ -114,6 +136,9 @@ export function AudioProvider({ children }) {
       return;
     }
     setIsPlaying(!audio.paused);
+    if (!audio.paused) {
+      setIsQueueEnded(false);
+    }
   }, []);
 
   // Initialize Audio element
@@ -122,7 +147,10 @@ export function AudioProvider({ children }) {
       audioRef.current = new Audio();
 
       const audio = audioRef.current;
-      const handlePlayEvent = () => setIsPlaying(true);
+      const handlePlayEvent = () => {
+        setIsPlaying(true);
+        setIsQueueEnded(false);
+      };
       const handlePauseEvent = () => setIsPlaying(false);
       const handleErrorEvent = () => {
         setIsPlaying(false);
@@ -154,17 +182,21 @@ export function AudioProvider({ children }) {
           const total = playlistRef.current.length;
           if (total === 0) {
             shouldAutoPlayRef.current = false;
+            setIsQueueEnded(false);
             return -1;
           }
           if (prevIndex < total - 1) {
             shouldAutoPlayRef.current = true;
+            setIsQueueEnded(false);
             return prevIndex + 1;
           }
           if (isLoopRef.current) {
             shouldAutoPlayRef.current = true;
+            setIsQueueEnded(false);
             return 0;
           }
           shouldAutoPlayRef.current = false;
+          setIsQueueEnded(true);
           return prevIndex;
         });
       };
@@ -202,6 +234,7 @@ export function AudioProvider({ children }) {
   const playTrack = useCallback((track) => {
     const nextTrack = sanitizeTrack(track);
     if (!nextTrack) return;
+    setIsQueueEnded(false);
 
     setPlaylist((prev) => {
       const dedupedPrev = prev.map(sanitizeTrack).filter(Boolean);
@@ -233,6 +266,7 @@ export function AudioProvider({ children }) {
     const normalized = Array.isArray(tracks)
       ? tracks.map(sanitizeTrack).filter(Boolean)
       : [];
+    setIsQueueEnded(false);
 
     setPlaylist(normalized);
 
@@ -290,6 +324,7 @@ export function AudioProvider({ children }) {
 
     setCurrentIndex(index);
     setIsExpanded(true);
+    setIsQueueEnded(false);
     shouldAutoPlayRef.current = true;
     skipAutoPlayEffectRef.current = true;
 
@@ -299,8 +334,38 @@ export function AudioProvider({ children }) {
       const knownDuration = normalizeDuration(trackDurationsRef.current[getTrackKey(track)]);
       setDuration(knownDuration);
       setProgress(0);
+    } else {
+      audio.currentTime = 0;
+      setProgress(0);
     }
 
+    tryPlayAudio(audio, "Play failed");
+    return true;
+  }, [tryPlayAudio]);
+
+  const restartQueue = useCallback(() => {
+    const audio = audioRef.current;
+    const tracks = playlistRef.current;
+    if (!audio || !tracks.length) return false;
+
+    const firstTrack = sanitizeTrack(tracks[0]);
+    if (!firstTrack?.voiceUrl) return false;
+
+    const targetKey = getTrackKey(firstTrack);
+    if (loadedTrackKeyRef.current !== targetKey) {
+      audio.src = normalizeAudioUrl(firstTrack.voiceUrl);
+      loadedTrackKeyRef.current = targetKey;
+      const knownDuration = normalizeDuration(trackDurationsRef.current[targetKey]);
+      setDuration(knownDuration);
+    }
+
+    audio.currentTime = 0;
+    setProgress(0);
+    setCurrentIndex(0);
+    setIsExpanded(true);
+    setIsQueueEnded(false);
+    shouldAutoPlayRef.current = true;
+    skipAutoPlayEffectRef.current = true;
     tryPlayAudio(audio, "Play failed");
     return true;
   }, [tryPlayAudio]);
@@ -309,13 +374,25 @@ export function AudioProvider({ children }) {
     const audio = audioRef.current;
     if (!audio) return;
     if (audio.paused) {
+      const tracks = playlistRef.current;
+      if (!tracks.length) return;
+      const atQueueEnd =
+        isQueueEnded ||
+        currentIndexRef.current < 0 ||
+        currentIndexRef.current >= tracks.length ||
+        isTrackAtEnd(audio);
+      if (atQueueEnd) {
+        restartQueue();
+        return;
+      }
       shouldAutoPlayRef.current = true;
+      setIsQueueEnded(false);
       tryPlayAudio(audio, "Play failed");
       return;
     }
     shouldAutoPlayRef.current = false;
     audio.pause();
-  }, [tryPlayAudio]);
+  }, [isQueueEnded, restartQueue, tryPlayAudio]);
 
   const pause = useCallback(() => {
     if (audioRef.current) {
@@ -346,12 +423,21 @@ export function AudioProvider({ children }) {
       const singleTrackDuration = normalizeDuration(audio.duration);
       if (singleTrackDuration <= 0) return;
       const target = Math.min(Math.max(time, 0), singleTrackDuration);
+      const isSeekingToQueueEnd = target >= Math.max(singleTrackDuration - END_EPSILON_SECONDS, 0);
       audio.currentTime = target;
       setProgress(target);
+      const shouldMarkEnded = isSeekingToQueueEnd && !isLoopRef.current;
+      setIsQueueEnded(shouldMarkEnded);
+      if (shouldMarkEnded) {
+        shouldAutoPlayRef.current = false;
+        audio.pause();
+        setIsPlaying(false);
+      }
       return;
     }
 
     const target = Math.min(Math.max(time, 0), knownTotal);
+    const isSeekingToQueueEnd = target >= Math.max(knownTotal - END_EPSILON_SECONDS, 0);
     let accumulated = 0;
     let targetIndex = -1;
     let targetOffset = 0;
@@ -362,23 +448,35 @@ export function AudioProvider({ children }) {
       const nextAccumulated = accumulated + trackDuration;
       if (target <= nextAccumulated || index === tracks.length - 1) {
         targetIndex = index;
-        targetOffset = Math.min(Math.max(target - accumulated, 0), trackDuration);
+        const allowTrackEnd = isSeekingToQueueEnd && index === tracks.length - 1;
+        targetOffset = clampTrackSeekOffset(target - accumulated, trackDuration, allowTrackEnd);
         break;
       }
       accumulated = nextAccumulated;
     }
 
     if (targetIndex < 0) return;
+    const shouldMarkEnded = isSeekingToQueueEnd && !isLoopRef.current;
+    setIsQueueEnded(shouldMarkEnded);
 
     if (targetIndex !== currentIndexRef.current) {
       pendingSeekRef.current = targetOffset;
-      shouldAutoPlayRef.current = !audio.paused;
+      shouldAutoPlayRef.current = shouldMarkEnded ? false : !audio.paused;
       setCurrentIndex(targetIndex);
+      if (shouldMarkEnded) {
+        audio.pause();
+        setIsPlaying(false);
+      }
       return;
     }
 
     audio.currentTime = targetOffset;
     setProgress(targetOffset);
+    if (shouldMarkEnded) {
+      shouldAutoPlayRef.current = false;
+      audio.pause();
+      setIsPlaying(false);
+    }
   }, []);
 
   const playNext = useCallback(() => {
@@ -387,14 +485,17 @@ export function AudioProvider({ children }) {
       if (total === 0) return -1;
       if (prevIndex < total - 1) {
         shouldAutoPlayRef.current = true;
+        setIsQueueEnded(false);
         return prevIndex + 1;
       }
       if (isLoop) {
         shouldAutoPlayRef.current = true;
+        setIsQueueEnded(false);
         return 0;
       }
       shouldAutoPlayRef.current = false;
       setIsPlaying(false);
+      setIsQueueEnded(true);
       return prevIndex;
     });
   }, [isLoop]);
@@ -403,6 +504,7 @@ export function AudioProvider({ children }) {
     setCurrentIndex((prevIndex) => {
       if (prevIndex <= 0) return prevIndex;
       shouldAutoPlayRef.current = true;
+      setIsQueueEnded(false);
       return prevIndex - 1;
     });
   }, []);
@@ -412,6 +514,7 @@ export function AudioProvider({ children }) {
   }, [playByIndex]);
 
   const removeTrack = useCallback((trackId) => {
+    setIsQueueEnded(false);
     setPlaylist((prev) => {
       const index = prev.findIndex((track) => track.id === trackId);
       if (index === -1) return prev;
@@ -533,6 +636,7 @@ export function AudioProvider({ children }) {
     skipAutoPlayEffectRef.current = false;
     loadedTrackKeyRef.current = null;
     setIsPlaying(false);
+    setIsQueueEnded(false);
   }, [currentIndex, playlist, tryPlayAudio]);
 
   const currentTrack = currentIndex >= 0 ? playlist[currentIndex] : null;
@@ -568,6 +672,7 @@ export function AudioProvider({ children }) {
     currentTrack,
     playlist,
     isPlaying,
+    isQueueEnded,
     isExpanded,
     progress,
     duration,
@@ -578,6 +683,7 @@ export function AudioProvider({ children }) {
     playTrack,
     setQueue,
     playByIndex,
+    restartQueue,
     togglePlay,
     pause,
     seek,

@@ -1,28 +1,46 @@
-﻿// ./src/app/api/admin/prayerresponse/[id]/block/route.js
 import { NextResponse } from "next/server";
-import prisma from "@/lib/prisma";
+
 import { requireAdmin } from "@/lib/admin-route-auth";
+import { logAdminAction, logSystemError } from "@/lib/logger";
+import prisma from "@/lib/prisma";
 
 export async function PATCH(request, { params }) {
-  const { error } = requireAdmin(request);
+  const { error, session } = requireAdmin(request);
   if (error) return error;
 
   try {
-    const { id } = params; // URL /api/admin/prayerresponse/[id]/block
+    const { id } = params;
     const { block } = await request.json();
 
     if (!id) {
-      return NextResponse.json({ message: "缺少 ID" }, { status: 400 });
+      return NextResponse.json({ message: "Missing ID" }, { status: 400 });
     }
 
     const updated = await prisma.prayerResponse.update({
       where: { id },
-      data: { isBlocked: block },
+      data: { isBlocked: Boolean(block) },
+    });
+
+    await logAdminAction({
+      action: updated.isBlocked ? "prayerresponse.block" : "prayerresponse.unblock",
+      message: `Updated prayer response ${id} status to ${updated.isBlocked ? "Blocked" : "Active"}`,
+      actorId: session.adminId,
+      actorEmail: session.username,
+      targetType: "PrayerResponse",
+      targetId: id,
+      requestPath: request.url,
+      metadata: { block: Boolean(block) },
     });
 
     return NextResponse.json(updated);
-  } catch (error) {
-    console.error("PATCH /api/admin/prayerresponse/[id]/block error:", error);
-    return NextResponse.json({ message: "更新失敗" }, { status: 500 });
+  } catch (err) {
+    await logSystemError({
+      message: `Failed to update prayer response status: ${params?.id ?? ""}`,
+      error: err,
+      requestPath: request.url,
+    });
+
+    return NextResponse.json({ message: "Failed to update prayer response status" }, { status: 500 });
   }
 }
+

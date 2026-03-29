@@ -21,6 +21,10 @@ function createEmptyEditForm() {
     solanaAddress: "",
     bscAddress: "",
     isAddressVerified: false,
+    isBlocked: false,
+    reportCount: 0,
+    createdAt: null,
+    updatedAt: null,
   };
 }
 
@@ -37,6 +41,10 @@ function mapUserToEditForm(user) {
     solanaAddress: user.solanaAddress || "",
     bscAddress: user.bscAddress || "",
     isAddressVerified: Boolean(user.isAddressVerified),
+    isBlocked: Boolean(user.isBlocked),
+    reportCount: Number(user.reportCount || 0),
+    createdAt: user.createdAt || null,
+    updatedAt: user.updatedAt || null,
   };
 }
 
@@ -57,6 +65,7 @@ function sanitizeForPayload(form) {
 
 export default function AdminUsersPage() {
   const { feedbackNode, confirmAction, notifyError, notifySuccess } = useAdminFeedback();
+
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -66,8 +75,11 @@ export default function AdminUsersPage() {
   const [blockActionUserId, setBlockActionUserId] = useState(null);
   const [loadingEditUserId, setLoadingEditUserId] = useState(null);
   const [savingEdit, setSavingEdit] = useState(false);
+  const [editorLoading, setEditorLoading] = useState(false);
   const [editorOpen, setEditorOpen] = useState(false);
+  const [editorError, setEditorError] = useState("");
   const [editForm, setEditForm] = useState(createEmptyEditForm());
+  const [originalEditForm, setOriginalEditForm] = useState(createEmptyEditForm());
   const [pagination, setPagination] = useState({
     total: 0,
     page: 1,
@@ -102,7 +114,8 @@ export default function AdminUsersPage() {
       });
 
       if (!res.ok) {
-        throw new Error("無法取得使用者資料");
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.message || "無法取得使用者列表");
       }
 
       const data = await res.json();
@@ -121,7 +134,7 @@ export default function AdminUsersPage() {
       setUsers(data.data ?? []);
       setPagination(nextPagination);
     } catch (err) {
-      setError(err.message || "無法取得使用者資料");
+      setError(err.message || "無法取得使用者列表");
     } finally {
       setLoading(false);
     }
@@ -131,14 +144,44 @@ export default function AdminUsersPage() {
     loadUsers();
   }, [loadUsers]);
 
+  const closeEditorWithoutConfirm = useCallback(() => {
+    setEditorOpen(false);
+    setEditorLoading(false);
+    setEditorError("");
+    setEditForm(createEmptyEditForm());
+    setOriginalEditForm(createEmptyEditForm());
+  }, []);
+
+  const isDirty = useMemo(
+    () => JSON.stringify(sanitizeForPayload(editForm)) !== JSON.stringify(sanitizeForPayload(originalEditForm)),
+    [editForm, originalEditForm],
+  );
+
+  const requestCloseEditor = useCallback(async () => {
+    if (savingEdit) return;
+
+    if (isDirty) {
+      const shouldClose = await confirmAction({
+        title: "尚未儲存變更",
+        message: "你有尚未儲存的內容，確定要關閉編輯視窗嗎？",
+        confirmText: "關閉",
+        cancelText: "繼續編輯",
+        tone: "warning",
+      });
+      if (!shouldClose) return;
+    }
+
+    closeEditorWithoutConfirm();
+  }, [closeEditorWithoutConfirm, confirmAction, isDirty, savingEdit]);
+
   const handleToggleBlock = useCallback(
     async (id, block) => {
       const shouldContinue = await confirmAction({
         title: block ? "確認封鎖使用者" : "確認解除封鎖",
         message: block
-          ? "封鎖後該使用者將無法正常使用部分功能。"
-          : "解除封鎖後該使用者將恢復功能使用。",
-        confirmText: block ? "確認封鎖" : "確認解除",
+          ? "封鎖後該使用者將無法登入與操作，是否繼續？"
+          : "解除封鎖後該使用者可恢復操作，是否繼續？",
+        confirmText: block ? "封鎖" : "解除封鎖",
         tone: "warning",
       });
 
@@ -157,7 +200,14 @@ export default function AdminUsersPage() {
           throw new Error(data.message || "更新使用者狀態失敗");
         }
 
-        await loadUsers();
+        const updated = await res.json();
+        setUsers((prev) => prev.map((user) => (user.id === updated.id ? { ...user, ...updated } : user)));
+
+        if (editForm.id === updated.id) {
+          setEditForm((prev) => ({ ...prev, isBlocked: Boolean(updated.isBlocked) }));
+          setOriginalEditForm((prev) => ({ ...prev, isBlocked: Boolean(updated.isBlocked) }));
+        }
+
         notifySuccess(block ? "已封鎖使用者" : "已解除封鎖");
       } catch (err) {
         notifyError(err.message || "更新使用者狀態失敗");
@@ -165,39 +215,40 @@ export default function AdminUsersPage() {
         setBlockActionUserId(null);
       }
     },
-    [confirmAction, loadUsers, notifyError, notifySuccess],
+    [confirmAction, editForm.id, notifyError, notifySuccess],
   );
 
   const openEditor = useCallback(
     async (id) => {
       try {
         setLoadingEditUserId(id);
+        setEditorOpen(true);
+        setEditorLoading(true);
+        setEditorError("");
+
         const res = await fetch(`/api/admin/users/${id}`, {
           cache: "no-store",
         });
 
         if (!res.ok) {
           const data = await res.json().catch(() => ({}));
-          throw new Error(data.message || "無法取得使用者詳細資料");
+          throw new Error(data.message || "無法取得使用者詳情");
         }
 
         const user = await res.json();
-        setEditForm(mapUserToEditForm(user));
-        setEditorOpen(true);
+        const mapped = mapUserToEditForm(user);
+        setEditForm(mapped);
+        setOriginalEditForm(mapped);
       } catch (err) {
-        notifyError(err.message || "無法取得使用者詳細資料");
+        setEditorError(err.message || "無法取得使用者詳情");
+        notifyError(err.message || "無法取得使用者詳情");
       } finally {
+        setEditorLoading(false);
         setLoadingEditUserId(null);
       }
     },
     [notifyError],
   );
-
-  const closeEditor = useCallback(() => {
-    if (savingEdit) return;
-    setEditorOpen(false);
-    setEditForm(createEmptyEditForm());
-  }, [savingEdit]);
 
   const handleEditField = useCallback((key, value) => {
     setEditForm((prev) => ({
@@ -208,9 +259,9 @@ export default function AdminUsersPage() {
 
   const handleSaveEdit = useCallback(async () => {
     const shouldContinue = await confirmAction({
-      title: "確認更新使用者資料",
-      message: "這會立即覆蓋目前資料，請確認欄位內容正確。",
-      confirmText: "儲存變更",
+      title: "確認儲存使用者資料",
+      message: "儲存後會立即影響使用者檔案資料，是否繼續？",
+      confirmText: "儲存",
       tone: "warning",
     });
 
@@ -228,53 +279,82 @@ export default function AdminUsersPage() {
 
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
-        throw new Error(data.message || "更新使用者資料失敗");
+        throw new Error(data.message || "更新使用者失敗");
       }
 
-      await loadUsers();
+      const updated = await res.json();
+      const mapped = mapUserToEditForm(updated);
+      setEditForm(mapped);
+      setOriginalEditForm(mapped);
+      setUsers((prev) =>
+        prev.map((user) =>
+          user.id === updated.id
+            ? {
+                ...user,
+                name: updated.name,
+                email: updated.email,
+                isBlocked: updated.isBlocked,
+                reportCount: updated.reportCount,
+                updatedAt: updated.updatedAt,
+              }
+            : user,
+        ),
+      );
+
       notifySuccess("使用者資料已更新");
-      setEditorOpen(false);
-      setEditForm(createEmptyEditForm());
     } catch (err) {
-      notifyError(err.message || "更新使用者資料失敗");
+      notifyError(err.message || "更新使用者失敗");
     } finally {
       setSavingEdit(false);
     }
-  }, [confirmAction, editForm, loadUsers, notifyError, notifySuccess]);
+  }, [confirmAction, editForm, notifyError, notifySuccess]);
+
+  useEffect(() => {
+    if (!editorOpen) return;
+
+    const handleKeyDown = (event) => {
+      if (event.key === "Escape") {
+        event.preventDefault();
+        requestCloseEditor();
+      }
+    };
+
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [editorOpen, requestCloseEditor]);
 
   const totalPages = Math.max(pagination.totalPages || 1, 1);
-  const isEditing = editorOpen && Boolean(editForm.id);
-  const editorTitle = useMemo(() => {
-    if (!isEditing) return "編輯使用者資料";
-    return `編輯使用者：${editForm.name || editForm.email || "未命名"}`;
-  }, [editForm.email, editForm.name, isEditing]);
+  const publicProfileHref = editForm.username ? `/overcomer/${editForm.username}` : "";
 
   return (
     <div className="admin-section">
       <header className="admin-section__header">
         <div>
-          <p className="admin-section__eyebrow">會員管理</p>
-          <h1>使用者清單</h1>
+          <p className="admin-section__eyebrow">帳號管理</p>
+          <h1>使用者管理</h1>
         </div>
       </header>
 
       <AdminHintPanel
-        title="管理建議"
+        title="管理提醒"
         tone="warning"
-        description="你可以透過「編輯」直接修正使用者上傳的個資欄位，封鎖操作請先二次確認。"
-        items={["先比對 Email 與建立時間，避免操作錯誤帳號。", "大量處理建議分批進行，每批先複核再執行。"]}
+        description="點擊 ID 可打開預覽與編輯彈窗，快速檢視前台公開資訊與核心欄位。"
+        items={[
+          "封鎖狀態可在列表與彈窗內同步確認。",
+          "若 username 存在，建議儲存前先檢查公開頁連結。",
+        ]}
       />
 
       <section className="admin-section__card">
         <header className="admin-section__card-header">
           <div>
             <h2>使用者列表</h2>
-            <p>可依姓名、Email 及狀態快速搜尋，並進行個別編輯。</p>
+            <p>可依姓名與 Email 搜尋，並透過狀態快速篩選。</p>
           </div>
           <div className="admin-section__filters">
             <input
               type="search"
-              placeholder="搜尋姓名或 Email"
+              placeholder="搜尋姓名、Email"
               value={search}
               onChange={(event) => {
                 setSearch(event.target.value);
@@ -290,7 +370,7 @@ export default function AdminUsersPage() {
             >
               <option value="all">全部</option>
               <option value="active">啟用中</option>
-              <option value="blocked">已封鎖</option>
+              <option value="blocked">封鎖中</option>
             </select>
           </div>
         </header>
@@ -305,35 +385,46 @@ export default function AdminUsersPage() {
               <table className="admin-table">
                 <thead>
                   <tr>
+                    <th>ID</th>
                     <th>姓名</th>
                     <th>Email</th>
-                    <th>檢舉次數</th>
+                    <th>檢舉數</th>
                     <th>狀態</th>
-                    <th>最後更新</th>
+                    <th>更新時間</th>
                     <th>操作</th>
                   </tr>
                 </thead>
                 <tbody>
                   {users.length === 0 ? (
                     <tr>
-                      <td colSpan={6}>目前沒有符合條件的使用者</td>
+                      <td colSpan={7}>目前沒有符合條件的使用者</td>
                     </tr>
                   ) : (
                     users.map((user) => (
                       <tr key={user.id}>
-                        <td>{user.name || "未命名"}</td>
+                        <td>
+                          <button
+                            type="button"
+                            className="link-button"
+                            onClick={() => openEditor(user.id)}
+                            disabled={loadingEditUserId === user.id || blockActionUserId === user.id}
+                          >
+                            {user.id}
+                          </button>
+                        </td>
+                        <td>{user.name || "未設定"}</td>
                         <td>{user.email}</td>
                         <td>{user.reportCount ?? 0}</td>
                         <td>
                           {user.isBlocked ? (
-                            <span className="status-badge status-badge--blocked">已封鎖</span>
+                            <span className="status-badge status-badge--blocked">封鎖中</span>
                           ) : (
                             <span className="status-badge status-badge--active">啟用中</span>
                           )}
                         </td>
-                        <td>{user.updatedAt ? new Date(user.updatedAt).toLocaleString() : "—"}</td>
+                        <td>{user.updatedAt ? new Date(user.updatedAt).toLocaleString() : "-"}</td>
                         <td>
-                          <div className="admin-user-actions">
+                          <div className="admin-entity-actions">
                             <button
                               type="button"
                               className="link-button"
@@ -364,12 +455,9 @@ export default function AdminUsersPage() {
                 上一頁
               </button>
               <span>
-                第 {page} / {totalPages} 頁
+                {page} / {totalPages}
               </span>
-              <button
-                disabled={page >= totalPages}
-                onClick={() => setPage((prev) => Math.min(prev + 1, totalPages))}
-              >
+              <button disabled={page >= totalPages} onClick={() => setPage((prev) => Math.min(prev + 1, totalPages))}>
                 下一頁
               </button>
             </div>
@@ -378,131 +466,169 @@ export default function AdminUsersPage() {
       </section>
 
       {editorOpen ? (
-        <div className="admin-user-editor" role="dialog" aria-modal="true" aria-label={editorTitle}>
-          <div className="admin-user-editor__backdrop" onClick={closeEditor} />
-          <section className="admin-user-editor__dialog">
-            <header className="admin-user-editor__header">
+        <div className="admin-editor" role="dialog" aria-modal="true" aria-label="使用者編輯">
+          <div className="admin-editor__backdrop" onClick={requestCloseEditor} />
+          <section className="admin-editor__dialog">
+            <header className="admin-editor__header">
               <div>
-                <p className="admin-user-editor__eyebrow">管理員編輯模式</p>
-                <h3>{editorTitle}</h3>
+                <p className="admin-editor__eyebrow">使用者管理</p>
+                <h3>{editForm.id ? `使用者 #${editForm.id}` : "使用者"}</h3>
               </div>
-              <button type="button" className="button button--ghost" onClick={closeEditor} disabled={savingEdit}>
+              <button type="button" className="button button--ghost" onClick={requestCloseEditor} disabled={savingEdit}>
                 關閉
               </button>
             </header>
 
-            <div className="admin-user-editor__grid">
-              <label className="admin-user-editor__field">
-                <span>Email</span>
-                <input
-                  type="email"
-                  value={editForm.email}
-                  onChange={(event) => handleEditField("email", event.target.value)}
-                  placeholder="user@example.com"
-                />
-              </label>
+            {editorLoading ? (
+              <p className="admin-editor__status">載入中...</p>
+            ) : editorError ? (
+              <div className="admin-editor__status admin-editor__status--error">
+                <p>{editorError}</p>
+              </div>
+            ) : (
+              <>
+                <section className="admin-editor__preview">
+                  <div className="admin-editor__preview-media admin-editor__preview-media--avatar">
+                    {editForm.avatarUrl ? <img src={editForm.avatarUrl} alt={editForm.name || "avatar"} /> : <span>無頭像</span>}
+                  </div>
 
-              <label className="admin-user-editor__field">
-                <span>姓名</span>
-                <input
-                  type="text"
-                  value={editForm.name}
-                  onChange={(event) => handleEditField("name", event.target.value)}
-                  placeholder="使用者顯示名稱"
-                />
-              </label>
+                  <div className="admin-editor__preview-content">
+                    <h4>{editForm.name || "未設定姓名"}</h4>
+                    <p>{editForm.bio || "（無個人簡介）"}</p>
+                    <div className="admin-editor__preview-meta">
+                      <span>Username：{editForm.username || "-"}</span>
+                      <span>Email：{editForm.email || "-"}</span>
+                      <span>國家：{editForm.country || "-"}</span>
+                      <span>封鎖狀態：{editForm.isBlocked ? "封鎖中" : "啟用中"}</span>
+                      <span>檢舉數：{editForm.reportCount ?? 0}</span>
+                      <span>建立：{editForm.createdAt ? new Date(editForm.createdAt).toLocaleString() : "-"}</span>
+                      <span>更新：{editForm.updatedAt ? new Date(editForm.updatedAt).toLocaleString() : "-"}</span>
+                    </div>
+                    {publicProfileHref ? (
+                      <a className="admin-editor__preview-link" href={publicProfileHref} target="_blank" rel="noreferrer">
+                        開啟公開頁面
+                      </a>
+                    ) : null}
+                  </div>
+                </section>
 
-              <label className="admin-user-editor__field">
-                <span>Username</span>
-                <input
-                  type="text"
-                  value={editForm.username}
-                  onChange={(event) => handleEditField("username", event.target.value)}
-                  placeholder="username"
-                />
-              </label>
+                <section className="admin-editor__form">
+                  <div className="admin-editor__grid">
+                    <label className="admin-editor__field">
+                      <span>Email</span>
+                      <input
+                        type="email"
+                        value={editForm.email}
+                        onChange={(event) => handleEditField("email", event.target.value)}
+                        placeholder="user@example.com"
+                      />
+                    </label>
 
-              <label className="admin-user-editor__field">
-                <span>信仰傳統</span>
-                <input
-                  type="text"
-                  value={editForm.faithTradition}
-                  onChange={(event) => handleEditField("faithTradition", event.target.value)}
-                  placeholder="例：基督教"
-                />
-              </label>
+                    <label className="admin-editor__field">
+                      <span>姓名</span>
+                      <input
+                        type="text"
+                        value={editForm.name}
+                        onChange={(event) => handleEditField("name", event.target.value)}
+                        placeholder="請輸入使用者姓名"
+                      />
+                    </label>
 
-              <label className="admin-user-editor__field">
-                <span>國家</span>
-                <input
-                  type="text"
-                  value={editForm.country}
-                  onChange={(event) => handleEditField("country", event.target.value)}
-                  placeholder="例：Taiwan"
-                />
-              </label>
+                    <label className="admin-editor__field">
+                      <span>Username</span>
+                      <input
+                        type="text"
+                        value={editForm.username}
+                        onChange={(event) => handleEditField("username", event.target.value)}
+                        placeholder="username"
+                      />
+                    </label>
 
-              <label className="admin-user-editor__field admin-user-editor__field--full">
-                <span>頭像 URL</span>
-                <input
-                  type="url"
-                  value={editForm.avatarUrl}
-                  onChange={(event) => handleEditField("avatarUrl", event.target.value)}
-                  placeholder="https://..."
-                />
-              </label>
+                    <label className="admin-editor__field">
+                      <span>信仰傳統</span>
+                      <input
+                        type="text"
+                        value={editForm.faithTradition}
+                        onChange={(event) => handleEditField("faithTradition", event.target.value)}
+                        placeholder="例如：基督教"
+                      />
+                    </label>
 
-              <label className="admin-user-editor__field admin-user-editor__field--full">
-                <span>個人簡介</span>
-                <textarea
-                  rows={4}
-                  value={editForm.bio}
-                  onChange={(event) => handleEditField("bio", event.target.value)}
-                  placeholder="可編輯使用者上傳的簡介內容"
-                />
-              </label>
+                    <label className="admin-editor__field">
+                      <span>國家</span>
+                      <input
+                        type="text"
+                        value={editForm.country}
+                        onChange={(event) => handleEditField("country", event.target.value)}
+                        placeholder="例如：Taiwan"
+                      />
+                    </label>
 
-              <label className="admin-user-editor__field">
-                <span>Solana 地址</span>
-                <input
-                  type="text"
-                  value={editForm.solanaAddress}
-                  onChange={(event) => handleEditField("solanaAddress", event.target.value)}
-                  placeholder="未來發幣用地址"
-                />
-              </label>
+                    <label className="admin-editor__field admin-editor__field--full">
+                      <span>頭像 URL</span>
+                      <input
+                        type="url"
+                        value={editForm.avatarUrl}
+                        onChange={(event) => handleEditField("avatarUrl", event.target.value)}
+                        placeholder="https://..."
+                      />
+                    </label>
 
-              <label className="admin-user-editor__field">
-                <span>BSC 地址</span>
-                <input
-                  type="text"
-                  value={editForm.bscAddress}
-                  onChange={(event) => handleEditField("bscAddress", event.target.value)}
-                  placeholder="未來發幣用地址"
-                />
-              </label>
-            </div>
+                    <label className="admin-editor__field admin-editor__field--full">
+                      <span>個人簡介</span>
+                      <textarea
+                        rows={4}
+                        value={editForm.bio}
+                        onChange={(event) => handleEditField("bio", event.target.value)}
+                        placeholder="請輸入公開個人簡介"
+                      />
+                    </label>
 
-            <label className="admin-user-editor__checkbox">
-              <input
-                type="checkbox"
-                checked={editForm.isAddressVerified}
-                onChange={(event) => handleEditField("isAddressVerified", event.target.checked)}
-              />
-              <span>地址已驗證</span>
-            </label>
+                    <label className="admin-editor__field">
+                      <span>Solana 地址</span>
+                      <input
+                        type="text"
+                        value={editForm.solanaAddress}
+                        onChange={(event) => handleEditField("solanaAddress", event.target.value)}
+                        placeholder="Solana wallet"
+                      />
+                    </label>
 
-            <footer className="admin-user-editor__actions">
-              <button type="button" className="button button--ghost" onClick={closeEditor} disabled={savingEdit}>
-                取消
-              </button>
-              <button type="button" className="button button--primary" onClick={handleSaveEdit} disabled={savingEdit}>
-                {savingEdit ? "儲存中..." : "儲存變更"}
-              </button>
-            </footer>
+                    <label className="admin-editor__field">
+                      <span>BSC 地址</span>
+                      <input
+                        type="text"
+                        value={editForm.bscAddress}
+                        onChange={(event) => handleEditField("bscAddress", event.target.value)}
+                        placeholder="BSC wallet"
+                      />
+                    </label>
+                  </div>
+
+                  <label className="admin-editor__checkbox">
+                    <input
+                      type="checkbox"
+                      checked={editForm.isAddressVerified}
+                      onChange={(event) => handleEditField("isAddressVerified", event.target.checked)}
+                    />
+                    <span>錢包地址已驗證</span>
+                  </label>
+                </section>
+
+                <footer className="admin-editor__actions">
+                  <button type="button" className="button button--ghost" onClick={requestCloseEditor} disabled={savingEdit}>
+                    取消
+                  </button>
+                  <button type="button" className="button button--primary" onClick={handleSaveEdit} disabled={savingEdit}>
+                    {savingEdit ? "儲存中..." : "儲存變更"}
+                  </button>
+                </footer>
+              </>
+            )}
           </section>
         </div>
       ) : null}
+
       {feedbackNode}
     </div>
   );

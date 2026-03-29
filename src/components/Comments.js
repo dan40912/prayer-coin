@@ -9,7 +9,7 @@ import { buildOvercomerSlug } from "@/lib/overcomer";
 
 import { REPORT_REASONS } from "@/constants/reportReasons";
 
-// ===== 可切換的簡易 Debug（預設關閉） =====
+// ===== ??????????? Debug??????????????????? =====
 const DEBUG = false;
 const DEBUG_TAG = "[Recorder]";
 function logDebug(...args) {
@@ -24,13 +24,13 @@ function logDebug(...args) {
   console.log(DEBUG_TAG, `[${ts}]`, ...args);
 }
 
-// ===== 錄音參數 =====
+// ===== ???????????怏?????=====
 const MAX_RECORD_SECONDS = 120;
 const COUNTDOWN_START = 3;
 const DEFAULT_SAMPLE_RATE = 16000;
 const DEFAULT_BITRATE = 128000;
 
-// 錄音格式（優先 WebM/Opus，最通用）
+// ?????????????WebM/Opus?????????????
 const RECORDING_FORMATS = [
   { mimeType: "audio/webm;codecs=opus", extension: "webm" },
   { mimeType: "audio/webm", extension: "webm" },
@@ -72,9 +72,9 @@ function createMediaRecorderWithFallback(stream) {
   try {
     recorder = new MediaRecorder(stream, options);
   } catch (e) {
-    // 若不支援指定 mime，直接用瀏覽器預設
+    // ??????????? mime????????????????????
     recorder = new MediaRecorder(stream);
-    // 同步實際使用的格式，方便檔名副檔名/上傳
+    // ???????????????????????????????????????????????????????
     format.mimeType = recorder.mimeType;
     format.extension = getExtensionFromMime(recorder.mimeType);
   }
@@ -83,7 +83,7 @@ function createMediaRecorderWithFallback(stream) {
   return { recorder, format, options };
 }
 
-// ===== 小工具 =====
+// ===== ?????????=====
 function formatSeconds(totalSeconds) {
   const minutes = Math.floor(totalSeconds / 60)
     .toString()
@@ -94,11 +94,9 @@ function formatSeconds(totalSeconds) {
 function getDisplayName(response) {
   if (response.isAnonymous) return "匿名代禱者";
   return response.responder?.name || response.responder?.email || "未命名";
-  console.log("handleSubmit -> authUser:", authUser);
 }
 function getAvatarUrl(response) {
   return response.responder?.avatarUrl || null;
-  console.log("handleSubmit -> authUser:", authUser);
 }
 function getAvatarFallback(name) {
   const initial = name?.trim()?.charAt(0) || "祈";
@@ -116,7 +114,7 @@ function getResponderProfileHref(response) {
   return `/overcomer/${encodeURIComponent(slug)}`;
 }
 
-// ===== 主元件 =====
+// ===== ??????=====
 export default function Comments({ requestId, ownerId = null }) {
   const authUser = useAuthSession();
 
@@ -136,6 +134,7 @@ export default function Comments({ requestId, ownerId = null }) {
   const [reportError, setReportError] = useState("");
   const [actionNotice, setActionNotice] = useState("");
   const [actionNoticeType, setActionNoticeType] = useState("success");
+  const [openActionMenuId, setOpenActionMenuId] = useState(null);
 
   const reportTargetName = reportTarget ? getDisplayName(reportTarget) : "";
   const reportPreviewMessage = reportTarget?.message
@@ -153,7 +152,7 @@ export default function Comments({ requestId, ownerId = null }) {
 
   const openReportModal = useCallback((response) => {
     if (!authUser) {
-      setActionNotice("請先登入後再進行檢舉");
+      setActionNotice("請先登入後再進行檢舉。");
       setActionNoticeType("error");
       return;
     }
@@ -164,13 +163,15 @@ export default function Comments({ requestId, ownerId = null }) {
     setReportFeedback("");
   }, [authUser]);
 
+  const toggleActionMenu = useCallback((responseId) => {
+    setOpenActionMenuId((prev) => (prev === responseId ? null : responseId));
+  }, []);
+
   const handleShareResponse = useCallback(async (response) => {
     if (typeof window === "undefined") return;
     const baseUrl = window.location.href.split("#")[0];
     const shareUrl = `${baseUrl}#prayer-response-${response.id}`;
-    const shareText = response.message
-      ? response.message.slice(0, 120)
-      : "邀請你一起關心這則禱告回應";
+    const shareText = response.message ? response.message.slice(0, 120) : "邀請你一起關心這則禱告回應";
     try {
       if (navigator.share) {
         await navigator.share({
@@ -178,11 +179,11 @@ export default function Comments({ requestId, ownerId = null }) {
           text: shareText,
           url: shareUrl,
         });
-        setActionNotice("已開啟分享功能");
+        setActionNotice("已開啟分享功能。");
         setActionNoticeType("success");
       } else if (navigator.clipboard) {
         await navigator.clipboard.writeText(shareUrl);
-        setActionNotice("已複製分享連結");
+        setActionNotice("已複製分享連結。");
         setActionNoticeType("success");
       } else {
         const textarea = document.createElement("textarea");
@@ -194,17 +195,17 @@ export default function Comments({ requestId, ownerId = null }) {
         textarea.select();
         try {
           document.execCommand("copy");
-          setActionNotice("已複製分享連結");
+          setActionNotice("已複製分享連結。");
           setActionNoticeType("success");
-        } catch (copyErr) {
-          throw new Error("無法使用分享功能");
+        } catch (_copyErr) {
+          throw new Error("無法複製分享連結。");
         } finally {
           textarea.remove();
         }
       }
     } catch (err) {
       if (err?.name === "AbortError") return;
-      setActionNotice(err?.message || "分享失敗，請稍後再試");
+      setActionNotice(err?.message || "分享失敗，請稍後再試。");
       setActionNoticeType("error");
     }
   }, []);
@@ -212,11 +213,11 @@ export default function Comments({ requestId, ownerId = null }) {
   const handleReportSubmit = useCallback(async (event) => {
     event.preventDefault();
     if (!reportTarget) {
-      setReportError("找不到要檢舉的資料");
+      setReportError("找不到要檢舉的回應。");
       return;
     }
     if (!reportReason) {
-      setReportError("請選擇檢舉理由");
+      setReportError("請選擇檢舉理由。");
       return;
     }
     setReportSubmitting(true);
@@ -236,7 +237,7 @@ export default function Comments({ requestId, ownerId = null }) {
 
       if (!response.ok) {
         const data = await response.json().catch(() => ({}));
-        throw new Error(data?.message || "檢舉失敗，請稍後再試");
+        throw new Error(data?.message || "檢舉失敗，請稍後再試。");
       }
 
       const ownerReporting = ownerIdValue && authUser?.id && String(authUser.id) === ownerIdValue;
@@ -248,18 +249,18 @@ export default function Comments({ requestId, ownerId = null }) {
             : item
         )
       );
-      setReportFeedback("已收到您的檢舉，我們會儘速處理。");
+      setReportFeedback("已送出檢舉，感謝你幫助我們維護社群內容。");
       window.setTimeout(() => {
         closeReportModal();
       }, 1500);
     } catch (err) {
-      setReportError(err?.message || "檢舉失敗，請稍後再試");
+      setReportError(err?.message || "檢舉失敗，請稍後再試。");
     } finally {
       setReportSubmitting(false);
     }
   }, [reportTarget, reportReason, reportRemarks, closeReportModal, ownerIdValue, authUser]);
 
-  // 錄音狀態
+  // ????????
   const [audioUrl, setAudioUrl] = useState(null);
   const audioBlobRef = useRef(null);
   const recordingFormatRef = useRef(resolveRecordingFormat());
@@ -272,7 +273,7 @@ export default function Comments({ requestId, ownerId = null }) {
   const [recordError, setRecordError] = useState("");
   const [submittingResponse, setSubmittingResponse] = useState(false);
 
-  // 媒體資源
+  // ?????????????
   const mediaRecorderRef = useRef(null);
   const mediaStreamRef = useRef(null);
   const audioContextRef = useRef(null);
@@ -280,20 +281,20 @@ export default function Comments({ requestId, ownerId = null }) {
   const recordTimerRef = useRef(null);
   const discardRecordingOnStopRef = useRef(false);
 
-  // 讀取回應列表
+  // ????????????
   useEffect(() => {
     let cancelled = false;
     (async () => {
       try {
         const res = await fetch(`/api/responses/${requestId}`, { cache: "no-store" });
-        if (!res.ok) throw new Error("無法載入回應");
+        if (!res.ok) throw new Error("無法載入回應。");
         const data = await res.json();
         if (!cancelled) {
           setResponses(data);
           setError("");
         }
       } catch (err) {
-        if (!cancelled) setError(err.message || "無法載入回應");
+        if (!cancelled) setError(err.message || "無法載入回應。");
       } finally {
         if (!cancelled) setLoading(false);
       }
@@ -301,7 +302,7 @@ export default function Comments({ requestId, ownerId = null }) {
 
     return () => {
       cancelled = true;
-      // 元件卸載時釋放資源/計時器/URL
+      // ???????怏?????????????????????URL
       cleanupRecording();
       if (recordTimerRef.current) {
         clearInterval(recordTimerRef.current);
@@ -315,6 +316,10 @@ export default function Comments({ requestId, ownerId = null }) {
   useEffect(() => {
     const handleKeydown = (event) => {
       if (event.key === "Escape") {
+        if (openActionMenuId !== null) {
+          setOpenActionMenuId(null);
+          return;
+        }
         if (reportTarget && !reportSubmitting) {
           closeReportModal();
         }
@@ -322,7 +327,22 @@ export default function Comments({ requestId, ownerId = null }) {
     };
     document.addEventListener("keydown", handleKeydown);
     return () => document.removeEventListener("keydown", handleKeydown);
-  }, [reportTarget, reportSubmitting, closeReportModal]);
+  }, [openActionMenuId, reportTarget, reportSubmitting, closeReportModal]);
+
+  useEffect(() => {
+    if (openActionMenuId === null) return;
+    const handlePointerDown = (event) => {
+      if (!(event.target instanceof Element)) return;
+      if (event.target.closest(".comment-item__menu-wrap")) return;
+      setOpenActionMenuId(null);
+    };
+    document.addEventListener("mousedown", handlePointerDown);
+    document.addEventListener("touchstart", handlePointerDown);
+    return () => {
+      document.removeEventListener("mousedown", handlePointerDown);
+      document.removeEventListener("touchstart", handlePointerDown);
+    };
+  }, [openActionMenuId]);
 
   useEffect(() => {
     if (!actionNotice) return;
@@ -330,7 +350,7 @@ export default function Comments({ requestId, ownerId = null }) {
     return () => window.clearTimeout(timer);
   }, [actionNotice]);
 
-  // 上限秒數自動停止
+  // ???????????????????授???????
   useEffect(() => {
     if (!recording) return;
     if (recordSeconds >= MAX_RECORD_SECONDS) {
@@ -339,7 +359,7 @@ export default function Comments({ requestId, ownerId = null }) {
     }
   }, [recordSeconds, recording]);
 
-  // 倒數計時
+  // ??????????????
   useEffect(() => {
     if (!isRecorderModalOpen || recorderStep !== "countdown") return;
     if (countdownValue === null) return;
@@ -357,7 +377,7 @@ export default function Comments({ requestId, ownerId = null }) {
     return () => window.clearTimeout(timer);
   }, [countdownValue, isRecorderModalOpen, recorderStep]);
 
-  // 統一清理，fromStop=true 表示來自 onstop，不再呼叫 recorder.stop()
+  // ???????????????????romStop=true ??????????? onstop???????????recorder.stop()
   const cleanupRecording = useCallback((fromStop = false) => {
     if (recordTimerRef.current) {
       clearInterval(recordTimerRef.current);
@@ -390,7 +410,7 @@ export default function Comments({ requestId, ownerId = null }) {
     setRecordSeconds(0);
   }, []);
 
-  // 開啟錄音（要求麥克風權限→倒數）
+  // ?????????????????????????????????????????
   const openRecorder = async () => {
     setRecordError("");
     setCountdownValue(null);
@@ -412,13 +432,13 @@ export default function Comments({ requestId, ownerId = null }) {
       setIsRecorderModalOpen(true);
     } catch (err) {
       console.error("access microphone failed", err);
-      setRecordError("需要麥克風權限才能錄音");
+      setRecordError("需要麥克風權限才能錄音。");
       setIsRecorderModalOpen(false);
       cleanupRecording();
     }
   };
 
-  // 手動關閉 Modal（取消/錯誤）
+  // ?????? Modal????????????
   const closeRecorderModal = () => {
     if (recorderStep === "countdown" || recorderStep === "recording") {
       discardRecordingOnStopRef.current = true;
@@ -429,7 +449,7 @@ export default function Comments({ requestId, ownerId = null }) {
     setCountdownValue(null);
   };
 
-  // 開始錄音
+  // ???????
   const beginRecording = () => {
     if (!mediaStreamRef.current) {
       setRecorderStep("idle");
@@ -468,7 +488,7 @@ export default function Comments({ requestId, ownerId = null }) {
 
       recorder.addEventListener("error", (event) => {
         const err = event?.error;
-        setRecordError(`錄音發生錯誤${err?.name ? `: ${err.name}` : ""}`);
+        setRecordError(`錄音發生錯誤${err?.name ? `：${err.name}` : ""}`);
       });
 
       recorder.addEventListener("dataavailable", (event) => {
@@ -509,14 +529,14 @@ export default function Comments({ requestId, ownerId = null }) {
       setRecorderStep("recording");
     } catch (error) {
       console.error("begin recording failed", error);
-      setRecordError("錄音啟動失敗，請重試或更換瀏覽器。");
+      setRecordError("錄音啟動失敗，請檢查權限後再試。");
       cleanupRecording();
       setRecorderStep("idle");
       setCountdownValue(null);
     }
   };
 
-  // 停止錄音（使用者按鈕）
+  // ????????授????????????????????????????
   const stopRecording = () => {
     const recorder = mediaRecorderRef.current;
     if (recorder && recorder.state === "recording") {
@@ -540,7 +560,7 @@ export default function Comments({ requestId, ownerId = null }) {
     setCountdownValue(null);
   };
 
-  // 送出表單
+  // ???????????????
   const useRecordedAudio = () => {
     setIsRecorderModalOpen(false);
     setRecorderStep("idle");
@@ -596,7 +616,7 @@ export default function Comments({ requestId, ownerId = null }) {
       setRecorderStep("idle");
       return true;
     } catch (err) {
-      setActionNotice(err?.message || "送出回應失敗。");
+      setActionNotice(err?.message || "送出回應失敗，請稍後再試。");
       setActionNoticeType("error");
       return false;
     } finally {
@@ -622,7 +642,7 @@ export default function Comments({ requestId, ownerId = null }) {
     if (!isRecorderModalOpen) return null;
 
     return (
-      <div className="record-modal" role="dialog" aria-modal="true" aria-label="錄音器">
+      <div className="record-modal" role="dialog" aria-modal="true" aria-label="錄音視窗">
         <div className="record-modal__backdrop" onClick={closeRecorderModal} />
         <div className="record-modal__card">
           {recordError ? (
@@ -636,7 +656,7 @@ export default function Comments({ requestId, ownerId = null }) {
           ) : recorderStep === "countdown" ? (
             <>
               <h4>準備錄音</h4>
-              <p>倒數結束後將開始錄音。</p>
+              <p>倒數結束後將自動開始錄音。</p>
               <div className="record-modal__count">{countdownValue}</div>
               <button type="button" className="cp-button cp-button--ghost" onClick={closeRecorderModal}>
                 取消
@@ -645,7 +665,7 @@ export default function Comments({ requestId, ownerId = null }) {
           ) : recorderStep === "recording" ? (
             <>
               <h4>錄音中</h4>
-              <p>最長可錄 {MAX_RECORD_SECONDS} 秒。</p>
+              <p>最長可錄製 {MAX_RECORD_SECONDS} 秒。</p>
               <div className="record-modal__timer">{formatSeconds(recordSeconds)}</div>
               <div className="record-modal__actions">
                 <button type="button" className="cp-button cp-button--danger" onClick={stopRecording}>
@@ -656,7 +676,7 @@ export default function Comments({ requestId, ownerId = null }) {
           ) : recorderStep === "review" && audioUrl ? (
             <>
               <h4>檢查錄音</h4>
-              <p>可直接送出，或重新錄音。</p>
+              <p>送出前請先確認錄音內容。</p>
               <audio src={audioUrl} controls preload="metadata" className="record-modal__audio" />
               <div className="record-modal__actions record-modal__actions--review">
                 <button type="button" className="cp-button cp-button--ghost" onClick={rerecordAudio} disabled={submittingResponse}>
@@ -666,7 +686,7 @@ export default function Comments({ requestId, ownerId = null }) {
                   保留並關閉
                 </button>
                 <button type="button" className="cp-button" onClick={submitFromRecorderModal} disabled={submittingResponse}>
-                  {submittingResponse ? "上傳中..." : "立即上傳"}
+                  {submittingResponse ? "送出中..." : "送出回應"}
                 </button>
               </div>
             </>
@@ -678,7 +698,9 @@ export default function Comments({ requestId, ownerId = null }) {
 
   const hasAudio = Boolean(audioUrl);
 
-  const visibleResponses = responses.filter((response) => !response.isBlocked);
+  const visibleResponses = responses.filter(
+    (response) => !response.isBlocked && Number(response.reportCount ?? 0) === 0
+  );
 
   return (
     <section className="comments card">
@@ -690,13 +712,13 @@ export default function Comments({ requestId, ownerId = null }) {
 
       {!authUser && (
         <div className="alert alert-warning">
-          請先 <Link href="/login">登入</Link> 後才能留言或錄音。
+          請先 <Link href="/login">登入</Link> 後才能留言或檢舉。
         </div>
       )}
 
       <div className="comments__header">
-        <h3>社群禱告牆</h3>
-        <p className="comments__subtitle">留下你的文字或語音，成為他們的力量。</p>
+        <h3>禱告回應</h3>
+        <p className="comments__subtitle">留下文字或語音，成為彼此的支持。</p>
       </div>
 
       {actionNotice ? (
@@ -707,17 +729,18 @@ export default function Comments({ requestId, ownerId = null }) {
 
       <div className="comments__list" aria-live="polite">
           {loading ? (
-            <p>載入回應中…</p>
+            <p>載入回應中...</p>
           ) : error ? (
             <p className="cp-alert cp-alert--error">{error}</p>
           ) : visibleResponses.length === 0 ? (
-            <p className="cp-helper">成為第一個回應的朋友吧！</p>
+            <p className="cp-helper">成為第一位留下回應的人吧。</p>
           ) : (
             visibleResponses.map((response) => {
                 const name = getDisplayName(response);
                 const avatarUrl = getAvatarUrl(response);
                 const avatarFallback = getAvatarFallback(name);
                 const profileHref = getResponderProfileHref(response);
+                const isActionMenuOpen = openActionMenuId === response.id;
                 return (
                   <article
                     key={response.id}
@@ -757,9 +780,9 @@ export default function Comments({ requestId, ownerId = null }) {
                           {response.reportCount > 0 ? (
                             <span
                               className="comment-item__report-badge"
-                              title={`被檢舉 ${response.reportCount} 次`}
+                              title={`已被檢舉 ${response.reportCount} 次`}
                             >
-                              檢舉 × {response.reportCount}
+                              檢舉 x {response.reportCount}
                             </span>
                           ) : null}
                           <div className="comment-item__actions">
@@ -770,13 +793,38 @@ export default function Comments({ requestId, ownerId = null }) {
                             >
                               分享
                             </button>
-                            <button
-                              type="button"
-                              className="comment-item__action-btn comment-item__action-btn--report"
-                              onClick={() => openReportModal(response)}
-                            >
-                              檢舉
-                            </button>
+                            <div className={`comment-item__menu-wrap${isActionMenuOpen ? " is-open" : ""}`}>
+                              <button
+                                type="button"
+                                className="comment-item__menu-trigger"
+                                aria-label="更多操作"
+                                aria-haspopup="menu"
+                                aria-expanded={isActionMenuOpen}
+                                aria-controls={`comment-action-menu-${response.id}`}
+                                onClick={() => toggleActionMenu(response.id)}
+                              >
+                                ...
+                              </button>
+                              {isActionMenuOpen ? (
+                                <div
+                                  id={`comment-action-menu-${response.id}`}
+                                  className="comment-item__action-menu"
+                                  role="menu"
+                                >
+                                  <button
+                                    type="button"
+                                    role="menuitem"
+                                    className="comment-item__action-menu-item comment-item__action-menu-item--danger"
+                                    onClick={() => {
+                                      setOpenActionMenuId(null);
+                                      openReportModal(response);
+                                    }}
+                                  >
+                                    檢舉
+                                  </button>
+                                </div>
+                              ) : null}
+                            </div>
                           </div>
                         </div>
                     </div>
@@ -807,7 +855,7 @@ export default function Comments({ requestId, ownerId = null }) {
             <textarea
               value={text}
               onChange={(event) => setText(event.target.value)}
-              placeholder="和他們說說話，或分享你的代禱內容。"
+              placeholder="寫下鼓勵的話，或上傳你的語音代禱。"
               rows={4}
             />
             <div className="record-toolbar">
@@ -822,14 +870,14 @@ export default function Comments({ requestId, ownerId = null }) {
                   style={{ display: "inline-flex", alignItems: "center", gap: "8px", padding: "12px 24px", borderRadius: "50px" }}
                 >
                   <i className="fa-solid fa-microphone"></i>
-                  開始錄音
+                  錄製語音
                 </button>
               ) : null}
 
               {hasAudio ? (
                 <div className="audio-preview glass-panel" style={{ padding: "10px", marginTop: "10px" }}>
                   <p style={{ margin: "0 0 10px 0", fontSize: "0.9rem", color: "var(--text-light)" }}>
-                    錄音已完成，可重新錄音或直接送出回應。
+                    錄音已完成，可重新錄音或直接送出。
                   </p>
                   <audio src={audioUrl} controls preload="metadata" style={{ width: "100%" }} />
                   <div className="audio-preview__actions" style={{ display: "flex", gap: "10px", marginTop: "10px" }}>
@@ -865,22 +913,22 @@ export default function Comments({ requestId, ownerId = null }) {
             >
               ×
             </button>
-            <h4>檢舉禱告回應</h4>
+            <h4>檢舉這則回應</h4>
             <p className="comment-report-modal__hint">
-              請選擇檢舉原因並留下必要的補充說明，我們會盡快安排管理員審核。
+              請選擇檢舉理由，若有需要可補充說明，管理員會儘快審核。
             </p>
             <div className="comment-report-modal__preview">
               <p className="comment-report-modal__preview-label">檢舉對象</p>
-              <strong>{reportTargetName || "未知使用者"}</strong>
+              <strong>{reportTargetName || "未命名使用者"}</strong>
               {reportPreviewMessage ? (
                 <p className="comment-report-modal__preview-message">{reportPreviewMessage}</p>
               ) : (
-                <p className="comment-report-modal__preview-message muted">這則回應沒有文字內容</p>
+                <p className="comment-report-modal__preview-message muted">這則回應沒有文字內容。</p>
               )}
             </div>
             <form onSubmit={handleReportSubmit} className="comment-report-modal__form">
               <fieldset className="comment-report-modal__fieldset">
-                <legend>檢舉原因</legend>
+                <legend>檢舉理由</legend>
                 {REPORT_REASONS.map((reason) => (
                   <label key={reason.value} className="comment-report-modal__reason">
                     <input
@@ -897,12 +945,12 @@ export default function Comments({ requestId, ownerId = null }) {
               </fieldset>
 
               <label className="comment-report-modal__remarks">
-                <span>備註說明</span>
+                <span>補充說明（選填）</span>
                 <textarea
                   value={reportRemarks}
                   onChange={(event) => setReportRemarks(event.target.value)}
                   rows={4}
-                  placeholder="若需要補充說明，請在此留言。"
+                  placeholder="若需補充說明，請在此留言。"
                   disabled={reportSubmitting}
                 />
               </label>
