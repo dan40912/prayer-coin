@@ -14,6 +14,12 @@ import { normalizeAudioUrl } from "@/lib/media-url";
 const AudioContext = createContext(null);
 const hasOwn = Object.prototype.hasOwnProperty;
 const END_EPSILON_SECONDS = 0.12;
+const AUDIO_DEBUG_TAG = "[AudioContext]";
+
+function logAudioDebug(event, details = {}) {
+  // Keep a stable, searchable debug stream for playback failures and loop behavior.
+  console.log(`${AUDIO_DEBUG_TAG} ${event}`, details);
+}
 
 function getTrackKey(track) {
   if (!track) return null;
@@ -107,23 +113,50 @@ export function AudioProvider({ children }) {
   }, []);
 
   const tryPlayAudio = useCallback((audio, errorLabel = "Play failed") => {
-    if (!audio) return;
+    if (!audio) {
+      logAudioDebug("tryPlayAudio:blocked:no-audio", { errorLabel });
+      return;
+    }
+    logAudioDebug("tryPlayAudio:start", {
+      errorLabel,
+      paused: audio.paused,
+      currentTime: normalizeDuration(audio.currentTime),
+      duration: normalizeDuration(audio.duration),
+      currentIndex: currentIndexRef.current,
+      queueSize: playlistRef.current.length,
+      isLoop: isLoopRef.current,
+    });
     const playPromise = audio.play();
     if (playPromise && typeof playPromise.then === "function") {
       playPromise
         .then(() => {
+          logAudioDebug("tryPlayAudio:success", {
+            errorLabel,
+            currentIndex: currentIndexRef.current,
+            queueSize: playlistRef.current.length,
+          });
           setIsPlaying(true);
           setIsQueueEnded(false);
         })
         .catch((error) => {
+          logAudioDebug("tryPlayAudio:failed", {
+            errorLabel,
+            name: String(error?.name || ""),
+            message: String(error?.message || ""),
+            currentIndex: currentIndexRef.current,
+            queueSize: playlistRef.current.length,
+            isLoop: isLoopRef.current,
+          });
           if (shouldSkipToNextTrackOnPlayFailure(error)) {
             setCurrentIndex((prevIndex) => {
               const total = playlistRef.current.length;
               if (total === 0) return -1;
               if (prevIndex >= 0 && prevIndex < total - 1) {
+                logAudioDebug("tryPlayAudio:skip-to-next", { prevIndex, nextIndex: prevIndex + 1, total });
                 shouldAutoPlayRef.current = true;
                 return prevIndex + 1;
               }
+              logAudioDebug("tryPlayAudio:skip-not-possible", { prevIndex, total });
               shouldAutoPlayRef.current = false;
               return prevIndex;
             });
@@ -153,6 +186,12 @@ export function AudioProvider({ children }) {
       };
       const handlePauseEvent = () => setIsPlaying(false);
       const handleErrorEvent = () => {
+        logAudioDebug("audio:error-event", {
+          currentIndex: currentIndexRef.current,
+          queueSize: playlistRef.current.length,
+          mediaErrorCode: audio?.error?.code ?? null,
+          mediaErrorMessage: audio?.error?.message ?? "",
+        });
         setIsPlaying(false);
         setCurrentIndex((prevIndex) => {
           const total = playlistRef.current.length;
@@ -177,24 +216,53 @@ export function AudioProvider({ children }) {
       };
 
       const handleEnded = () => {
+        logAudioDebug("audio:ended", {
+          currentIndex: currentIndexRef.current,
+          queueSize: playlistRef.current.length,
+          isLoop: isLoopRef.current,
+        });
         setIsPlaying(false);
         setCurrentIndex((prevIndex) => {
           const total = playlistRef.current.length;
           if (total === 0) {
+            logAudioDebug("audio:ended:queue-empty");
             shouldAutoPlayRef.current = false;
             setIsQueueEnded(false);
             return -1;
           }
           if (prevIndex < total - 1) {
+            logAudioDebug("audio:ended:advance-next", { prevIndex, nextIndex: prevIndex + 1, total });
             shouldAutoPlayRef.current = true;
             setIsQueueEnded(false);
             return prevIndex + 1;
           }
           if (isLoopRef.current) {
+            logAudioDebug("audio:ended:loop-enabled", { prevIndex, total });
             shouldAutoPlayRef.current = true;
             setIsQueueEnded(false);
+            if (total === 1) {
+              audio.currentTime = 0;
+              const loopPlayPromise = audio.play();
+              if (loopPlayPromise && typeof loopPlayPromise.then === "function") {
+                loopPlayPromise
+                  .then(() => {
+                    logAudioDebug("audio:ended:single-track-loop:restart-success");
+                    setIsPlaying(true);
+                  })
+                  .catch((error) => {
+                    logAudioDebug("audio:ended:single-track-loop:restart-failed", {
+                      name: String(error?.name || ""),
+                      message: String(error?.message || ""),
+                    });
+                    setIsPlaying(false);
+                  });
+              } else {
+                setIsPlaying(!audio.paused);
+              }
+            }
             return 0;
           }
+          logAudioDebug("audio:ended:mark-queue-ended", { prevIndex, total });
           shouldAutoPlayRef.current = false;
           setIsQueueEnded(true);
           return prevIndex;
@@ -311,11 +379,20 @@ export function AudioProvider({ children }) {
   const playByIndex = useCallback((index) => {
     const audio = audioRef.current;
     const tracks = playlistRef.current;
-    if (!audio) return false;
-    if (index < 0 || index >= tracks.length) return false;
+    if (!audio) {
+      logAudioDebug("playByIndex:blocked:no-audio", { index });
+      return false;
+    }
+    if (index < 0 || index >= tracks.length) {
+      logAudioDebug("playByIndex:blocked:invalid-index", { index, total: tracks.length });
+      return false;
+    }
 
     const track = sanitizeTrack(tracks[index]);
-    if (!track?.voiceUrl) return false;
+    if (!track?.voiceUrl) {
+      logAudioDebug("playByIndex:blocked:no-voice-url", { index });
+      return false;
+    }
     const targetKey = getTrackKey(track);
 
     const currentTrack = tracks[currentIndexRef.current];
@@ -340,16 +417,23 @@ export function AudioProvider({ children }) {
     }
 
     tryPlayAudio(audio, "Play failed");
+    logAudioDebug("playByIndex:requested", { index, targetKey });
     return true;
   }, [tryPlayAudio]);
 
   const restartQueue = useCallback(() => {
     const audio = audioRef.current;
     const tracks = playlistRef.current;
-    if (!audio || !tracks.length) return false;
+    if (!audio || !tracks.length) {
+      logAudioDebug("restartQueue:blocked", { hasAudio: Boolean(audio), queueSize: tracks.length });
+      return false;
+    }
 
     const firstTrack = sanitizeTrack(tracks[0]);
-    if (!firstTrack?.voiceUrl) return false;
+    if (!firstTrack?.voiceUrl) {
+      logAudioDebug("restartQueue:blocked:no-first-track-voice-url");
+      return false;
+    }
 
     const targetKey = getTrackKey(firstTrack);
     if (loadedTrackKeyRef.current !== targetKey) {
@@ -367,21 +451,41 @@ export function AudioProvider({ children }) {
     shouldAutoPlayRef.current = true;
     skipAutoPlayEffectRef.current = true;
     tryPlayAudio(audio, "Play failed");
+    logAudioDebug("restartQueue:requested", {
+      queueSize: tracks.length,
+      firstTrackKey: targetKey,
+      isLoop: isLoopRef.current,
+    });
     return true;
   }, [tryPlayAudio]);
 
   const togglePlay = useCallback(() => {
     const audio = audioRef.current;
-    if (!audio) return;
+    if (!audio) {
+      logAudioDebug("togglePlay:blocked:no-audio");
+      return;
+    }
     if (audio.paused) {
       const tracks = playlistRef.current;
-      if (!tracks.length) return;
+      if (!tracks.length) {
+        logAudioDebug("togglePlay:blocked:no-tracks");
+        return;
+      }
       const atQueueEnd =
         isQueueEnded ||
         currentIndexRef.current < 0 ||
         currentIndexRef.current >= tracks.length ||
         isTrackAtEnd(audio);
+      logAudioDebug("togglePlay:play-request", {
+        currentIndex: currentIndexRef.current,
+        queueSize: tracks.length,
+        isQueueEnded,
+        atQueueEnd,
+        audioAtEnd: isTrackAtEnd(audio),
+        isLoop: isLoopRef.current,
+      });
       if (atQueueEnd) {
+        logAudioDebug("togglePlay:restart-queue");
         restartQueue();
         return;
       }
@@ -390,6 +494,10 @@ export function AudioProvider({ children }) {
       tryPlayAudio(audio, "Play failed");
       return;
     }
+    logAudioDebug("togglePlay:pause-request", {
+      currentIndex: currentIndexRef.current,
+      queueSize: playlistRef.current.length,
+    });
     shouldAutoPlayRef.current = false;
     audio.pause();
   }, [isQueueEnded, restartQueue, tryPlayAudio]);
@@ -484,21 +592,28 @@ export function AudioProvider({ children }) {
       const total = playlistRef.current.length;
       if (total === 0) return -1;
       if (prevIndex < total - 1) {
+        logAudioDebug("playNext:advance", { prevIndex, nextIndex: prevIndex + 1, total });
         shouldAutoPlayRef.current = true;
         setIsQueueEnded(false);
         return prevIndex + 1;
       }
       if (isLoop) {
+        logAudioDebug("playNext:loop-to-start", { prevIndex, total });
         shouldAutoPlayRef.current = true;
         setIsQueueEnded(false);
+        if (total === 1 && audioRef.current) {
+          audioRef.current.currentTime = 0;
+          tryPlayAudio(audioRef.current, "Play failed");
+        }
         return 0;
       }
+      logAudioDebug("playNext:reached-end-no-loop", { prevIndex, total });
       shouldAutoPlayRef.current = false;
       setIsPlaying(false);
       setIsQueueEnded(true);
       return prevIndex;
     });
-  }, [isLoop]);
+  }, [isLoop, tryPlayAudio]);
 
   const playPrev = useCallback(() => {
     setCurrentIndex((prevIndex) => {
