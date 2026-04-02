@@ -19,3 +19,6 @@ out/
 /src/generated/prisma
 logs/
 public/uploads/
+public/voices/
+tmp/
+.codex_tmp_figma*
