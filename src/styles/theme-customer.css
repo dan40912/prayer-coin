@@ -88,6 +88,19 @@
   gap: var(--space-sm);
 }
 
+.cp-profile__visibility {
+  display: grid;
+  gap: 0.45rem;
+  padding: var(--space-md);
+  border-radius: var(--radius-lg);
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.cp-profile__visibility strong {
+  color: #f8fafc;
+}
+
 .cp-button,
 .cp-link {
   font-weight: 600;
@@ -144,6 +157,11 @@
   display: grid;
   grid-template-columns: minmax(0, 280px) minmax(0, 1fr);
   gap: var(--space-lg);
+}
+
+.cp-card__layout--profile {
+  grid-template-columns: minmax(0, 160px) minmax(0, 1fr);
+  align-items: start;
 }
 
 .cp-card__cover {
@@ -336,6 +354,18 @@
   color: var(--text-main);
 }
 
+.cp-modal__toggle {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.8rem;
+  color: var(--text-main);
+  font-weight: 600;
+}
+
+.cp-modal__toggle input {
+  margin-top: 0.2rem;
+}
+
 .cp-modal__preview {
   border-radius: var(--radius-lg);
   overflow: hidden;
@@ -441,6 +471,61 @@
 
 .cp-withdraw__table td {
   color: rgba(255, 255, 255, 0.88);
+}
+
+.cp-overcomer-card__avatar {
+  display: block;
+  width: 160px;
+  height: 160px;
+  border-radius: 24px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.cp-overcomer-card__avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+footer .footer-socials {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.85rem;
+  margin-top: 1.15rem;
+}
+
+footer .footer-social {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.7rem 0.95rem;
+  border-radius: 999px;
+  border: 1px solid rgba(148, 163, 184, 0.22);
+  background: rgba(15, 23, 42, 0.4);
+  color: #e2e8f0;
+  text-decoration: none;
+  transition: transform 0.2s ease, border-color 0.2s ease, background 0.2s ease, color 0.2s ease;
+}
+
+footer .footer-social svg {
+  width: 1.05rem;
+  height: 1.05rem;
+  flex: 0 0 auto;
+}
+
+footer .footer-social:hover {
+  transform: translateY(-1px);
+  color: #f8fbff;
+  border-color: rgba(140, 195, 255, 0.48);
+  background: rgba(30, 41, 59, 0.72);
+}
+
+footer .footer-social--disabled {
+  opacity: 0.56;
+  cursor: default;
 }
 
 /* ------------------------------------------
@@ -605,8 +690,17 @@
   .cp-card__layout {
     grid-template-columns: 1fr;
   }
+  .cp-card__layout--profile {
+    grid-template-columns: 1fr;
+  }
   .cp-card__cover {
     max-height: 240px;
+  }
+  .cp-overcomer-card__avatar {
+    width: 100%;
+    max-width: 220px;
+    height: 220px;
+    margin: 0 auto;
   }
   .cp-withdraw__grid {
     grid-template-columns: 1fr;

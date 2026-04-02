@@ -1,4 +1,4 @@
-﻿import { NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 
 import prisma from "@/lib/prisma";
@@ -23,6 +23,8 @@ export async function POST(request) {
         email: true,
         name: true,
         username: true,
+        sessionVersion: true,
+        publicProfileEnabled: true,
         passwordHash: true,
         isBlocked: true,
         avatarUrl: true,
@@ -51,6 +53,7 @@ export async function POST(request) {
         isBlocked: user.isBlocked,
         avatarUrl: user.avatarUrl,
         bio: user.bio,
+        publicProfileEnabled: user.publicProfileEnabled,
       },
     });
 

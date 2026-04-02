@@ -1,23 +1,23 @@
-"use client";
+﻿"use client";
 
 import {
   createContext,
-  useContext,
-  useState,
-  useRef,
   useCallback,
+  useContext,
   useEffect,
   useMemo,
+  useRef,
+  useState,
 } from "react";
 import { normalizeAudioUrl } from "@/lib/media-url";
 
 const AudioContext = createContext(null);
 const hasOwn = Object.prototype.hasOwnProperty;
 const END_EPSILON_SECONDS = 0.12;
+const PLAYBACK_TIMEOUT_MS = 12000;
 const AUDIO_DEBUG_TAG = "[AudioContext]";
 
 function logAudioDebug(event, details = {}) {
-  // Keep a stable, searchable debug stream for playback failures and loop behavior.
   console.log(`${AUDIO_DEBUG_TAG} ${event}`, details);
 }
 
@@ -64,7 +64,25 @@ function shouldSkipToNextTrackOnPlayFailure(error) {
   if (message.includes("not supported")) return true;
   if (message.includes("no supported source")) return true;
   if (message.includes("decode")) return true;
+  if (message.includes("media error")) return true;
+  if (message.includes("load")) return true;
+  if (message.includes("network")) return true;
+  if (message.includes("timeout")) return true;
   return false;
+}
+
+function buildTrackLabel(track) {
+  if (!track) return "未知音檔";
+  return (
+    track.speaker?.trim() ||
+    track.requestTitle?.trim() ||
+    track.message?.trim() ||
+    "未知音檔"
+  );
+}
+
+function buildSkipNotice(track) {
+  return `已自動跳過無法播放的音檔：${buildTrackLabel(track)}`;
 }
 
 export function AudioProvider({ children }) {
@@ -77,17 +95,90 @@ export function AudioProvider({ children }) {
   const [duration, setDuration] = useState(0);
   const [isLoop, setIsLoop] = useState(false);
   const [trackDurations, setTrackDurations] = useState({});
+  const [isRecovering, setIsRecovering] = useState(false);
+  const [endedReason, setEndedReason] = useState(null);
+  const [playbackNotice, setPlaybackNotice] = useState(null);
+  const [failedTrackKeys, setFailedTrackKeys] = useState([]);
+  const [lastSkippedTrack, setLastSkippedTrack] = useState(null);
 
   const audioRef = useRef(null);
   const playlistRef = useRef([]);
   const currentIndexRef = useRef(-1);
   const isLoopRef = useRef(false);
   const trackDurationsRef = useRef({});
+  const failedTrackKeysRef = useRef(new Set());
   const pendingSeekRef = useRef(null);
   const probingKeysRef = useRef(new Set());
   const shouldAutoPlayRef = useRef(false);
   const loadedTrackKeyRef = useRef(null);
   const skipAutoPlayEffectRef = useRef(false);
+  const playbackTimeoutRef = useRef(null);
+  const playAttemptIdRef = useRef(0);
+  const failureHandlingKeyRef = useRef(null);
+
+  const clearPlaybackNotice = useCallback(() => {
+    setPlaybackNotice(null);
+  }, []);
+
+  const pushPlaybackNotice = useCallback((type, message, track = null) => {
+    setPlaybackNotice({
+      type,
+      message,
+      trackKey: getTrackKey(track),
+      createdAt: Date.now(),
+    });
+  }, []);
+
+  const commitFailedTrackKeys = useCallback((updater) => {
+    const current = Array.from(failedTrackKeysRef.current);
+    const nextValue =
+      typeof updater === "function" ? updater(current) : updater;
+    const normalized = Array.from(
+      new Set((Array.isArray(nextValue) ? nextValue : []).filter(Boolean))
+    );
+    failedTrackKeysRef.current = new Set(normalized);
+    setFailedTrackKeys(normalized);
+    return normalized;
+  }, []);
+
+  const clearTrackFailure = useCallback(
+    (track) => {
+      const key = getTrackKey(track);
+      if (!key) return;
+      commitFailedTrackKeys((prev) => prev.filter((item) => item !== key));
+    },
+    [commitFailedTrackKeys]
+  );
+
+  const markTrackFailed = useCallback(
+    (track) => {
+      const key = getTrackKey(track);
+      if (!key) return;
+      commitFailedTrackKeys((prev) =>
+        prev.includes(key) ? prev : [...prev, key]
+      );
+    },
+    [commitFailedTrackKeys]
+  );
+
+  const resetPlaybackFailures = useCallback(() => {
+    failureHandlingKeyRef.current = null;
+    failedTrackKeysRef.current = new Set();
+    setFailedTrackKeys([]);
+    setLastSkippedTrack(null);
+  }, []);
+
+  const syncFailedTrackKeysWithQueue = useCallback(
+    (tracks) => {
+      const validKeys = new Set(
+        (Array.isArray(tracks) ? tracks : [])
+          .map((track) => getTrackKey(track))
+          .filter(Boolean)
+      );
+      commitFailedTrackKeys((prev) => prev.filter((key) => validKeys.has(key)));
+    },
+    [commitFailedTrackKeys]
+  );
 
   const setDurationForTrack = useCallback((track, seconds) => {
     const key = getTrackKey(track);
@@ -99,343 +190,627 @@ export function AudioProvider({ children }) {
     });
   }, []);
 
+  const clearPlaybackAttemptTimeout = useCallback(() => {
+    if (playbackTimeoutRef.current) {
+      clearTimeout(playbackTimeoutRef.current);
+      playbackTimeoutRef.current = null;
+    }
+  }, []);
+
+  const invalidatePlaybackAttempt = useCallback(() => {
+    playAttemptIdRef.current += 1;
+    clearPlaybackAttemptTimeout();
+    return playAttemptIdRef.current;
+  }, [clearPlaybackAttemptTimeout]);
+
+  const finishQueue = useCallback(
+    (reason, noticeMessage = "", noticeType = "info") => {
+      const audio = audioRef.current;
+      invalidatePlaybackAttempt();
+      shouldAutoPlayRef.current = false;
+      skipAutoPlayEffectRef.current = false;
+      if (audio) {
+        audio.pause();
+      }
+      setIsPlaying(false);
+      setIsRecovering(false);
+      setIsQueueEnded(true);
+      setEndedReason(reason);
+      if (noticeMessage) {
+        pushPlaybackNotice(noticeType, noticeMessage);
+      }
+      logAudioDebug("播放結束:標記完成", {
+        reason,
+        currentIndex: currentIndexRef.current,
+        queueSize: playlistRef.current.length,
+      });
+    },
+    [invalidatePlaybackAttempt, pushPlaybackNotice]
+  );
+
   const stopAndResetAudio = useCallback(() => {
-    if (!audioRef.current) return;
-    audioRef.current.pause();
-    audioRef.current.currentTime = 0;
+    const audio = audioRef.current;
+    invalidatePlaybackAttempt();
+    if (audio) {
+      audio.pause();
+      audio.currentTime = 0;
+      audio.removeAttribute("src");
+      audio.load();
+    }
     shouldAutoPlayRef.current = false;
     skipAutoPlayEffectRef.current = false;
     loadedTrackKeyRef.current = null;
+    pendingSeekRef.current = null;
+    failureHandlingKeyRef.current = null;
     setIsPlaying(false);
+    setIsRecovering(false);
     setIsQueueEnded(false);
+    setEndedReason(null);
     setProgress(0);
     setDuration(0);
+    clearPlaybackNotice();
+    resetPlaybackFailures();
+  }, [clearPlaybackNotice, invalidatePlaybackAttempt, resetPlaybackFailures]);
+
+  const findFirstPlayableIndex = useCallback((tracks = playlistRef.current) => {
+    for (let index = 0; index < tracks.length; index += 1) {
+      const track = sanitizeTrack(tracks[index]);
+      const key = getTrackKey(track);
+      if (!track || !key) continue;
+      if (failedTrackKeysRef.current.has(key)) continue;
+      return index;
+    }
+    return -1;
   }, []);
 
-  const tryPlayAudio = useCallback((audio, errorLabel = "Play failed") => {
-    if (!audio) {
-      logAudioDebug("tryPlayAudio:blocked:no-audio", { errorLabel });
-      return;
-    }
-    logAudioDebug("tryPlayAudio:start", {
-      errorLabel,
-      paused: audio.paused,
-      currentTime: normalizeDuration(audio.currentTime),
-      duration: normalizeDuration(audio.duration),
-      currentIndex: currentIndexRef.current,
-      queueSize: playlistRef.current.length,
-      isLoop: isLoopRef.current,
-    });
-    const playPromise = audio.play();
-    if (playPromise && typeof playPromise.then === "function") {
-      playPromise
-        .then(() => {
-          logAudioDebug("tryPlayAudio:success", {
-            errorLabel,
-            currentIndex: currentIndexRef.current,
-            queueSize: playlistRef.current.length,
-          });
-          setIsPlaying(true);
-          setIsQueueEnded(false);
-        })
-        .catch((error) => {
-          logAudioDebug("tryPlayAudio:failed", {
-            errorLabel,
-            name: String(error?.name || ""),
-            message: String(error?.message || ""),
-            currentIndex: currentIndexRef.current,
-            queueSize: playlistRef.current.length,
-            isLoop: isLoopRef.current,
-          });
-          if (shouldSkipToNextTrackOnPlayFailure(error)) {
-            setCurrentIndex((prevIndex) => {
-              const total = playlistRef.current.length;
-              if (total === 0) return -1;
-              if (prevIndex >= 0 && prevIndex < total - 1) {
-                logAudioDebug("tryPlayAudio:skip-to-next", { prevIndex, nextIndex: prevIndex + 1, total });
-                shouldAutoPlayRef.current = true;
-                return prevIndex + 1;
-              }
-              logAudioDebug("tryPlayAudio:skip-not-possible", { prevIndex, total });
-              shouldAutoPlayRef.current = false;
-              return prevIndex;
-            });
-          } else {
-            shouldAutoPlayRef.current = false;
-            setIsPlaying(false);
-          }
-          console.error(errorLabel, error);
-        });
-      return;
-    }
-    setIsPlaying(!audio.paused);
-    if (!audio.paused) {
-      setIsQueueEnded(false);
-    }
-  }, []);
-
-  // Initialize Audio element
-  useEffect(() => {
-    if (typeof window !== "undefined") {
-      audioRef.current = new Audio();
-
-      const audio = audioRef.current;
-      const handlePlayEvent = () => {
-        setIsPlaying(true);
-        setIsQueueEnded(false);
-      };
-      const handlePauseEvent = () => setIsPlaying(false);
-      const handleErrorEvent = () => {
-        logAudioDebug("audio:error-event", {
-          currentIndex: currentIndexRef.current,
-          queueSize: playlistRef.current.length,
-          mediaErrorCode: audio?.error?.code ?? null,
-          mediaErrorMessage: audio?.error?.message ?? "",
-        });
-        setIsPlaying(false);
-        setCurrentIndex((prevIndex) => {
-          const total = playlistRef.current.length;
-          if (total === 0) return -1;
-          if (prevIndex >= 0 && prevIndex < total - 1) {
-            shouldAutoPlayRef.current = true;
-            return prevIndex + 1;
-          }
-          shouldAutoPlayRef.current = false;
-          return prevIndex;
-        });
-      };
-
-      const updateProgress = () => {
-        setProgress(audio.currentTime);
-        const nextDuration = normalizeDuration(audio.duration);
-        setDuration(nextDuration);
-        const track = playlistRef.current[currentIndexRef.current];
-        if (track && nextDuration > 0) {
-          setDurationForTrack(track, nextDuration);
+  const findNextPlayableIndex = useCallback(
+    (startIndex, { allowLoop = false, tracks = playlistRef.current } = {}) => {
+      const total = tracks.length;
+      if (total === 0) return -1;
+      const maxSteps = allowLoop ? total : Math.max(total - startIndex - 1, 0);
+      for (let step = 1; step <= maxSteps; step += 1) {
+        let candidate = startIndex + step;
+        if (allowLoop) {
+          candidate = ((candidate % total) + total) % total;
+        } else if (candidate >= total) {
+          break;
         }
-      };
-
-      const handleEnded = () => {
-        logAudioDebug("audio:ended", {
-          currentIndex: currentIndexRef.current,
-          queueSize: playlistRef.current.length,
-          isLoop: isLoopRef.current,
-        });
-        setIsPlaying(false);
-        setCurrentIndex((prevIndex) => {
-          const total = playlistRef.current.length;
-          if (total === 0) {
-            logAudioDebug("audio:ended:queue-empty");
-            shouldAutoPlayRef.current = false;
-            setIsQueueEnded(false);
-            return -1;
-          }
-          if (prevIndex < total - 1) {
-            logAudioDebug("audio:ended:advance-next", { prevIndex, nextIndex: prevIndex + 1, total });
-            shouldAutoPlayRef.current = true;
-            setIsQueueEnded(false);
-            return prevIndex + 1;
-          }
-          if (isLoopRef.current) {
-            logAudioDebug("audio:ended:loop-enabled", { prevIndex, total });
-            shouldAutoPlayRef.current = true;
-            setIsQueueEnded(false);
-            if (total === 1) {
-              audio.currentTime = 0;
-              const loopPlayPromise = audio.play();
-              if (loopPlayPromise && typeof loopPlayPromise.then === "function") {
-                loopPlayPromise
-                  .then(() => {
-                    logAudioDebug("audio:ended:single-track-loop:restart-success");
-                    setIsPlaying(true);
-                  })
-                  .catch((error) => {
-                    logAudioDebug("audio:ended:single-track-loop:restart-failed", {
-                      name: String(error?.name || ""),
-                      message: String(error?.message || ""),
-                    });
-                    setIsPlaying(false);
-                  });
-              } else {
-                setIsPlaying(!audio.paused);
-              }
-            }
-            return 0;
-          }
-          logAudioDebug("audio:ended:mark-queue-ended", { prevIndex, total });
-          shouldAutoPlayRef.current = false;
-          setIsQueueEnded(true);
-          return prevIndex;
-        });
-      };
-
-      const handleLoadedMetadata = () => {
-        updateProgress();
-        if (pendingSeekRef.current === null) return;
-        const target = Math.max(0, pendingSeekRef.current);
-        const maxTime = normalizeDuration(audio.duration);
-        const nextTime = maxTime > 0 ? Math.min(target, maxTime) : target;
-        audio.currentTime = nextTime;
-        setProgress(nextTime);
-        pendingSeekRef.current = null;
-      };
-
-      audio.addEventListener("timeupdate", updateProgress);
-      audio.addEventListener("ended", handleEnded);
-      audio.addEventListener("loadedmetadata", handleLoadedMetadata);
-      audio.addEventListener("play", handlePlayEvent);
-      audio.addEventListener("pause", handlePauseEvent);
-      audio.addEventListener("error", handleErrorEvent);
-
-      return () => {
-        audio.pause();
-        audio.removeEventListener("timeupdate", updateProgress);
-        audio.removeEventListener("ended", handleEnded);
-        audio.removeEventListener("loadedmetadata", handleLoadedMetadata);
-        audio.removeEventListener("play", handlePlayEvent);
-        audio.removeEventListener("pause", handlePauseEvent);
-        audio.removeEventListener("error", handleErrorEvent);
-      };
-    }
-  }, [setDurationForTrack]);
-
-  const playTrack = useCallback((track) => {
-    const nextTrack = sanitizeTrack(track);
-    if (!nextTrack) return;
-    setIsQueueEnded(false);
-
-    setPlaylist((prev) => {
-      const dedupedPrev = prev.map(sanitizeTrack).filter(Boolean);
-      const existingIndex = dedupedPrev.findIndex(
-        (item) =>
-          (nextTrack.id && item.id === nextTrack.id) ||
-          (item.voiceUrl && item.voiceUrl === nextTrack.voiceUrl)
-      );
-
-      if (existingIndex >= 0) {
-        shouldAutoPlayRef.current = true;
-        setCurrentIndex(existingIndex);
-        return dedupedPrev;
+        const track = sanitizeTrack(tracks[candidate]);
+        const key = getTrackKey(track);
+        if (!track || !key) continue;
+        if (failedTrackKeysRef.current.has(key)) continue;
+        return candidate;
       }
+      return -1;
+    },
+    []
+  );
 
-      const deduped = dedupedPrev.filter(
-        (item) =>
-          (nextTrack.id ? item.id !== nextTrack.id : true) &&
-          (item.voiceUrl ? item.voiceUrl !== nextTrack.voiceUrl : true)
-      );
-      shouldAutoPlayRef.current = true;
-      setCurrentIndex(0);
-      return [nextTrack, ...deduped];
-    });
-    setIsExpanded(true);
+  const findPrevPlayableIndex = useCallback((startIndex, { tracks = playlistRef.current } = {}) => {
+    for (let candidate = startIndex - 1; candidate >= 0; candidate -= 1) {
+      const track = sanitizeTrack(tracks[candidate]);
+      const key = getTrackKey(track);
+      if (!track || !key) continue;
+      if (failedTrackKeysRef.current.has(key)) continue;
+      return candidate;
+    }
+    return -1;
   }, []);
 
-  const setQueue = useCallback((tracks, startIndex = 0) => {
-    const normalized = Array.isArray(tracks)
-      ? tracks.map(sanitizeTrack).filter(Boolean)
-      : [];
-    setIsQueueEnded(false);
-
-    setPlaylist(normalized);
-
-    if (!normalized.length) {
-      stopAndResetAudio();
-      setCurrentIndex(-1);
-      return;
-    }
-
-    if (startIndex < 0) {
-      const currentTrack = playlistRef.current[currentIndexRef.current];
-      const preserveKey = getTrackKey(currentTrack) || loadedTrackKeyRef.current;
-
-      if (!preserveKey) {
-        shouldAutoPlayRef.current = false;
-        skipAutoPlayEffectRef.current = false;
-        setCurrentIndex(-1);
+  const handleTrackPlaybackFailure = useCallback(
+    (track, error, source = "未知來源") => {
+      const audio = audioRef.current;
+      const failedTrack = sanitizeTrack(track) || track;
+      const failedKey = getTrackKey(failedTrack);
+      if (!failedKey) {
+        logAudioDebug("音檔失敗:缺少可辨識鍵值", { source });
+        finishQueue("all_failed", "可播放音檔已全部跳過，要重新嘗試嗎？", "warning");
+        return;
+      }
+      if (failureHandlingKeyRef.current === failedKey) {
+        logAudioDebug("音檔失敗:忽略重複處理", { source, failedKey });
         return;
       }
 
-      const nextIndex = normalized.findIndex((track) => getTrackKey(track) === preserveKey);
+      failureHandlingKeyRef.current = failedKey;
+      invalidatePlaybackAttempt();
+      if (audio) {
+        audio.pause();
+      }
+
+      markTrackFailed(failedTrack);
+      setLastSkippedTrack(failedTrack);
+      setIsPlaying(false);
+      setIsRecovering(true);
+      setIsQueueEnded(false);
+      setEndedReason(null);
+      pushPlaybackNotice("warning", buildSkipNotice(failedTrack), failedTrack);
+
+      const nextIndex = findNextPlayableIndex(currentIndexRef.current, {
+        allowLoop: isLoopRef.current,
+      });
+
+      logAudioDebug("音檔失敗:自動跳過", {
+        source,
+        failedKey,
+        failedLabel: buildTrackLabel(failedTrack),
+        currentIndex: currentIndexRef.current,
+        nextIndex,
+        queueSize: playlistRef.current.length,
+        errorName: String(error?.name || ""),
+        errorMessage: String(error?.message || ""),
+      });
+
       if (nextIndex < 0) {
+        finishQueue("all_failed", "可播放音檔已全部跳過，要重新嘗試嗎？", "warning");
+        return;
+      }
+
+      shouldAutoPlayRef.current = true;
+      skipAutoPlayEffectRef.current = false;
+      setCurrentIndex(nextIndex);
+      setIsExpanded(true);
+    },
+    [
+      findNextPlayableIndex,
+      finishQueue,
+      invalidatePlaybackAttempt,
+      markTrackFailed,
+      pushPlaybackNotice,
+    ]
+  );
+
+  const startPlaybackAttemptTimeout = useCallback(
+    (track, attemptId) => {
+      clearPlaybackAttemptTimeout();
+      const targetKey = getTrackKey(track);
+      if (!targetKey) return;
+      playbackTimeoutRef.current = setTimeout(() => {
+        if (attemptId !== playAttemptIdRef.current) return;
+        if (loadedTrackKeyRef.current !== targetKey) return;
+        logAudioDebug("播放逾時:自動跳過", {
+          targetKey,
+          currentIndex: currentIndexRef.current,
+          queueSize: playlistRef.current.length,
+        });
+        handleTrackPlaybackFailure(
+          track,
+          new Error("音訊載入逾時"),
+          "播放逾時"
+        );
+      }, PLAYBACK_TIMEOUT_MS);
+    },
+    [clearPlaybackAttemptTimeout, handleTrackPlaybackFailure]
+  );
+
+  const tryPlayAudio = useCallback(
+    (audio, errorLabel = "播放失敗", { track = null } = {}) => {
+      const resolvedTrack =
+        sanitizeTrack(track) || sanitizeTrack(playlistRef.current[currentIndexRef.current]);
+
+      if (!audio || !resolvedTrack) {
+        logAudioDebug("嘗試播放:阻擋", {
+          原因: !audio ? "沒有 Audio 實例" : "沒有有效音檔",
+          errorLabel,
+          currentIndex: currentIndexRef.current,
+          queueSize: playlistRef.current.length,
+        });
+        return false;
+      }
+
+      const attemptId = invalidatePlaybackAttempt();
+      const trackKey = getTrackKey(resolvedTrack);
+      failureHandlingKeyRef.current = null;
+      startPlaybackAttemptTimeout(resolvedTrack, attemptId);
+
+      logAudioDebug("嘗試播放:開始", {
+        errorLabel,
+        trackKey,
+        trackLabel: buildTrackLabel(resolvedTrack),
+        currentIndex: currentIndexRef.current,
+        queueSize: playlistRef.current.length,
+        isLoop: isLoopRef.current,
+      });
+
+      const playPromise = audio.play();
+      if (playPromise && typeof playPromise.then === "function") {
+        playPromise
+          .then(() => {
+            if (attemptId !== playAttemptIdRef.current) return;
+            clearPlaybackAttemptTimeout();
+            failureHandlingKeyRef.current = null;
+            setIsPlaying(true);
+            setIsRecovering(false);
+            setIsQueueEnded(false);
+            setEndedReason(null);
+            logAudioDebug("嘗試播放:成功", {
+              trackKey,
+              currentIndex: currentIndexRef.current,
+              queueSize: playlistRef.current.length,
+            });
+          })
+          .catch((error) => {
+            if (attemptId !== playAttemptIdRef.current) return;
+            clearPlaybackAttemptTimeout();
+            logAudioDebug("嘗試播放:失敗", {
+              trackKey,
+              trackLabel: buildTrackLabel(resolvedTrack),
+              currentIndex: currentIndexRef.current,
+              queueSize: playlistRef.current.length,
+              errorName: String(error?.name || ""),
+              errorMessage: String(error?.message || ""),
+            });
+            if (shouldSkipToNextTrackOnPlayFailure(error)) {
+              handleTrackPlaybackFailure(resolvedTrack, error, errorLabel);
+            } else {
+              setIsPlaying(false);
+              setIsRecovering(false);
+              pushPlaybackNotice("warning", "播放失敗，請再試一次。", resolvedTrack);
+            }
+            console.error(errorLabel, error);
+          });
+        return true;
+      }
+
+      clearPlaybackAttemptTimeout();
+      setIsPlaying(!audio.paused);
+      setIsRecovering(false);
+      if (!audio.paused) {
+        setIsQueueEnded(false);
+        setEndedReason(null);
+      }
+      return true;
+    },
+    [
+      clearPlaybackAttemptTimeout,
+      handleTrackPlaybackFailure,
+      invalidatePlaybackAttempt,
+      pushPlaybackNotice,
+      startPlaybackAttemptTimeout,
+    ]
+  );
+
+  useEffect(() => {
+    if (typeof window === "undefined") return undefined;
+
+    audioRef.current = new Audio();
+    audioRef.current.preload = "metadata";
+
+    const audio = audioRef.current;
+    const handlePlayEvent = () => {
+      clearPlaybackAttemptTimeout();
+      setIsPlaying(true);
+      setIsRecovering(false);
+      setIsQueueEnded(false);
+      setEndedReason(null);
+    };
+
+    const handlePauseEvent = () => {
+      setIsPlaying(false);
+    };
+
+    const handleErrorEvent = () => {
+      const track = playlistRef.current[currentIndexRef.current];
+      const error = new Error(audio?.error?.message || "音訊資源載入失敗");
+      logAudioDebug("Audio 事件:錯誤", {
+        currentIndex: currentIndexRef.current,
+        queueSize: playlistRef.current.length,
+        mediaErrorCode: audio?.error?.code ?? null,
+        mediaErrorMessage: audio?.error?.message ?? "",
+      });
+      handleTrackPlaybackFailure(track, error, "audio.error");
+    };
+
+    const updateProgress = () => {
+      setProgress(normalizeDuration(audio.currentTime));
+      const nextDuration = normalizeDuration(audio.duration);
+      setDuration(nextDuration);
+      const track = playlistRef.current[currentIndexRef.current];
+      if (track && nextDuration > 0) {
+        setDurationForTrack(track, nextDuration);
+      }
+    };
+
+    const handleEnded = () => {
+      const tracks = playlistRef.current;
+      const total = tracks.length;
+      const currentTrack = tracks[currentIndexRef.current];
+
+      logAudioDebug("Audio 事件:播放結束", {
+        currentIndex: currentIndexRef.current,
+        queueSize: total,
+        isLoop: isLoopRef.current,
+      });
+
+      clearPlaybackAttemptTimeout();
+      setIsPlaying(false);
+      setIsRecovering(false);
+
+      if (total === 0) {
+        setCurrentIndex(-1);
+        setIsQueueEnded(false);
+        setEndedReason(null);
+        return;
+      }
+
+      const nextIndex = findNextPlayableIndex(currentIndexRef.current, {
+        allowLoop: isLoopRef.current,
+      });
+
+      if (nextIndex >= 0) {
+        shouldAutoPlayRef.current = true;
+        skipAutoPlayEffectRef.current = false;
+        setIsQueueEnded(false);
+        setEndedReason(null);
+
+        if (nextIndex === currentIndexRef.current && audioRef.current) {
+          audioRef.current.currentTime = 0;
+          setProgress(0);
+          tryPlayAudio(audioRef.current, "單曲循環重播失敗", {
+            track: currentTrack,
+          });
+          return;
+        }
+
+        setCurrentIndex(nextIndex);
+        return;
+      }
+
+      finishQueue("completed", "播放完成，要重新播放嗎？");
+    };
+
+    const handleLoadedMetadata = () => {
+      updateProgress();
+      if (pendingSeekRef.current === null) return;
+      const target = Math.max(0, pendingSeekRef.current);
+      const maxTime = normalizeDuration(audio.duration);
+      const nextTime = maxTime > 0 ? Math.min(target, maxTime) : target;
+      audio.currentTime = nextTime;
+      setProgress(nextTime);
+      pendingSeekRef.current = null;
+    };
+
+    audio.addEventListener("timeupdate", updateProgress);
+    audio.addEventListener("ended", handleEnded);
+    audio.addEventListener("loadedmetadata", handleLoadedMetadata);
+    audio.addEventListener("play", handlePlayEvent);
+    audio.addEventListener("pause", handlePauseEvent);
+    audio.addEventListener("error", handleErrorEvent);
+
+    return () => {
+      invalidatePlaybackAttempt();
+      audio.pause();
+      audio.removeEventListener("timeupdate", updateProgress);
+      audio.removeEventListener("ended", handleEnded);
+      audio.removeEventListener("loadedmetadata", handleLoadedMetadata);
+      audio.removeEventListener("play", handlePlayEvent);
+      audio.removeEventListener("pause", handlePauseEvent);
+      audio.removeEventListener("error", handleErrorEvent);
+    };
+  }, [
+    clearPlaybackAttemptTimeout,
+    findNextPlayableIndex,
+    finishQueue,
+    handleTrackPlaybackFailure,
+    invalidatePlaybackAttempt,
+    setDurationForTrack,
+    tryPlayAudio,
+  ]);
+
+  const playTrack = useCallback(
+    (track) => {
+      const nextTrack = sanitizeTrack(track);
+      if (!nextTrack) return;
+      clearPlaybackNotice();
+      setEndedReason(null);
+      setIsQueueEnded(false);
+      setIsRecovering(false);
+      clearTrackFailure(nextTrack);
+
+      setPlaylist((prev) => {
+        const dedupedPrev = prev.map(sanitizeTrack).filter(Boolean);
+        const existingIndex = dedupedPrev.findIndex(
+          (item) =>
+            (nextTrack.id && item.id === nextTrack.id) ||
+            (item.voiceUrl && item.voiceUrl === nextTrack.voiceUrl)
+        );
+
+        if (existingIndex >= 0) {
+          shouldAutoPlayRef.current = true;
+          skipAutoPlayEffectRef.current = false;
+          setCurrentIndex(existingIndex);
+          return dedupedPrev;
+        }
+
+        const deduped = dedupedPrev.filter(
+          (item) =>
+            (nextTrack.id ? item.id !== nextTrack.id : true) &&
+            (item.voiceUrl ? item.voiceUrl !== nextTrack.voiceUrl : true)
+        );
+        shouldAutoPlayRef.current = true;
+        skipAutoPlayEffectRef.current = false;
+        setCurrentIndex(0);
+        return [nextTrack, ...deduped];
+      });
+
+      setIsExpanded(true);
+      logAudioDebug("加入並播放音檔", {
+        trackKey: getTrackKey(nextTrack),
+        trackLabel: buildTrackLabel(nextTrack),
+      });
+    },
+    [clearPlaybackNotice, clearTrackFailure]
+  );
+
+  const setQueue = useCallback(
+    (tracks, startIndex = 0) => {
+      const normalized = Array.isArray(tracks)
+        ? tracks.map(sanitizeTrack).filter(Boolean)
+        : [];
+
+      setPlaylist(normalized);
+      setEndedReason(null);
+      setIsQueueEnded(false);
+      setIsRecovering(false);
+      if (startIndex >= 0) {
+        resetPlaybackFailures();
+      } else {
+        syncFailedTrackKeysWithQueue(normalized);
+      }
+
+      if (!normalized.length) {
         stopAndResetAudio();
         setCurrentIndex(-1);
         return;
       }
 
-      const audio = audioRef.current;
-      shouldAutoPlayRef.current = Boolean(audio && !audio.paused);
+      if (startIndex < 0) {
+        const currentTrack = playlistRef.current[currentIndexRef.current];
+        const preserveKey = getTrackKey(currentTrack) || loadedTrackKeyRef.current;
+
+        if (!preserveKey) {
+          shouldAutoPlayRef.current = false;
+          skipAutoPlayEffectRef.current = false;
+          setCurrentIndex(-1);
+          setProgress(0);
+          setDuration(0);
+          return;
+        }
+
+        const nextIndex = normalized.findIndex(
+          (track) => getTrackKey(track) === preserveKey
+        );
+        if (nextIndex < 0) {
+          stopAndResetAudio();
+          setCurrentIndex(-1);
+          return;
+        }
+
+        const audio = audioRef.current;
+        shouldAutoPlayRef.current = Boolean(audio && !audio.paused);
+        skipAutoPlayEffectRef.current = false;
+        setCurrentIndex(nextIndex);
+        return;
+      }
+
+      clearPlaybackNotice();
+      const baseIndex = Math.min(Math.max(startIndex, 0), normalized.length - 1);
+      const safeIndex = findNextPlayableIndex(baseIndex - 1, {
+        allowLoop: false,
+        tracks: normalized,
+      });
+
+      if (safeIndex < 0) {
+        stopAndResetAudio();
+        setCurrentIndex(-1);
+        finishQueue("all_failed", "可播放音檔已全部跳過，要重新嘗試嗎？", "warning");
+        return;
+      }
+
+      shouldAutoPlayRef.current = true;
       skipAutoPlayEffectRef.current = false;
-      setCurrentIndex(nextIndex);
-      return;
-    }
+      setCurrentIndex(safeIndex);
+      setIsExpanded(true);
+    },
+    [
+      clearPlaybackNotice,
+      findNextPlayableIndex,
+      finishQueue,
+      resetPlaybackFailures,
+      stopAndResetAudio,
+      syncFailedTrackKeysWithQueue,
+    ]
+  );
 
-    const safeIndex = Math.min(Math.max(startIndex, 0), normalized.length - 1);
-    shouldAutoPlayRef.current = true;
-    skipAutoPlayEffectRef.current = false;
-    setCurrentIndex(safeIndex);
-    setIsExpanded(true);
-  }, [stopAndResetAudio]);
+  const playByIndex = useCallback(
+    (index) => {
+      const audio = audioRef.current;
+      const tracks = playlistRef.current;
+      if (!audio) {
+        logAudioDebug("指定索引播放:阻擋", { 原因: "沒有 Audio 實例", index });
+        return false;
+      }
+      if (index < 0 || index >= tracks.length) {
+        logAudioDebug("指定索引播放:阻擋", {
+          原因: "索引超出範圍",
+          index,
+          total: tracks.length,
+        });
+        return false;
+      }
 
-  const playByIndex = useCallback((index) => {
-    const audio = audioRef.current;
-    const tracks = playlistRef.current;
-    if (!audio) {
-      logAudioDebug("playByIndex:blocked:no-audio", { index });
-      return false;
-    }
-    if (index < 0 || index >= tracks.length) {
-      logAudioDebug("playByIndex:blocked:invalid-index", { index, total: tracks.length });
-      return false;
-    }
+      const track = sanitizeTrack(tracks[index]);
+      if (!track?.voiceUrl) {
+        logAudioDebug("指定索引播放:阻擋", {
+          原因: "音檔網址無效",
+          index,
+        });
+        return false;
+      }
 
-    const track = sanitizeTrack(tracks[index]);
-    if (!track?.voiceUrl) {
-      logAudioDebug("playByIndex:blocked:no-voice-url", { index });
-      return false;
-    }
-    const targetKey = getTrackKey(track);
+      clearTrackFailure(track);
+      clearPlaybackNotice();
+      failureHandlingKeyRef.current = null;
+      const targetKey = getTrackKey(track);
+      const currentTrack = tracks[currentIndexRef.current];
+      const shouldSwitchTrack =
+        loadedTrackKeyRef.current !== targetKey ||
+        getTrackKey(currentTrack) !== targetKey;
 
-    const currentTrack = tracks[currentIndexRef.current];
-    const shouldSwitchTrack =
-      loadedTrackKeyRef.current !== targetKey || getTrackKey(currentTrack) !== targetKey;
+      setCurrentIndex(index);
+      setIsExpanded(true);
+      setIsQueueEnded(false);
+      setEndedReason(null);
+      setIsRecovering(false);
+      shouldAutoPlayRef.current = true;
+      skipAutoPlayEffectRef.current = true;
 
-    setCurrentIndex(index);
-    setIsExpanded(true);
-    setIsQueueEnded(false);
-    shouldAutoPlayRef.current = true;
-    skipAutoPlayEffectRef.current = true;
+      if (shouldSwitchTrack) {
+        audio.src = normalizeAudioUrl(track.voiceUrl);
+        loadedTrackKeyRef.current = targetKey;
+        const knownDuration = normalizeDuration(trackDurationsRef.current[targetKey]);
+        setDuration(knownDuration);
+        setProgress(0);
+      } else {
+        audio.currentTime = 0;
+        setProgress(0);
+      }
 
-    if (shouldSwitchTrack) {
-      audio.src = normalizeAudioUrl(track.voiceUrl);
-      loadedTrackKeyRef.current = targetKey;
-      const knownDuration = normalizeDuration(trackDurationsRef.current[getTrackKey(track)]);
-      setDuration(knownDuration);
-      setProgress(0);
-    } else {
-      audio.currentTime = 0;
-      setProgress(0);
-    }
-
-    tryPlayAudio(audio, "Play failed");
-    logAudioDebug("playByIndex:requested", { index, targetKey });
-    return true;
-  }, [tryPlayAudio]);
+      tryPlayAudio(audio, "指定索引播放失敗", { track });
+      logAudioDebug("指定索引播放:請求", {
+        index,
+        targetKey,
+        trackLabel: buildTrackLabel(track),
+      });
+      return true;
+    },
+    [clearPlaybackNotice, clearTrackFailure, tryPlayAudio]
+  );
 
   const restartQueue = useCallback(() => {
     const audio = audioRef.current;
     const tracks = playlistRef.current;
     if (!audio || !tracks.length) {
-      logAudioDebug("restartQueue:blocked", { hasAudio: Boolean(audio), queueSize: tracks.length });
+      logAudioDebug("重新播放清單:阻擋", {
+        hasAudio: Boolean(audio),
+        queueSize: tracks.length,
+      });
       return false;
     }
 
-    const firstTrack = sanitizeTrack(tracks[0]);
-    if (!firstTrack?.voiceUrl) {
-      logAudioDebug("restartQueue:blocked:no-first-track-voice-url");
+    clearPlaybackNotice();
+    resetPlaybackFailures();
+
+    const firstIndex = findFirstPlayableIndex(tracks);
+    if (firstIndex < 0) {
+      finishQueue("all_failed", "可播放音檔已全部跳過，要重新嘗試嗎？", "warning");
       return false;
     }
 
+    const firstTrack = sanitizeTrack(tracks[firstIndex]);
     const targetKey = getTrackKey(firstTrack);
+    failureHandlingKeyRef.current = null;
+
     if (loadedTrackKeyRef.current !== targetKey) {
       audio.src = normalizeAudioUrl(firstTrack.voiceUrl);
       loadedTrackKeyRef.current = targetKey;
@@ -445,70 +820,138 @@ export function AudioProvider({ children }) {
 
     audio.currentTime = 0;
     setProgress(0);
-    setCurrentIndex(0);
+    setCurrentIndex(firstIndex);
     setIsExpanded(true);
     setIsQueueEnded(false);
+    setEndedReason(null);
+    setIsRecovering(false);
     shouldAutoPlayRef.current = true;
     skipAutoPlayEffectRef.current = true;
-    tryPlayAudio(audio, "Play failed");
-    logAudioDebug("restartQueue:requested", {
+    tryPlayAudio(audio, "重新播放清單失敗", { track: firstTrack });
+    logAudioDebug("重新播放清單:請求", {
       queueSize: tracks.length,
+      firstTrackIndex: firstIndex,
       firstTrackKey: targetKey,
       isLoop: isLoopRef.current,
     });
     return true;
-  }, [tryPlayAudio]);
+  }, [
+    clearPlaybackNotice,
+    findFirstPlayableIndex,
+    finishQueue,
+    resetPlaybackFailures,
+    tryPlayAudio,
+  ]);
 
   const togglePlay = useCallback(() => {
     const audio = audioRef.current;
+    const tracks = playlistRef.current;
     if (!audio) {
-      logAudioDebug("togglePlay:blocked:no-audio");
+      logAudioDebug("切換播放:阻擋", { 原因: "沒有 Audio 實例" });
       return;
     }
+
     if (audio.paused) {
-      const tracks = playlistRef.current;
       if (!tracks.length) {
-        logAudioDebug("togglePlay:blocked:no-tracks");
+        logAudioDebug("切換播放:阻擋", { 原因: "播放清單為空" });
         return;
       }
-      const atQueueEnd =
-        isQueueEnded ||
-        currentIndexRef.current < 0 ||
-        currentIndexRef.current >= tracks.length ||
-        isTrackAtEnd(audio);
-      logAudioDebug("togglePlay:play-request", {
-        currentIndex: currentIndexRef.current,
-        queueSize: tracks.length,
-        isQueueEnded,
-        atQueueEnd,
-        audioAtEnd: isTrackAtEnd(audio),
-        isLoop: isLoopRef.current,
-      });
-      if (atQueueEnd) {
-        logAudioDebug("togglePlay:restart-queue");
+
+      if (isQueueEnded) {
+        logAudioDebug("切換播放:重新開始清單", {
+          currentIndex: currentIndexRef.current,
+          queueSize: tracks.length,
+        });
         restartQueue();
         return;
       }
-      shouldAutoPlayRef.current = true;
-      setIsQueueEnded(false);
-      tryPlayAudio(audio, "Play failed");
+
+      const currentTrack = sanitizeTrack(tracks[currentIndexRef.current]);
+      const currentKey = getTrackKey(currentTrack);
+      const currentFailed = currentKey
+        ? failedTrackKeysRef.current.has(currentKey)
+        : true;
+
+      if (isTrackAtEnd(audio)) {
+        const nextIndex = findNextPlayableIndex(currentIndexRef.current, {
+          allowLoop: isLoopRef.current,
+        });
+
+        if (nextIndex >= 0 && nextIndex !== currentIndexRef.current) {
+          shouldAutoPlayRef.current = true;
+          skipAutoPlayEffectRef.current = false;
+          setCurrentIndex(nextIndex);
+          setIsQueueEnded(false);
+          setEndedReason(null);
+          setIsRecovering(false);
+          return;
+        }
+
+        if (nextIndex === currentIndexRef.current) {
+          audio.currentTime = 0;
+          setProgress(0);
+          tryPlayAudio(audio, "單曲循環重播失敗", { track: currentTrack });
+          return;
+        }
+
+        finishQueue("completed", "播放完成，要重新播放嗎？");
+        return;
+      }
+
+      if (!currentTrack || currentFailed || currentIndexRef.current < 0) {
+        const resumeIndex =
+          currentIndexRef.current >= 0
+            ? findNextPlayableIndex(currentIndexRef.current, {
+                allowLoop: isLoopRef.current,
+              })
+            : findFirstPlayableIndex();
+
+        if (resumeIndex < 0) {
+          finishQueue("all_failed", "可播放音檔已全部跳過，要重新嘗試嗎？", "warning");
+          return;
+        }
+
+        shouldAutoPlayRef.current = true;
+        skipAutoPlayEffectRef.current = false;
+        setCurrentIndex(resumeIndex);
+        setIsExpanded(true);
+        setIsQueueEnded(false);
+        setEndedReason(null);
+        setIsRecovering(false);
+        return;
+      }
+
+      tryPlayAudio(audio, "恢復播放失敗", { track: currentTrack });
       return;
     }
-    logAudioDebug("togglePlay:pause-request", {
+
+    logAudioDebug("切換播放:暫停", {
       currentIndex: currentIndexRef.current,
-      queueSize: playlistRef.current.length,
+      queueSize: tracks.length,
     });
     shouldAutoPlayRef.current = false;
+    invalidatePlaybackAttempt();
     audio.pause();
-  }, [isQueueEnded, restartQueue, tryPlayAudio]);
+  }, [
+    findFirstPlayableIndex,
+    findNextPlayableIndex,
+    finishQueue,
+    invalidatePlaybackAttempt,
+    isQueueEnded,
+    restartQueue,
+    tryPlayAudio,
+  ]);
 
   const pause = useCallback(() => {
-    if (audioRef.current) {
+    const audio = audioRef.current;
+    if (audio) {
       shouldAutoPlayRef.current = false;
-      audioRef.current.pause();
+      invalidatePlaybackAttempt();
+      audio.pause();
     }
     setIsPlaying(false);
-  }, []);
+    setIsRecovering(false);
+  }, [invalidatePlaybackAttempt]);
 
   const seek = useCallback((time) => {
     if (audioRef.current) {
@@ -524,19 +967,22 @@ export function AudioProvider({ children }) {
 
     const durations = tracks.map((track) => {
       const key = getTrackKey(track);
-      return key ? normalizeDuration(trackDurationsRef.current[key]) : 0;
+      if (!key || failedTrackKeysRef.current.has(key)) return 0;
+      return normalizeDuration(trackDurationsRef.current[key]);
     });
     const knownTotal = durations.reduce((sum, value) => sum + value, 0);
+
     if (knownTotal <= 0) {
       const singleTrackDuration = normalizeDuration(audio.duration);
       if (singleTrackDuration <= 0) return;
       const target = Math.min(Math.max(time, 0), singleTrackDuration);
-      const isSeekingToQueueEnd = target >= Math.max(singleTrackDuration - END_EPSILON_SECONDS, 0);
+      const isSeekingToQueueEnd =
+        target >= Math.max(singleTrackDuration - END_EPSILON_SECONDS, 0);
       audio.currentTime = target;
       setProgress(target);
-      const shouldMarkEnded = isSeekingToQueueEnd && !isLoopRef.current;
-      setIsQueueEnded(shouldMarkEnded);
-      if (shouldMarkEnded) {
+      if (isSeekingToQueueEnd && !isLoopRef.current) {
+        setEndedReason("manual");
+        setIsQueueEnded(true);
         shouldAutoPlayRef.current = false;
         audio.pause();
         setIsPlaying(false);
@@ -545,7 +991,8 @@ export function AudioProvider({ children }) {
     }
 
     const target = Math.min(Math.max(time, 0), knownTotal);
-    const isSeekingToQueueEnd = target >= Math.max(knownTotal - END_EPSILON_SECONDS, 0);
+    const isSeekingToQueueEnd =
+      target >= Math.max(knownTotal - END_EPSILON_SECONDS, 0);
     let accumulated = 0;
     let targetIndex = -1;
     let targetOffset = 0;
@@ -557,21 +1004,32 @@ export function AudioProvider({ children }) {
       if (target <= nextAccumulated || index === tracks.length - 1) {
         targetIndex = index;
         const allowTrackEnd = isSeekingToQueueEnd && index === tracks.length - 1;
-        targetOffset = clampTrackSeekOffset(target - accumulated, trackDuration, allowTrackEnd);
+        targetOffset = clampTrackSeekOffset(
+          target - accumulated,
+          trackDuration,
+          allowTrackEnd
+        );
         break;
       }
       accumulated = nextAccumulated;
     }
 
     if (targetIndex < 0) return;
-    const shouldMarkEnded = isSeekingToQueueEnd && !isLoopRef.current;
-    setIsQueueEnded(shouldMarkEnded);
+
+    if (isSeekingToQueueEnd && !isLoopRef.current) {
+      setEndedReason("manual");
+      setIsQueueEnded(true);
+    } else {
+      setEndedReason(null);
+      setIsQueueEnded(false);
+    }
 
     if (targetIndex !== currentIndexRef.current) {
       pendingSeekRef.current = targetOffset;
-      shouldAutoPlayRef.current = shouldMarkEnded ? false : !audio.paused;
+      shouldAutoPlayRef.current = isSeekingToQueueEnd ? false : !audio.paused;
+      skipAutoPlayEffectRef.current = false;
       setCurrentIndex(targetIndex);
-      if (shouldMarkEnded) {
+      if (isSeekingToQueueEnd && !isLoopRef.current) {
         audio.pause();
         setIsPlaying(false);
       }
@@ -580,7 +1038,7 @@ export function AudioProvider({ children }) {
 
     audio.currentTime = targetOffset;
     setProgress(targetOffset);
-    if (shouldMarkEnded) {
+    if (isSeekingToQueueEnd && !isLoopRef.current) {
       shouldAutoPlayRef.current = false;
       audio.pause();
       setIsPlaying(false);
@@ -588,48 +1046,65 @@ export function AudioProvider({ children }) {
   }, []);
 
   const playNext = useCallback(() => {
-    setCurrentIndex((prevIndex) => {
-      const total = playlistRef.current.length;
-      if (total === 0) return -1;
-      if (prevIndex < total - 1) {
-        logAudioDebug("playNext:advance", { prevIndex, nextIndex: prevIndex + 1, total });
-        shouldAutoPlayRef.current = true;
-        setIsQueueEnded(false);
-        return prevIndex + 1;
-      }
-      if (isLoop) {
-        logAudioDebug("playNext:loop-to-start", { prevIndex, total });
-        shouldAutoPlayRef.current = true;
-        setIsQueueEnded(false);
-        if (total === 1 && audioRef.current) {
-          audioRef.current.currentTime = 0;
-          tryPlayAudio(audioRef.current, "Play failed");
-        }
-        return 0;
-      }
-      logAudioDebug("playNext:reached-end-no-loop", { prevIndex, total });
-      shouldAutoPlayRef.current = false;
-      setIsPlaying(false);
-      setIsQueueEnded(true);
-      return prevIndex;
+    const tracks = playlistRef.current;
+    const total = tracks.length;
+    if (!total) return;
+
+    const nextIndex = findNextPlayableIndex(currentIndexRef.current, {
+      allowLoop: isLoopRef.current,
     });
-  }, [isLoop, tryPlayAudio]);
+
+    if (nextIndex < 0) {
+      finishQueue("completed", "播放完成，要重新播放嗎？");
+      return;
+    }
+
+    if (nextIndex === currentIndexRef.current && audioRef.current) {
+      audioRef.current.currentTime = 0;
+      setProgress(0);
+      tryPlayAudio(audioRef.current, "單曲循環重播失敗", {
+        track: tracks[nextIndex],
+      });
+      return;
+    }
+
+    shouldAutoPlayRef.current = true;
+    skipAutoPlayEffectRef.current = false;
+    setCurrentIndex(nextIndex);
+    setIsQueueEnded(false);
+    setEndedReason(null);
+    setIsRecovering(false);
+  }, [findNextPlayableIndex, finishQueue, tryPlayAudio]);
 
   const playPrev = useCallback(() => {
-    setCurrentIndex((prevIndex) => {
-      if (prevIndex <= 0) return prevIndex;
-      shouldAutoPlayRef.current = true;
-      setIsQueueEnded(false);
-      return prevIndex - 1;
-    });
-  }, []);
+    const tracks = playlistRef.current;
+    if (!tracks.length) return;
+
+    const prevIndex = findPrevPlayableIndex(currentIndexRef.current);
+    if (prevIndex < 0) {
+      if (audioRef.current) {
+        audioRef.current.currentTime = 0;
+      }
+      setProgress(0);
+      return;
+    }
+
+    shouldAutoPlayRef.current = true;
+    skipAutoPlayEffectRef.current = false;
+    setCurrentIndex(prevIndex);
+    setIsQueueEnded(false);
+    setEndedReason(null);
+    setIsRecovering(false);
+  }, [findPrevPlayableIndex]);
 
   const selectTrack = useCallback((index) => {
     playByIndex(index);
   }, [playByIndex]);
 
   const removeTrack = useCallback((trackId) => {
-    setIsQueueEnded(false);
+    const removedTrack = playlistRef.current.find((track) => track.id === trackId);
+    clearTrackFailure(removedTrack);
+
     setPlaylist((prev) => {
       const index = prev.findIndex((track) => track.id === trackId);
       if (index === -1) return prev;
@@ -640,10 +1115,15 @@ export function AudioProvider({ children }) {
           stopAndResetAudio();
           return -1;
         }
+
+        const audio = audioRef.current;
+        const wasPlaying = Boolean(audio && !audio.paused);
         if (index < prevIndex) {
           return Math.max(prevIndex - 1, 0);
         }
         if (index === prevIndex) {
+          shouldAutoPlayRef.current = wasPlaying;
+          skipAutoPlayEffectRef.current = false;
           return Math.min(prevIndex, next.length - 1);
         }
         return prevIndex;
@@ -651,7 +1131,7 @@ export function AudioProvider({ children }) {
 
       return next;
     });
-  }, [stopAndResetAudio]);
+  }, [clearTrackFailure, stopAndResetAudio]);
 
   useEffect(() => {
     playlistRef.current = playlist;
@@ -715,21 +1195,27 @@ export function AudioProvider({ children }) {
     };
   }, [playlist]);
 
-  // Handle track changes
   useEffect(() => {
     if (currentIndex >= 0 && playlist[currentIndex] && audioRef.current) {
       const track = sanitizeTrack(playlist[currentIndex]);
       if (!track) {
-        setIsPlaying(false);
+        handleTrackPlaybackFailure(
+          playlist[currentIndex],
+          new Error("音檔資料無效"),
+          "切換曲目"
+        );
         return;
       }
+
       const audio = audioRef.current;
       const targetKey = getTrackKey(track);
       const shouldSwitchTrack = loadedTrackKeyRef.current !== targetKey;
+      failureHandlingKeyRef.current = null;
+
       if (shouldSwitchTrack) {
         audio.src = normalizeAudioUrl(track.voiceUrl);
         loadedTrackKeyRef.current = targetKey;
-        const knownDuration = normalizeDuration(trackDurationsRef.current[getTrackKey(track)]);
+        const knownDuration = normalizeDuration(trackDurationsRef.current[targetKey]);
         setDuration(knownDuration);
         setProgress(0);
       }
@@ -738,50 +1224,75 @@ export function AudioProvider({ children }) {
         if (skipAutoPlayEffectRef.current) {
           skipAutoPlayEffectRef.current = false;
         } else {
-          tryPlayAudio(audio, "Play error");
+          tryPlayAudio(audio, "切換曲目播放失敗", { track });
         }
       } else {
         skipAutoPlayEffectRef.current = false;
+        invalidatePlaybackAttempt();
         audio.pause();
         setIsPlaying(false);
       }
       return;
     }
+
+    invalidatePlaybackAttempt();
     shouldAutoPlayRef.current = false;
     skipAutoPlayEffectRef.current = false;
     loadedTrackKeyRef.current = null;
+    failureHandlingKeyRef.current = null;
     setIsPlaying(false);
-    setIsQueueEnded(false);
-  }, [currentIndex, playlist, tryPlayAudio]);
+    setIsRecovering(false);
+    if (!playlist.length) {
+      setIsQueueEnded(false);
+      setEndedReason(null);
+      setProgress(0);
+      setDuration(0);
+    }
+  }, [currentIndex, handleTrackPlaybackFailure, invalidatePlaybackAttempt, playlist, tryPlayAudio]);
 
   const currentTrack = currentIndex >= 0 ? playlist[currentIndex] : null;
+
   const queueDuration = useMemo(
     () =>
       playlist.reduce((sum, track) => {
         const key = getTrackKey(track);
-        if (!key) return sum;
+        if (!key || failedTrackKeys.includes(key)) return sum;
         return sum + normalizeDuration(trackDurations[key]);
       }, 0),
-    [playlist, trackDurations]
+    [failedTrackKeys, playlist, trackDurations]
   );
+
   const queueProgress = useMemo(() => {
     if (currentIndex < 0 || !playlist.length) return 0;
 
     let elapsed = 0;
     for (let index = 0; index < playlist.length; index += 1) {
       const track = playlist[index];
-      const trackDuration = normalizeDuration(trackDurations[getTrackKey(track)]);
+      const key = getTrackKey(track);
+      if (!key || failedTrackKeys.includes(key)) continue;
+
+      const trackDuration = normalizeDuration(trackDurations[key]);
       if (index < currentIndex) {
         elapsed += trackDuration;
         continue;
       }
       if (index === currentIndex) {
-        elapsed += trackDuration > 0 ? Math.min(progress, trackDuration) : Math.max(progress, 0);
+        elapsed +=
+          trackDuration > 0 ? Math.min(progress, trackDuration) : Math.max(progress, 0);
       }
       break;
     }
     return elapsed;
-  }, [currentIndex, playlist, progress, trackDurations]);
+  }, [currentIndex, failedTrackKeys, playlist, progress, trackDurations]);
+
+  const playerPhase = useMemo(() => {
+    if (!playlist.length) return "empty";
+    if (isRecovering) return "recovering";
+    if (isPlaying) return "playing";
+    if (isQueueEnded) return "ended";
+    if (currentIndex >= 0 && playlist[currentIndex]) return "paused";
+    return "ready";
+  }, [currentIndex, isPlaying, isQueueEnded, isRecovering, playlist]);
 
   const value = {
     currentTrack,
@@ -794,7 +1305,13 @@ export function AudioProvider({ children }) {
     queueProgress,
     queueDuration,
     isLoop,
+    playerPhase,
+    endedReason,
+    playbackNotice,
+    failedTrackKeys,
+    lastSkippedTrack,
     setIsExpanded,
+    clearPlaybackNotice,
     playTrack,
     setQueue,
     playByIndex,

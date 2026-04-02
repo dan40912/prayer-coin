@@ -1,7 +1,10 @@
 ﻿"use client";
 
-import { useEffect, useMemo, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useMemo, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+
+import { saveAuthSession } from "@/lib/auth-storage";
+import { resolveSafeNextPath } from "@/lib/redirect-target";
 
 const initialForm = {
   fullName: "",
@@ -152,6 +155,7 @@ function normalizeCountryInput(value) {
 
 export default function SignupForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [form, setForm] = useState(initialForm);
   const [status, setStatus] = useState({ state: "idle", message: "" });
   const countrySuggestions = useMemo(() => {
@@ -169,15 +173,6 @@ export default function SignupForm() {
       return item.aliases.some((alias) => normalizeLookupKey(alias).includes(keyword));
     });
   }, [form.country]);
-
-  useEffect(() => {
-    if (status.state === "success") {
-      const timer = setTimeout(() => {
-        router.push("/login");
-      }, 3000);
-      return () => clearTimeout(timer);
-    }
-  }, [status.state, router]);
 
   const updateField = (field) => (event) => {
     const value = field === "acceptedTerms" ? event.target.checked : event.target.value;
@@ -205,15 +200,17 @@ export default function SignupForm() {
   const handleSubmit = async (event) => {
     event.preventDefault();
     setStatus({ state: "loading", message: "" });
-    
-  const normalizedUsername = String(form.username)
-    .trim()
-    .normalize("NFKC") // 轉全形→半形
-    .replace(/\s+/g, "") // 移除所有空白
-    .toLowerCase();
+
+    const nextPath = resolveSafeNextPath(searchParams?.get("next"), "/customer-portal");
+    const normalizedUsername = String(form.username)
+      .trim()
+      .normalize("NFKC")
+      .replace(/\s+/g, "")
+      .toLowerCase();
 
     const normalizedCountry = normalizeCountryInput(form.country);
     const formToSend = { ...form, username: normalizedUsername, country: normalizedCountry };
+
     try {
       const response = await fetch("/api/auth/signup", {
         method: "POST",
@@ -227,8 +224,15 @@ export default function SignupForm() {
         throw new Error(data.message || "發生未知錯誤");
       }
 
-      setStatus({ state: "success", message: "註冊成功！3 秒後將帶您前往登入頁面。" });
+      saveAuthSession(data.user);
+      setStatus({
+        state: "success",
+        message: nextPath === "/customer-portal" ? "註冊成功！正在帶您進入會員中心。" : "註冊成功！正在帶您回到原本頁面。",
+      });
       setForm(initialForm);
+      setTimeout(() => {
+        router.replace(nextPath);
+      }, 1200);
     } catch (error) {
       setStatus({ state: "error", message: error.message });
     }

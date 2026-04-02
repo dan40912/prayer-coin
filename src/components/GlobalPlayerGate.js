@@ -12,12 +12,14 @@ function isPath(pathname, target) {
 
 export default function GlobalPlayerGate() {
   const pathname = usePathname() || "/";
-  const { playlist, isPlaying, pause } = useAudio();
+  const { playlist, currentTrack, isPlaying, pause } = useAudio();
 
   const hasQueue = Array.isArray(playlist) && playlist.length > 0;
-  const inPrayerDetail = pathname.startsWith("/prayfor/");
+  const hasPlaybackState = hasQueue || Boolean(currentTrack);
+  const inPrayerList = isPath(pathname, "/prayfor");
   const inOvercomer = isPath(pathname, "/overcomer");
   const inCustomerPortal = pathname === "/customer-portal";
+  const supportedByRoute = inPrayerList || inOvercomer || inCustomerPortal;
 
   const blockedByRoute =
     pathname === "/" ||
@@ -34,15 +36,12 @@ export default function GlobalPlayerGate() {
     isPath(pathname, "/customer-portal/edit");
 
   useEffect(() => {
-    if (!blockedByRoute) return;
+    if (!blockedByRoute && supportedByRoute) return;
     if (!isPlaying) return;
     pause();
-  }, [blockedByRoute, isPlaying, pause]);
+  }, [blockedByRoute, isPlaying, pause, supportedByRoute]);
 
-  const shouldShowByRoute =
-    (inPrayerDetail && hasQueue) ||
-    (inOvercomer && hasQueue) ||
-    (inCustomerPortal && isPlaying);
+  const shouldShowByRoute = supportedByRoute && hasPlaybackState;
 
   if (!shouldShowByRoute) {
     return null;

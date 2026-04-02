@@ -15,7 +15,7 @@ export default function OvercomerReportButton({ targetUserId, targetUsername, ta
   const [feedback, setFeedback] = useState("");
   const [error, setError] = useState("");
 
-  if (!authUser) return null;
+  if (!authUser || authUser.id === targetUserId) return null;
 
   const openModal = () => {
     setIsOpen(true);
@@ -54,12 +54,17 @@ export default function OvercomerReportButton({ targetUserId, targetUsername, ta
         }),
       });
 
+      const data = await response.json().catch(() => ({}));
+
       if (!response.ok) {
-        const data = await response.json().catch(() => ({ message: "檢舉失敗，請稍後再試。" }));
         throw new Error(data?.message || "檢舉失敗，請稍後再試。");
       }
 
-      setFeedback("已送出檢舉，我們會盡快審核。");
+      if (data?.alreadyReported) {
+        setFeedback("你已經檢舉過這個公開個人頁，我們會持續追蹤。");
+      } else {
+        setFeedback("已送出檢舉，我們會盡快審核。");
+      }
       setSelectedReason("");
       setRemarks("");
       window.setTimeout(() => {

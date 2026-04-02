@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+﻿import { NextResponse } from "next/server";
 
 import { ensureActiveCustomer } from "@/lib/customer-access";
 import prisma from "@/lib/prisma";
@@ -31,7 +31,7 @@ const RESPONSE_SELECT = {
 export async function GET() {
   try {
     const session = requireSessionUser();
-    const user = await ensureActiveCustomer(session.userId);
+    const user = await ensureActiveCustomer(session);
 
     await processPendingResponseRewardsForUser(user.id);
 
@@ -68,3 +68,4 @@ export async function GET() {
     );
   }
 }
+

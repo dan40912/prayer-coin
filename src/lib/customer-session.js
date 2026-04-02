@@ -1,12 +1,9 @@
 import crypto from "node:crypto";
+import { getCustomerSessionSecret } from "@/lib/session-secrets";
 
 export const CUSTOMER_SESSION_COOKIE = "pc-auth-session";
 
 const SESSION_TTL_SECONDS = 7 * 24 * 60 * 60;
-
-function getSessionSecret() {
-  return process.env.CUSTOMER_SESSION_SECRET || process.env.ADMIN_SESSION_SECRET || "dev-customer-session-secret-change-me";
-}
 
 function encodePayload(payload) {
   return Buffer.from(JSON.stringify(payload), "utf8").toString("base64url");
@@ -22,7 +19,10 @@ function decodePayload(payloadBase64) {
 }
 
 function signPayload(payloadBase64) {
-  return crypto.createHmac("sha256", getSessionSecret()).update(payloadBase64).digest("base64url");
+  return crypto
+    .createHmac("sha256", getCustomerSessionSecret())
+    .update(payloadBase64)
+    .digest("base64url");
 }
 
 export function createCustomerSessionToken(user) {
@@ -33,6 +33,7 @@ export function createCustomerSessionToken(user) {
     email: user.email,
     name: user.name ?? null,
     username: user.username ?? null,
+    sessionVersion: Number(user.sessionVersion ?? 0),
     exp: now + SESSION_TTL_SECONDS,
   };
   const payloadBase64 = encodePayload(payload);
@@ -67,7 +68,10 @@ export function verifyCustomerSessionToken(token) {
     return null;
   }
 
-  return payload;
+  return {
+    ...payload,
+    sessionVersion: Number.isInteger(payload.sessionVersion) ? payload.sessionVersion : 0,
+  };
 }
 
 export function readCustomerSessionFromRequest(request) {

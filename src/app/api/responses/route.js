@@ -32,7 +32,7 @@ function normalizeMessage(value) {
 export async function POST(req) {
   try {
     const session = requireSessionUser();
-    await ensureActiveCustomer(session.userId);
+    await ensureActiveCustomer(session);
 
     const form = await req.formData();
     const requestId = form.get("requestId");
@@ -165,3 +165,4 @@ export async function POST(req) {
     return NextResponse.json({ error: "Failed to create response" }, { status: 500 });
   }
 }
+

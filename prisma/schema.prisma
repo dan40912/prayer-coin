@@ -24,6 +24,8 @@ model User {
   bio            String?
   isBlocked      Boolean          @default(false)
   reportCount    Int              @default(0)
+  sessionVersion Int              @default(0)
+  publicProfileEnabled Boolean    @default(true)
 
   walletBalance      Decimal          @default(0.00) @db.Decimal(10,2)
   bscAddress         String?          @db.VarChar(191)
@@ -34,6 +36,8 @@ model User {
   prayerResponses  PrayerResponse[]
   prayerResponseReports PrayerResponseReport[]
   homePrayerCardReports HomePrayerCardReport[]
+  overcomerReportsSent     OvercomerUserReport[] @relation("OvercomerReportsSent")
+  overcomerReportsReceived OvercomerUserReport[] @relation("OvercomerReportsReceived")
   homePrayerCards  HomePrayerCard[]
   resetToken       String?   @db.VarChar(255)
   resetTokenExpiry DateTime?
@@ -118,6 +122,23 @@ model PrayerResponseReport {
   @@index([createdAt])
   @@unique([responseId, reporterId])
   @@map("prayer_response_report")
+}
+
+model OvercomerUserReport {
+  id           Int      @id @default(autoincrement())
+  targetUserId String
+  targetUser   User     @relation("OvercomerReportsReceived", fields: [targetUserId], references: [id], onDelete: Cascade)
+  reporterId   String
+  reporter     User     @relation("OvercomerReportsSent", fields: [reporterId], references: [id], onDelete: Cascade)
+  reason       String
+  remarks      String?
+  createdAt    DateTime @default(now())
+
+  @@index([targetUserId])
+  @@index([reporterId])
+  @@index([createdAt])
+  @@unique([targetUserId, reporterId])
+  @@map("overcomer_user_report")
 }
 
 model SiteBanner {

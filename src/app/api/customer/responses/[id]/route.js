@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+﻿import { NextResponse } from "next/server";
 
 import { ensureActiveCustomer } from "@/lib/customer-access";
 import prisma from "@/lib/prisma";
@@ -60,7 +60,7 @@ export async function PATCH(request, { params }) {
 
   try {
     const session = requireSessionUser();
-    const user = await ensureActiveCustomer(session.userId);
+    const user = await ensureActiveCustomer(session);
 
     const payload = await request.json().catch(() => null);
     if (!payload || typeof payload !== "object") {

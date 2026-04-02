@@ -1,4 +1,4 @@
-﻿import { NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 
 import prisma from "@/lib/prisma";
 import { ensureActiveCustomer } from "@/lib/customer-access";
@@ -14,16 +14,47 @@ const VALID_REASONS = new Set([
   "other",
 ]);
 
+async function findTargetUser({ targetUserId, targetUsername }) {
+  if (targetUserId) {
+    return prisma.user.findFirst({
+      where: {
+        id: targetUserId,
+        isBlocked: false,
+        publicProfileEnabled: true,
+      },
+      select: {
+        id: true,
+        username: true,
+        name: true,
+      },
+    });
+  }
+
+  if (!targetUsername) return null;
+  return prisma.user.findFirst({
+    where: {
+      username: { equals: targetUsername, mode: "insensitive" },
+      isBlocked: false,
+      publicProfileEnabled: true,
+    },
+    select: {
+      id: true,
+      username: true,
+      name: true,
+    },
+  });
+}
+
 export async function POST(request) {
   try {
     const session = requireSessionUser();
-    const user = await ensureActiveCustomer(session.userId);
+    const user = await ensureActiveCustomer(session);
 
     const payload = await request.json().catch(() => null);
     const reason = payload?.reason;
-    const remarks = payload?.remarks ?? "";
+    const remarks = typeof payload?.remarks === "string" ? payload.remarks.trim() : "";
     const targetUserId = payload?.targetUserId ? String(payload.targetUserId) : null;
-    const targetUsername = payload?.targetUsername ? String(payload.targetUsername) : null;
+    const targetUsername = payload?.targetUsername ? String(payload.targetUsername).trim() : null;
 
     if (!VALID_REASONS.has(reason)) {
       return NextResponse.json({ message: "檢舉原因不正確。" }, { status: 400 });
@@ -33,42 +64,68 @@ export async function POST(request) {
       return NextResponse.json({ message: "缺少被檢舉使用者資訊。" }, { status: 400 });
     }
 
+    const targetUser = await findTargetUser({ targetUserId, targetUsername });
+    if (!targetUser) {
+      return NextResponse.json({ message: "找不到可檢舉的公開個人頁。" }, { status: 404 });
+    }
+
+    if (targetUser.id === user.id) {
+      return NextResponse.json({ message: "不能檢舉自己的公開個人頁。" }, { status: 400 });
+    }
+
     const metadata = {
       reason,
       remarks,
-      targetUserId,
-      targetUsername,
+      targetUserId: targetUser.id,
+      targetUsername: targetUser.username,
     };
 
+    const existing = await prisma.overcomerUserReport.findUnique({
+      where: {
+        targetUserId_reporterId: {
+          targetUserId: targetUser.id,
+          reporterId: user.id,
+        },
+      },
+      select: { id: true },
+    });
+
+    if (existing) {
+      return NextResponse.json({ success: true, alreadyReported: true });
+    }
+
     await prisma.$transaction(async (tx) => {
+      await tx.overcomerUserReport.create({
+        data: {
+          targetUserId: targetUser.id,
+          reporterId: user.id,
+          reason,
+          remarks: remarks || null,
+        },
+      });
+
+      await tx.user.update({
+        where: { id: targetUser.id },
+        data: { reportCount: { increment: 1 } },
+      });
+
       await tx.adminLog.create({
         data: {
           category: "ACTION",
           level: "WARNING",
-          message: `使用者檢舉 ${targetUsername || targetUserId || "未知使用者"}`,
+          message: `使用者檢舉公開個人頁 ${targetUser.username || targetUser.id}`,
           action: "overcomer/report",
           actorId: user.id,
           actorEmail: user.email ?? null,
           targetType: "user",
-          targetId: targetUserId,
+          targetId: targetUser.id,
           requestPath: "/api/overcomer/report",
           metadata,
         },
       });
-
-      if (targetUserId) {
-        try {
-          await tx.user.update({
-            where: { id: targetUserId },
-            data: { reportCount: { increment: 1 } },
-          });
-        } catch (err) {
-          console.warn("[overcomer] report user update skipped", err?.message);
-        }
-      }
     });
 
-    return NextResponse.json({ success: true });
+    return NextResponse.json({ success: true, alreadyReported: false });
   } catch (error) {
     if (error?.code === "UNAUTHENTICATED") {
       return NextResponse.json({ message: "請先登入後再檢舉。" }, { status: 401 });

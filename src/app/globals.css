@@ -1238,7 +1238,7 @@ textarea.form-control:focus {
   font-size: 0.95rem;
 }
 .checklist li::before {
-  content: "?";
+  content: "✓";
   position: absolute;
   left: 0;
   top: 0.05rem;
@@ -2522,7 +2522,7 @@ textarea.form-control:focus {
   box-shadow: 0 0 0 6px rgba(116, 128, 255, 0.15);
 }
 
-.admin-timeline__marker[data-priority="��"] {
+.admin-timeline__marker[data-priority="high"] {
   background: #f0625d;
   box-shadow: 0 0 0 6px rgba(240, 98, 93, 0.2);
 }
@@ -4418,7 +4418,7 @@ textarea.form-control:focus {
   .video-thumb img { max-width: 100%; }
   .video-actions { flex-direction: column; }
 }
-/* Detail �D���d�� */
+/* Prayer detail card */
 .prayer-detail-card {
   background: #fff;
   border-radius: 12px;
@@ -4434,7 +4434,7 @@ textarea.form-control:focus {
   margin-bottom: 16px;
 }
 
-/* ���D�h�� */
+/* Prayer detail headings */
 .prayer-detail-card h2,
 .prayer-detail-card h3 {
   margin-top: 20px;
@@ -4456,7 +4456,7 @@ textarea.form-control:focus {
   color: #444;
 }
 
-/* �������d�� */
+/* Prayer detail sidebar cards */
 .prayer-sidebar .card {
   background: #fff;
   border-radius: 10px;
@@ -4465,7 +4465,7 @@ textarea.form-control:focus {
   margin-bottom: 20px;
 }
 
-/* �d���� */
+/* Comments section */
 .comments-section {
   margin-top: 40px;
 }
@@ -4488,7 +4488,7 @@ textarea.form-control:focus {
   display: block;
   margin-bottom: 4px;
 }
-/* �d���Ϯe�� */
+/* Comments container */
 .comments {
   margin: 2rem auto;
   padding: 1.5rem;
@@ -4498,7 +4498,7 @@ textarea.form-control:focus {
   box-shadow: 0 4px 12px rgba(0,0,0,0.05);
 }
 
-/* �����n�J */
+/* Alert states */
 .alert {
   padding: 0.75rem 1rem;
   border-radius: 8px;
@@ -4512,7 +4512,7 @@ textarea.form-control:focus {
   border: 1px solid #ffeeba;
 }
 
-/* ���D */
+/* Comments heading */
 .comments h3 {
   font-size: 1.3rem;
   margin: 1.2rem 0 0.8rem;
@@ -4521,7 +4521,7 @@ textarea.form-control:focus {
   padding-left: 0.5rem;
 }
 
-/* �d���C�� */
+/* Comment list */
 .comment-list {
   list-style: none;
   padding: 0;
@@ -4539,7 +4539,7 @@ textarea.form-control:focus {
   font-weight: 600;
 }
 
-/* ë�i���� */
+/* Voice replies */
 .voice-section {
   margin-top: 2rem;
 }
@@ -4550,7 +4550,7 @@ textarea.form-control:focus {
   border-radius: 6px;
 }
 
-/* ���s�� */
+/* Audio actions */
 .audio-actions {
   display: flex;
   gap: 0.5rem;
@@ -4667,30 +4667,30 @@ textarea.form-control:focus {
   position: relative;
 }
 
-/* ���� Logo + Brand �W�� */
+/* Header logo and brand */
 .brand {
   display: flex;
   align-items: center;
   gap: 0.5rem;
 }
 
-/* �k�� (���� + �n�J�� + �~��) ���Ƥ@�C */
+/* Right-side nav actions */
 .nav-right {
   display: flex;
   align-items: center;
   gap: 1rem;
 }
 
-/* �����������G���� */
+/* Desktop nav links */
 .nav-links {
   display: flex;
   gap: 1rem;
 }
 
-/* �����������G���X�� dropdown */
+/* Mobile nav dropdown */
 @media (max-width: 768px) {
   .nav-links {
-    display: none; /* ���X */
+    display: none; /* hidden by default */
     position: absolute;
     top: 100%;
     right: 0;
@@ -4706,7 +4706,7 @@ textarea.form-control:focus {
   }
 }
 
-/* �T���b */
+/* Menu toggle */
 .menu-toggle {
   display: none;
   background: none;
@@ -4722,7 +4722,7 @@ textarea.form-control:focus {
 }
 .navbar {
   display: flex;
-  justify-content: space-between; /* ���k���} */
+  justify-content: space-between; /* distribute brand and actions */
   align-items: center;
   padding: 0.5rem 1rem;
 }
@@ -5501,9 +5501,9 @@ button.cp-link:disabled {
     width: 100%;
   }
 }
-/* �϶��T�G�B�@�֤� */
+/* Light feature section */
 .bg-light-flow {
-  background-color: #f7f7f7; /* �L�Ǧ⩳�A�Ϲj���L�϶� */
+  background-color: #f7f7f7; /* soft neutral background */
   padding-top: 5rem;
   padding-bottom: 5rem;
 }
@@ -5514,14 +5514,14 @@ button.cp-link:disabled {
 
 .intro-text {
   max-width: 800px;
-  margin: 1.5rem auto 3rem auto; /* �m���B�P�U���d���d�X�Z�� */
+  margin: 1.5rem auto 3rem auto; /* centered intro copy with extra bottom spacing */
   font-size: 1.15rem;
   color: #555;
 }
 
 .feature-grid-3 {
   display: grid;
-  /* �������G���� */
+  /* Stack as a single column by default */
   grid-template-columns: 1fr; 
   gap: 2rem;
   margin-bottom: 3rem;
@@ -5529,7 +5529,7 @@ button.cp-link:disabled {
 
 @media (min-width: 768px) {
   .feature-grid-3 {
-    /* �������G�T�� (col-4 ����) */
+    /* Expand to three columns on wider screens */
     grid-template-columns: repeat(3, 1fr);
   }
 }
@@ -5540,7 +5540,7 @@ button.cp-link:disabled {
   border-radius: 12px;
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
   transition: transform 0.3s ease, box-shadow 0.3s ease;
-  border-bottom: 4px solid #3b82f6; /* �D�D���˹� */
+  border-bottom: 4px solid #3b82f6; /* accent underline */
 }
 
 .feature-item:hover {
@@ -5556,7 +5556,7 @@ button.cp-link:disabled {
   width: 50px;
   height: 50px;
   border-radius: 50%;
-  background-color: #e0f2fe; /* �L�Ŧ��I�� */
+  background-color: #e0f2fe; /* light blue background */
   margin-bottom: 1rem;
 }
 
@@ -5574,11 +5574,11 @@ button.cp-link:disabled {
   /* padding: 1rem 2rem; */
   font-size: 1.25rem;
 }
-/* �϶��G�G�ǲ�ë�i�P�t�{�s�� */
+/* Dark faith section */
 .bg-dark-faith {
-  /* �ϥΤ@�Ӳ`�I�B���R���I���� */
-  background-color: #1a202c; /* �����`�ũά��¦� */
-  color: #f7fafc; /* �L�����r */
+  /* Deep, calm background for contrast-heavy content */
+  background-color: #1a202c; /* dark slate base */
+  color: #f7fafc; /* light text */
   padding-top: 5rem;
   padding-bottom: 5rem;
 }
@@ -5591,25 +5591,25 @@ button.cp-link:disabled {
   color: #cbd5e0;
 }
 
-/* �T�O���઺�����b�������ͮ� */
+/* Keep the alternating layout readable on desktop */
 @media (min-width: 768px) {
   .content-grid-reverse {
     grid-template-areas: "text image";
-    /* �o�̨ϥ� grid-template-columns: 1fr 1.2fr; �|���K�X�W�@�Ӱ϶�����ı���� */
+    /* Slightly widen the image column for better visual balance. */
     grid-template-columns: 1fr 1.2fr;
   }
-  /* �ѩ� JSX ���ڭ̨S���ϥ� CSS Grid Area�A�����վ㶶�� */
+  /* JSX does not use grid areas here, so reorder with item order instead. */
   .content-grid-reverse > .content-text {
-    order: 2; /* �����r�b�k�� */
+    order: 2; /* text on the right */
   }
   .content-grid-reverse > .content-image-wrapper {
-    order: 1; /* ���Ϥ��b���� */
+    order: 1; /* image on the left */
   }
 }
 
 .badge-light {
   color: #1a202c;
-  background-color: #f6e05e; /* �L�����j�� */
+  background-color: #f6e05e; /* warm highlight */
 }
 
 .feature-cards {
@@ -5622,15 +5622,15 @@ button.cp-link:disabled {
 
 @media (min-width: 640px) {
   .feature-cards {
-    flex-direction: row; /* �b���e�ù��W���V�ƦC */
+    flex-direction: row; /* switch to horizontal layout */
   }
 }
 
 .feature-card {
-  background-color: rgba(255, 255, 255, 0.08); /* ���L�z���I�� */
+  background-color: rgba(255, 255, 255, 0.08); /* translucent card background */
   padding: 1.5rem;
   border-radius: 8px;
-  border-left: 4px solid #f6e05e; /* �G�����˹��u */
+  border-left: 4px solid #f6e05e; /* yellow accent border */
   transition: transform 0.3s ease;
 }
 
@@ -5648,15 +5648,15 @@ button.cp-link:disabled {
   font-size: 0.95rem;
 }
 
-/* �q�ήe���˦� */
+/* Shared container styles */
 .section__container {
   max-width: 1200px;
   margin: 0 auto;
   padding: 0 1.5rem;
 }
-/* �϶��@�G���@�����P���|�v�T�O */
+/* Gradient section */
 .bg-gradient-power {
-  /* �ϥΤ@�ӬX�M�B�n�������ܭI�� */
+  /* Soft blue-to-gold gradient */
   background: linear-gradient(135deg, #f0f8ff 0%, #fff8e1 100%);
   padding-top: 5rem;
   padding-bottom: 5rem;
@@ -5664,14 +5664,14 @@ button.cp-link:disabled {
 
 .content-grid-2 {
   display: grid;
-  grid-template-columns: 1fr; /* �w�]������ */
+  grid-template-columns: 1fr; /* single column by default */
   gap: 3rem;
   align-items: center;
 }
 
 @media (min-width: 768px) {
   .content-grid-2 {
-    grid-template-columns: 1.2fr 1fr; /* ������������ */
+    grid-template-columns: 1.2fr 1fr; /* two-column desktop layout */
   }
 }
 
@@ -5704,24 +5704,24 @@ button.cp-link:disabled {
   display: block;
 }
 
-/* �������T�P�k���n���϶� */
+/* Legal links section */
 .bg-legal-links {
-  background-color: #fcfcfc; /* ���L���L���I�� */
-  border-top: 1px solid #eee; /* �������j�u */
+  background-color: #fcfcfc; /* near-white background */
+  border-top: 1px solid #eee; /* soft divider */
   padding-top: 4rem;
   padding-bottom: 4rem;
 }
 
 .info-links-grid {
   display: grid;
-  /* �����w�]������ */
+  /* single column by default */
   grid-template-columns: 1fr;
   gap: 2rem;
 }
 
 @media (min-width: 768px) {
   .info-links-grid {
-    /* ���������T�� */
+    /* expand to three columns */
     grid-template-columns: repeat(3, 1fr);
   }
 }
@@ -5734,8 +5734,8 @@ button.cp-link:disabled {
 }
 
 .info-link-group:hover {
-  border-color: #3b82f6; /* �D�D������ */
-  box-shadow: 0 4px 10px rgba(59, 130, 246, 0.1); /* ���L���v */
+  border-color: #3b82f6; /* primary accent border */
+  box-shadow: 0 4px 10px rgba(59, 130, 246, 0.1); /* subtle hover shadow */
 }
 
 .info-link-group h3 {
@@ -5747,12 +5747,12 @@ button.cp-link:disabled {
 .info-link-group p {
   font-size: 0.95rem;
   color: #6b7280;
-  min-height: 40px; /* �O���q�����פ@�P�A�קK�ƪ����� */
+  min-height: 40px; /* keep cards aligned when copy length varies */
 }
 
 .link-arrow {
   display: inline-block;
-  color: #3b82f6; /* �D�D���s�� */
+  color: #3b82f6; /* primary link color */
   text-decoration: none;
   font-weight: 600;
   margin-top: 1rem;
@@ -5761,10 +5761,10 @@ button.cp-link:disabled {
 
 .link-arrow:hover {
   text-decoration: underline;
-  margin-left: 5px; /* �b�Y���ʮĪG */
+  margin-left: 5px; /* small hover shift */
 }
-/* �T�O�z�����s�˦� (button--primary/secondary) �M badge-soft �w�g�w�q */
-/* �o�̰��]�z�� `button--secondary` �O�L�⩳���A`button--primary` �O�`�⩳���A�H�K�b���P�I���⤤�����ݲM */.cp-section--form {
+/* Form section layout */
+.cp-section--form {
   display: grid;
   gap: 2.2rem;
 }
@@ -6868,10 +6868,10 @@ header .nav-user {
 /* Start Pray base tokens */
 
 :root {
-    --color-primary: #1e3a8a; /* �`�Q�� */
-    --color-highlight: #fbbf24; /* �[�Ķ� */
-    --color-text: #374151; /* �`�Ǧ��奻 */
-    --color-light-bg: #f9fafb; /* �L�Ǧ��I�� */
+  --color-primary: #1e3a8a; /* primary blue */
+  --color-highlight: #fbbf24; /* highlight gold */
+  --color-text: #374151; /* body text */
+  --color-light-bg: #f9fafb; /* light background */
     --color-card-bg: #ffffff;
 }
 
@@ -6900,7 +6900,7 @@ header .nav-user {
     margin: 0 auto 20px auto;
 }
 
-/* ���X���ܷ��e���q���� */
+/* Current status pill */
 .current-status-tag {
     display: inline-block;
     padding: 8px 20px;
@@ -6909,11 +6909,11 @@ header .nav-user {
     font-weight: 700;
     border-radius: 9999px;
     box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
-    /* �W�[�߽İʵe�H�l�ު`�N�O */
+    /* Pulse to draw attention */
     animation: pulse-ring 2s infinite; 
 }
 
-/* ���u�Ϯe���G�|������ */
+/* Roadmap stage grid */
 .roadmap-stages-container {
     display: grid;
     gap: 30px;
@@ -6922,7 +6922,7 @@ header .nav-user {
     grid-template-columns: repeat(4, 1fr);
 }
 
-/* �������G�������| */
+/* Collapse to one column on narrower screens */
 @media (max-width: 1024px) {
     .roadmap-stages-container {
         grid-template-columns: 1fr;
@@ -6930,7 +6930,7 @@ header .nav-user {
 }
 
 
-/* ���W���q�d���˦� */
+/* Roadmap card styles */
 .roadmap-stage {
     background-color: var(--color-card-bg);
     border-radius: 12px;
@@ -6966,7 +6966,7 @@ header .nav-user {
     color: #1f2937;
 }
 
-/* ���e�Ӹ` */
+/* Stage body copy */
 .stage-content p {
     margin-bottom: 15px;
     font-size: 0.95rem;
@@ -6982,28 +6982,28 @@ header .nav-user {
 }
 
 
-/* --- �w���S�w���q���˦� --- */
+/* --- Stage state modifiers --- */
 
-/* CURRENT Phase 0: ���X���ܷ��e���q */
+/* Current phase highlight */
 .current-stage {
-    border-color: var(--color-highlight);
-    background-color: #fffbeb; /* �L�[�Ħ��I�� */
-    /* �W�[�@�ӥ~�����v�ӱj�� */
-    box-shadow: 0 0 0 3px var(--color-highlight), 0 10px 15px -3px rgba(0, 0, 0, 0.2); 
+  border-color: var(--color-highlight);
+  background-color: #fffbeb; /* soft gold background */
+  /* Add an outer ring for emphasis. */
+  box-shadow: 0 0 0 3px var(--color-highlight), 0 10px 15px -3px rgba(0, 0, 0, 0.2); 
 }
 
 .current-stage .stage-label,
 .current-stage .stage-title {
-    color: #92400e; /* �`�[�Ħ��奻 */
+    color: #92400e; /* darker gold text */
 }
 
 .current-stage .stage-focus {
-    background-color: #fef3c7; /* ���L���[�Ħ��Ω��J�I���e */
+    background-color: #fef3c7; /* softer focus panel */
     border-left-color: var(--color-highlight);
 }
 
 
-/* NEXT Phase 1: �аO�U�@�B */
+/* Next phase accent */
 .next-stage {
     border-top: 5px solid var(--color-primary);
 }
@@ -7016,9 +7016,9 @@ header .nav-user {
     border-left-color: var(--color-primary);
 }
 
-/* ���I/�D�Լ˦� */
+/* Risk and concern styling */
 .stage-risk {
-    color: #b91c1c; /* �����Ω����I */
+    color: #b91c1c; /* warning red */
     border: 1px dashed #fecaca;
     background-color: #fef2f2;
     border-radius: 6px;
@@ -7027,7 +7027,7 @@ header .nav-user {
     font-size: 0.9rem;
 }
 
-/* �߽İʵe�w�q */
+/* Pulse animation */
 @keyframes pulse-ring {
     0% {
         box-shadow: 0 0 0 0 var(--color-highlight), 0 4px 6px -1px rgba(0, 0, 0, 0.1);

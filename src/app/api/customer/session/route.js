@@ -6,12 +6,15 @@ import {
   readCustomerSessionFromRequest,
 } from "@/lib/customer-session";
 
-function toPublicUser(session) {
+function toPublicUser(user) {
   return {
-    id: session.userId,
-    email: session.email,
-    name: session.name,
-    username: session.username,
+    id: user.id,
+    email: user.email,
+    name: user.name,
+    username: user.username,
+    avatarUrl: user.avatarUrl ?? null,
+    bio: user.bio ?? null,
+    publicProfileEnabled: Boolean(user.publicProfileEnabled),
   };
 }
 
@@ -24,16 +27,11 @@ export async function GET(request) {
       return response;
     }
 
-    const user = await ensureActiveCustomer(session.userId);
+    const user = await ensureActiveCustomer(session);
 
     return NextResponse.json({
       authenticated: true,
-      user: toPublicUser({
-        userId: user.id,
-        email: user.email,
-        name: user.name,
-        username: user.username,
-      }),
+      user: toPublicUser(user),
     });
   } catch (error) {
     if (error?.code === "UNAUTHENTICATED" || error?.code === "ACCOUNT_BLOCKED") {

@@ -12,6 +12,7 @@ function normalizeSessionPayload(payload) {
     email: payload.email ?? null,
     name: payload.name ?? null,
     username: payload.username ?? null,
+    sessionVersion: Number.isInteger(payload.sessionVersion) ? payload.sessionVersion : 0,
     exp: payload.exp ?? null,
   };
 }

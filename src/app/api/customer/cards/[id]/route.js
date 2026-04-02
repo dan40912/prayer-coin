@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+﻿import { NextResponse } from "next/server";
 
 import { ensureActiveCustomer } from "@/lib/customer-access";
 import prisma from "@/lib/prisma";
@@ -98,7 +98,7 @@ async function getOwnedCard(cardId, userId) {
 
 async function requireActiveCustomerUser() {
   const session = requireSessionUser();
-  return ensureActiveCustomer(session.userId);
+  return ensureActiveCustomer(session);
 }
 
 export async function GET(request, { params }) {

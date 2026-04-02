@@ -17,6 +17,7 @@
     "db:bundle": "node scripts/db/export-migration-bundle.cjs",
     "db:studio": "prisma studio",
     "seed:admins": "node scripts/seed-admins.js",
+    "seed:demo": "node scripts/seed-demo.js",
     "qa": "node scripts/qa-flow.mjs",
     "qa:full": "node scripts/qa-flow.mjs full",
     "progress:sync": "python scripts/update_progress_tracker.py --event manual",

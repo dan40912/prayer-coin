@@ -9,7 +9,7 @@ import { buildOvercomerSlug } from "@/lib/overcomer";
 
 import { REPORT_REASONS } from "@/constants/reportReasons";
 
-// ===== ??????????? Debug??????????????????? =====
+// ===== Recorder debug helpers =====
 const DEBUG = false;
 const DEBUG_TAG = "[Recorder]";
 function logDebug(...args) {
@@ -24,13 +24,13 @@ function logDebug(...args) {
   console.log(DEBUG_TAG, `[${ts}]`, ...args);
 }
 
-// ===== ???????????怏?????=====
+// ===== Recording configuration =====
 const MAX_RECORD_SECONDS = 120;
 const COUNTDOWN_START = 3;
 const DEFAULT_SAMPLE_RATE = 16000;
 const DEFAULT_BITRATE = 128000;
 
-// ?????????????WebM/Opus?????????????
+// Prefer WebM/Opus when supported, then fall back through safer recorder formats.
 const RECORDING_FORMATS = [
   { mimeType: "audio/webm;codecs=opus", extension: "webm" },
   { mimeType: "audio/webm", extension: "webm" },
@@ -72,9 +72,9 @@ function createMediaRecorderWithFallback(stream) {
   try {
     recorder = new MediaRecorder(stream, options);
   } catch (e) {
-    // ??????????? mime????????????????????
+    // Retry without forcing mimeType when the preferred option is rejected.
     recorder = new MediaRecorder(stream);
-    // ???????????????????????????????????????????????????????
+    // Use the recorder's actual mimeType so the extension matches the output.
     format.mimeType = recorder.mimeType;
     format.extension = getExtensionFromMime(recorder.mimeType);
   }
@@ -83,7 +83,7 @@ function createMediaRecorderWithFallback(stream) {
   return { recorder, format, options };
 }
 
-// ===== ?????????=====
+// ===== Shared helpers =====
 function formatSeconds(totalSeconds) {
   const minutes = Math.floor(totalSeconds / 60)
     .toString()
@@ -114,7 +114,7 @@ function getResponderProfileHref(response) {
   return `/overcomer/${encodeURIComponent(slug)}`;
 }
 
-// ===== ??????=====
+// ===== Component =====
 export default function Comments({ requestId, ownerId = null }) {
   const authUser = useAuthSession();
 
@@ -260,7 +260,7 @@ export default function Comments({ requestId, ownerId = null }) {
     }
   }, [reportTarget, reportReason, reportRemarks, closeReportModal, ownerIdValue, authUser]);
 
-  // ????????
+  // Recorder state
   const [audioUrl, setAudioUrl] = useState(null);
   const audioBlobRef = useRef(null);
   const recordingFormatRef = useRef(resolveRecordingFormat());
@@ -273,7 +273,7 @@ export default function Comments({ requestId, ownerId = null }) {
   const [recordError, setRecordError] = useState("");
   const [submittingResponse, setSubmittingResponse] = useState(false);
 
-  // ?????????????
+  // Recorder refs
   const mediaRecorderRef = useRef(null);
   const mediaStreamRef = useRef(null);
   const audioContextRef = useRef(null);
@@ -281,7 +281,7 @@ export default function Comments({ requestId, ownerId = null }) {
   const recordTimerRef = useRef(null);
   const discardRecordingOnStopRef = useRef(false);
 
-  // ????????????
+  // Load existing responses
   useEffect(() => {
     let cancelled = false;
     (async () => {
@@ -302,7 +302,7 @@ export default function Comments({ requestId, ownerId = null }) {
 
     return () => {
       cancelled = true;
-      // ???????怏?????????????????????URL
+      // Release recorder resources and any generated blob URL on unmount.
       cleanupRecording();
       if (recordTimerRef.current) {
         clearInterval(recordTimerRef.current);
@@ -350,7 +350,7 @@ export default function Comments({ requestId, ownerId = null }) {
     return () => window.clearTimeout(timer);
   }, [actionNotice]);
 
-  // ???????????????????授???????
+  // Auto-stop once the recording reaches the time limit.
   useEffect(() => {
     if (!recording) return;
     if (recordSeconds >= MAX_RECORD_SECONDS) {
@@ -359,7 +359,7 @@ export default function Comments({ requestId, ownerId = null }) {
     }
   }, [recordSeconds, recording]);
 
-  // ??????????????
+  // Countdown timer before recording starts.
   useEffect(() => {
     if (!isRecorderModalOpen || recorderStep !== "countdown") return;
     if (countdownValue === null) return;
@@ -377,7 +377,7 @@ export default function Comments({ requestId, ownerId = null }) {
     return () => window.clearTimeout(timer);
   }, [countdownValue, isRecorderModalOpen, recorderStep]);
 
-  // ???????????????????romStop=true ??????????? onstop???????????recorder.stop()
+  // Skip recorder.stop() when cleanup already came from the onstop path.
   const cleanupRecording = useCallback((fromStop = false) => {
     if (recordTimerRef.current) {
       clearInterval(recordTimerRef.current);
@@ -410,7 +410,7 @@ export default function Comments({ requestId, ownerId = null }) {
     setRecordSeconds(0);
   }, []);
 
-  // ?????????????????????????????????????????
+  // Ask for microphone permission before opening the recorder modal.
   const openRecorder = async () => {
     setRecordError("");
     setCountdownValue(null);
@@ -438,7 +438,7 @@ export default function Comments({ requestId, ownerId = null }) {
     }
   };
 
-  // ?????? Modal????????????
+  // Closing the modal mid-flow should discard the current recording session.
   const closeRecorderModal = () => {
     if (recorderStep === "countdown" || recorderStep === "recording") {
       discardRecordingOnStopRef.current = true;
@@ -449,7 +449,7 @@ export default function Comments({ requestId, ownerId = null }) {
     setCountdownValue(null);
   };
 
-  // ???????
+  // Start recording
   const beginRecording = () => {
     if (!mediaStreamRef.current) {
       setRecorderStep("idle");
@@ -536,7 +536,7 @@ export default function Comments({ requestId, ownerId = null }) {
     }
   };
 
-  // ????????授????????????????????????????
+  // Stop through MediaRecorder so buffered chunks still flush via onstop.
   const stopRecording = () => {
     const recorder = mediaRecorderRef.current;
     if (recorder && recorder.state === "recording") {
@@ -560,7 +560,7 @@ export default function Comments({ requestId, ownerId = null }) {
     setCountdownValue(null);
   };
 
-  // ???????????????
+  // Keep the recorded clip and return to the response composer.
   const useRecordedAudio = () => {
     setIsRecorderModalOpen(false);
     setRecorderStep("idle");

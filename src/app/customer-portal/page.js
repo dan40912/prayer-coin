@@ -4,7 +4,7 @@ export const dynamic = "force-dynamic";
 
 export const metadata = {
   title: "我的禱告管理 | Start Pray 一起禱告吧",
-  description: "查看與管理你發佈的禱告卡、回應互動與個人內容設定。",
+  description: "查看與管理你建立的禱告卡、回應互動與個人內容設定。",
 };
 
 const CustomerPortalClient = nextDynamic(

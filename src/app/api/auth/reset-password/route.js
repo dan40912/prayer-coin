@@ -13,15 +13,15 @@ export async function POST(request) {
     const confirmPassword = typeof payload?.confirmPassword === "string" ? payload.confirmPassword : "";
 
     if (!token) {
-      return NextResponse.json({ message: "重設連結無效，請重新申請。" }, { status: 400 });
+      return NextResponse.json({ message: "缺少重設密碼憑證，請重新操作。" }, { status: 400 });
     }
 
     if (password.length < 8) {
-      return NextResponse.json({ message: "密碼至少需要 8 碼" }, { status: 400 });
+      return NextResponse.json({ message: "密碼至少需要 8 碼。" }, { status: 400 });
     }
 
     if (password !== confirmPassword) {
-      return NextResponse.json({ message: "兩次輸入密碼不一致" }, { status: 400 });
+      return NextResponse.json({ message: "兩次輸入的密碼不一致。" }, { status: 400 });
     }
 
     const hashedToken = crypto.createHash("sha256").update(token).digest("hex");
@@ -36,11 +36,12 @@ export async function POST(request) {
       },
       select: {
         id: true,
+        sessionVersion: true,
       },
     });
 
     if (!user) {
-      return NextResponse.json({ message: "重設連結已失效，請重新申請。" }, { status: 400 });
+      return NextResponse.json({ message: "重設連結無效或已過期，請重新申請。" }, { status: 400 });
     }
 
     const passwordHash = await bcrypt.hash(password, 12);
@@ -50,12 +51,13 @@ export async function POST(request) {
         passwordHash,
         resetToken: null,
         resetTokenExpiry: null,
+        sessionVersion: { increment: 1 },
       },
     });
 
-    return NextResponse.json({ message: "密碼已更新，請使用新密碼重新登入。" });
+    return NextResponse.json({ message: "密碼已更新，請重新登入。" });
   } catch (error) {
     console.error("POST /api/auth/reset-password 發生錯誤", error);
-    return NextResponse.json({ message: "重設密碼時發生錯誤" }, { status: 500 });
+    return NextResponse.json({ message: "重設密碼時發生錯誤。" }, { status: 500 });
   }
 }

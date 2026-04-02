@@ -5,6 +5,9 @@ import { mkdir, writeFile } from "node:fs/promises";
 import { NextResponse } from "next/server";
 import sharp from "sharp";
 
+import { ensureActiveCustomer } from "@/lib/customer-access";
+import { requireSessionUser } from "@/lib/server-session";
+
 const UPLOAD_DIR = path.join(process.cwd(), "public", "uploads");
 const MAX_UPLOAD_BYTES = 10 * 1024 * 1024;
 const MAX_DIMENSION = 1600;
@@ -23,21 +26,23 @@ function sanitizeFileStem(name = "") {
 
 export async function POST(request) {
   try {
+    const session = requireSessionUser();
+    await ensureActiveCustomer(session);
     await ensureUploadDir();
 
     const data = await request.formData();
     const file = data.get("file");
 
     if (!file || typeof file === "string" || typeof file.arrayBuffer !== "function") {
-      return NextResponse.json({ message: "找不到上傳的圖片檔案" }, { status: 400 });
+      return NextResponse.json({ message: "請先選擇要上傳的圖片檔案。" }, { status: 400 });
     }
 
     if (!file.type || !file.type.startsWith("image/")) {
-      return NextResponse.json({ message: "只允許上傳圖片檔案" }, { status: 400 });
+      return NextResponse.json({ message: "只接受圖片檔案。" }, { status: 400 });
     }
 
     if (file.size > MAX_UPLOAD_BYTES) {
-      return NextResponse.json({ message: "圖片大小不可超過 10MB" }, { status: 400 });
+      return NextResponse.json({ message: "圖片大小不可超過 10MB。" }, { status: 400 });
     }
 
     const fileBuffer = Buffer.from(await file.arrayBuffer());
@@ -55,7 +60,7 @@ export async function POST(request) {
         .webp({ quality: WEBP_QUALITY, effort: 6 })
         .toBuffer();
     } catch {
-      return NextResponse.json({ message: "圖片格式無法處理，請改用 JPG、PNG 或 WEBP" }, { status: 400 });
+      return NextResponse.json({ message: "圖片格式無法處理，請改用 JPG、PNG 或 WEBP。" }, { status: 400 });
     }
 
     const safeName = sanitizeFileStem(file.name);
@@ -65,12 +70,19 @@ export async function POST(request) {
     await writeFile(filePath, compressedBuffer);
 
     return NextResponse.json({
-      message: "圖片上傳成功",
+      message: "圖片上傳成功。",
       url: `/uploads/${filename}`,
       compressed: true,
     });
   } catch (error) {
+    if (error?.code === "UNAUTHENTICATED") {
+      return NextResponse.json({ message: "請先登入後再上傳圖片。" }, { status: 401 });
+    }
+    if (error?.code === "ACCOUNT_BLOCKED") {
+      return NextResponse.json({ message: "帳號已被停用，無法上傳圖片。" }, { status: 403 });
+    }
+
     console.error("upload-image failed:", error);
-    return NextResponse.json({ message: "圖片上傳失敗，請稍後再試" }, { status: 500 });
+    return NextResponse.json({ message: "圖片上傳失敗，請稍後再試。" }, { status: 500 });
   }
 }

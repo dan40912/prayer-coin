@@ -414,15 +414,6 @@ export default function CustomerPortalCreatePage() {
                 required
               />
             </label>
-            {/* <label>
-              <span>?芾?蝬脣?隞?? (slug)</span>
-              <input
-                type="text"
-                value={form.slug}
-                onChange={updateFormField("slug")}
-                placeholder="靘?family-health"
-              />
-            </label> */}
           </div>
 
           <div className="customer-create__row">
@@ -490,18 +481,6 @@ export default function CustomerPortalCreatePage() {
             )}
           </div>
 
-          {/* <div className="customer-create__row">
-            <label>
-              <span>???蹂誨??</span>
-              <input
-                type="text"
-                value={form.alt}
-                onChange={updateFormField("alt")}
-                placeholder="靘?摰嗡犖??銝?曲??
-              />
-            </label>
-          </div> */}
-
           <div className="customer-create__row customer-create__row--description">
             <label>
               <span>代禱內容 *</span>
@@ -515,49 +494,6 @@ export default function CustomerPortalCreatePage() {
               <small className="cp-helper">請直接輸入文字即可，不提供模板與即時預覽。</small>
             </label>
           </div>
-
-          {/* <div className="customer-create__row customer-create__row--equal">
-            <label>
-              <span>璅惜 (隞仿???)</span>
-              <input
-                type="text"
-                value={form.tags}
-                onChange={updateFormField("tags")}
-                placeholder="靘?摰嗅滬, ?怎?"
-              />
-            </label>
-            <label>
-              <span>Meta 鞈? (瘥?銝??</span>
-              <textarea
-                rows={2}
-                value={form.meta}
-                onChange={updateFormField("meta")}
-                placeholder={`靘?蝳勗??∠楊??PC-101
-撌脰◤ 12 雿誨蝳梯??亦?蝳望??害}
-              />
-            </label>
-          </div>
-
-          <div className="customer-create__row customer-create__row--equal">
-            <label>
-              <span>閰喟敦?批捆??? (?詨‵)</span>
-              <input
-                type="text"
-                value={form.detailsHref}
-                onChange={updateFormField("detailsHref")}
-                placeholder="?舫???唳摰??霅?隤芣???
-              />
-            </label>
-            <label>
-              <span>蝳勗????? (?詨‵)</span>
-              <input
-                type="text"
-                value={form.voiceHref}
-                onChange={updateFormField("voiceHref")}
-                placeholder="靘?閰喟敦?? #voice ?畾?
-              />
-            </label>
-          </div> */}
 
           <div className="customer-create__actions">
             <button type="submit" className="button button--primary" disabled={submitting || isUploadingImage}>

@@ -28,7 +28,7 @@ function clampLimit(value) {
 export async function GET(request) {
   try {
     const session = requireSessionUser();
-    const user = await ensureActiveCustomer(session.userId);
+    const user = await ensureActiveCustomer(session);
     const { searchParams } = new URL(request.url);
     const limit = clampLimit(searchParams.get("limit"));
 
@@ -61,29 +61,29 @@ export async function GET(request) {
     });
   } catch (error) {
     if (error?.code === "UNAUTHENTICATED") {
-      return NextResponse.json({ message: "Please sign in." }, { status: 401 });
+      return NextResponse.json({ message: "請先登入。" }, { status: 401 });
     }
     if (error?.code === "ACCOUNT_BLOCKED") {
-      return NextResponse.json({ message: "Your account is blocked." }, { status: 403 });
+      return NextResponse.json({ message: "帳號已被停用。" }, { status: 403 });
     }
 
     console.error("GET /api/customer/withdrawals error", error);
-    return NextResponse.json({ message: "Failed to load withdrawals." }, { status: 500 });
+    return NextResponse.json({ message: "載入提領紀錄失敗。" }, { status: 500 });
   }
 }
 
 export async function POST(request) {
   try {
     const session = requireSessionUser();
-    const activeUser = await ensureActiveCustomer(session.userId);
+    const activeUser = await ensureActiveCustomer(session);
 
     const payload = await request.json().catch(() => null);
     const amount = Number(payload?.amount);
 
     if (!Number.isFinite(amount) || amount < WITHDRAW_MIN_AMOUNT) {
       return NextResponse.json(
-        { message: `Withdraw amount must be at least ${WITHDRAW_MIN_AMOUNT}.` },
-        { status: 422 },
+        { message: `提領金額至少需要 ${WITHDRAW_MIN_AMOUNT}。` },
+        { status: 422 }
       );
     }
 
@@ -94,6 +94,7 @@ export async function POST(request) {
           id: true,
           walletBalance: true,
           bscAddress: true,
+          isAddressVerified: true,
         },
       }),
       prisma.tokenTransaction.findFirst({
@@ -107,23 +108,27 @@ export async function POST(request) {
     ]);
 
     if (!user) {
-      return NextResponse.json({ message: "User not found." }, { status: 404 });
+      return NextResponse.json({ message: "找不到使用者。" }, { status: 404 });
     }
 
     const targetAddress = user.bscAddress?.trim();
     if (!targetAddress) {
-      return NextResponse.json({ message: "Please set your BSC address before withdrawing." }, { status: 422 });
+      return NextResponse.json({ message: "請先設定 BSC 錢包地址。" }, { status: 422 });
+    }
+
+    if (!user.isAddressVerified) {
+      return NextResponse.json({ message: "目前錢包地址尚未完成驗證，暫時無法提領。" }, { status: 422 });
     }
 
     if (pendingOrder) {
       return NextResponse.json(
-        { message: "You already have a pending withdrawal request." },
-        { status: 409 },
+        { message: "你目前已有待處理的提領申請。" },
+        { status: 409 }
       );
     }
 
     if (toNumber(user.walletBalance) < amount) {
-      return NextResponse.json({ message: "Insufficient wallet balance." }, { status: 422 });
+      return NextResponse.json({ message: "錢包餘額不足。" }, { status: 422 });
     }
 
     const created = await prisma.tokenTransaction.create({
@@ -152,17 +157,17 @@ export async function POST(request) {
         ...created,
         amount: toNumber(created.amount),
       },
-      { status: 201 },
+      { status: 201 }
     );
   } catch (error) {
     if (error?.code === "UNAUTHENTICATED") {
-      return NextResponse.json({ message: "Please sign in." }, { status: 401 });
+      return NextResponse.json({ message: "請先登入。" }, { status: 401 });
     }
     if (error?.code === "ACCOUNT_BLOCKED") {
-      return NextResponse.json({ message: "Your account is blocked." }, { status: 403 });
+      return NextResponse.json({ message: "帳號已被停用。" }, { status: 403 });
     }
 
     console.error("POST /api/customer/withdrawals error", error);
-    return NextResponse.json({ message: "Failed to create withdrawal request." }, { status: 500 });
+    return NextResponse.json({ message: "建立提領申請失敗。" }, { status: 500 });
   }
 }

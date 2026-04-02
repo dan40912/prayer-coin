@@ -1,12 +1,9 @@
 import crypto from "node:crypto";
+import { getAdminSessionSecret } from "@/lib/session-secrets";
 
 export const ADMIN_SESSION_COOKIE = "prayer-coin-admin-session";
 
 const SESSION_TTL_SECONDS = 8 * 60 * 60;
-
-function getSessionSecret() {
-  return process.env.ADMIN_SESSION_SECRET || "dev-admin-session-secret-change-me";
-}
 
 function encodePayload(payload) {
   return Buffer.from(JSON.stringify(payload), "utf8").toString("base64url");
@@ -22,7 +19,10 @@ function decodePayload(payloadBase64) {
 }
 
 function signPayload(payloadBase64) {
-  return crypto.createHmac("sha256", getSessionSecret()).update(payloadBase64).digest("base64url");
+  return crypto
+    .createHmac("sha256", getAdminSessionSecret())
+    .update(payloadBase64)
+    .digest("base64url");
 }
 
 export function createAdminSessionToken(account) {

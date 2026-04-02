@@ -5,11 +5,19 @@ import { usePathname } from "next/navigation";
 
 import { useAudio } from "@/context/AudioContext";
 
-const FALLBACK_SPEAKER = "Anonymous";
-const FALLBACK_TITLE = "Prayer Audio";
-const FALLBACK_EMPTY_HINT = "No playable audio yet. Upload text or voice response first.";
-const FALLBACK_TEXT_MESSAGE = "No text message from this uploader yet.";
-const FALLBACK_VOICE_MESSAGE = "Voice message";
+const FALLBACK_SPEAKER = "匿名上傳者";
+const FALLBACK_TITLE = "代禱音訊";
+const FALLBACK_EMPTY_HINT = "目前沒有可播放的音訊，先上傳文字或語音回應。";
+const FALLBACK_TEXT_MESSAGE = "這位上傳者尚未留下文字訊息。";
+const FALLBACK_VOICE_MESSAGE = "語音回應";
+const PLAYER_PHASE_LABELS = {
+  ready: "準備播放",
+  playing: "播放中",
+  paused: "已暫停",
+  recovering: "正在跳過",
+  ended: "播放完成",
+  empty: "尚未載入",
+};
 
 const GLOBAL_PLAYER_BODY_CLASS = "has-global-player";
 const COMPANION_ACTIVE_CLASS = "is-companion-active";
@@ -51,6 +59,17 @@ function isSameTrack(left, right) {
   return false;
 }
 
+function getTrackIdentity(track) {
+  if (!track) return null;
+  if (track.id !== undefined && track.id !== null) {
+    return `id:${track.id}`;
+  }
+  if (track.voiceUrl) {
+    return `url:${track.voiceUrl}`;
+  }
+  return null;
+}
+
 export default function GlobalPlayer() {
   const pathname = usePathname() || "";
   const prayerId = useMemo(() => parsePrayerId(pathname), [pathname]);
@@ -62,6 +81,10 @@ export default function GlobalPlayer() {
     isPlaying,
     isLoop,
     isQueueEnded,
+    playerPhase,
+    endedReason,
+    playbackNotice,
+    clearPlaybackNotice,
     isExpanded,
     setIsExpanded,
     togglePlay,
@@ -81,6 +104,8 @@ export default function GlobalPlayer() {
   const progressBarRef = useRef(null);
   const [isOverlayDismissed, setIsOverlayDismissed] = useState(false);
   const [overlayBackground, setOverlayBackground] = useState("");
+  const previousTrackIdentityRef = useRef(null);
+  const previousPhaseRef = useRef(playerPhase);
 
   useEffect(() => {
     if (typeof document === "undefined") return undefined;
@@ -92,14 +117,26 @@ export default function GlobalPlayer() {
 
   const hasTrack = Boolean(currentTrack);
   const hasQueue = playlist.length > 0;
-  const canPlay = hasQueue;
   const hasStartedPlayback = hasTrack;
+  const currentTrackIdentity = useMemo(() => getTrackIdentity(currentTrack), [currentTrack]);
 
   useEffect(() => {
-    if (isPlaying && hasStartedPlayback) {
+    const previousTrackIdentity = previousTrackIdentityRef.current;
+    const previousPhase = previousPhaseRef.current;
+    const hasTrackChanged =
+      Boolean(currentTrackIdentity) && currentTrackIdentity !== previousTrackIdentity;
+    const shouldReopenOverlay =
+      hasStartedPlayback &&
+      playerPhase === "playing" &&
+      (hasTrackChanged || previousPhase === "ready" || previousPhase === "ended");
+
+    if (shouldReopenOverlay) {
       setIsOverlayDismissed(false);
     }
-  }, [isPlaying, hasStartedPlayback]);
+
+    previousTrackIdentityRef.current = currentTrackIdentity;
+    previousPhaseRef.current = playerPhase;
+  }, [currentTrackIdentity, hasStartedPlayback, playerPhase]);
 
   const displayTrack = hasStartedPlayback
     ? currentTrack
@@ -125,7 +162,75 @@ export default function GlobalPlayer() {
   }, [currentTrack, hasQueue, playlist]);
 
   const queuePositionText =
-    activeQueueIndex >= 0 ? `${activeQueueIndex + 1}/${playlist.length}` : `1/${playlist.length || 1}`;
+    activeQueueIndex >= 0
+      ? `第 ${activeQueueIndex + 1} / ${playlist.length} 首`
+      : `待播 ${playlist.length || 1} 首`;
+
+  const playerStatusLabel = PLAYER_PHASE_LABELS[playerPhase] || PLAYER_PHASE_LABELS.ready;
+  const playerStatusClass =
+    playerPhase === "playing"
+      ? "is-playing"
+      : playerPhase === "recovering"
+        ? "is-recovering"
+        : playerPhase === "ended"
+          ? "is-ended"
+          : playerPhase === "ready"
+            ? "is-ready"
+            : "is-paused";
+  const endedTitle =
+    endedReason === "all_failed"
+      ? "可播放音檔已全部跳過，要重新嘗試嗎？"
+      : "播放完成，要重新播放嗎？";
+  const showPlaybackNotice =
+    Boolean(playbackNotice?.message) &&
+    !(playerPhase === "ended" && playbackNotice?.message === endedTitle);
+
+  const playButtonConfig = useMemo(() => {
+    switch (playerPhase) {
+      case "playing":
+        return {
+          icon: "fa-pause",
+          label: "暫停",
+          ariaLabel: "暫停播放",
+          disabled: false,
+        };
+      case "paused":
+        return {
+          icon: "fa-play",
+          label: "繼續播放",
+          ariaLabel: "繼續播放",
+          disabled: false,
+        };
+      case "recovering":
+        return {
+          icon: "fa-spinner fa-spin",
+          label: "處理中",
+          ariaLabel: "正在跳過無法播放的音檔",
+          disabled: true,
+        };
+      case "ended":
+        return {
+          icon: "fa-rotate-right",
+          label: "重播",
+          ariaLabel: "重新播放整個清單",
+          disabled: false,
+        };
+      case "ready":
+        return {
+          icon: "fa-play",
+          label: "播放",
+          ariaLabel: "開始播放",
+          disabled: false,
+        };
+      default:
+        return {
+          icon: "fa-play",
+          label: "播放",
+          ariaLabel: "目前沒有可播放的音訊",
+          disabled: true,
+        };
+    }
+  }, [playerPhase]);
 
   const nowMetaPrimary = displayTrack.requestTitle || FALLBACK_TITLE;
   const nowMetaSecondary = hasVoiceTrack
@@ -140,7 +245,11 @@ export default function GlobalPlayer() {
   const progressPercent = Math.min(Math.max((effectiveProgress / safeDuration) * 100, 0), 100);
 
   const showCompanionOverlay =
-    isPrayerDetailPage && hasStartedPlayback && isPlaying && !isQueueEnded && !isOverlayDismissed;
+    isPrayerDetailPage &&
+    hasStartedPlayback &&
+    playerPhase === "playing" &&
+    !isQueueEnded &&
+    !isOverlayDismissed;
 
   useEffect(() => {
     if (!isPrayerDetailPage) {
@@ -208,40 +317,44 @@ export default function GlobalPlayer() {
   const handleTogglePlay = useCallback(
     (event) => {
       event?.stopPropagation?.();
-      if (!hasQueue) {
-        logGlobalPlayer("play-click-blocked:no-queue", {
-          hasTrack,
-          isQueueEnded,
-          activeQueueIndex,
-          queueSize: playlist.length,
-        });
-        return;
+      switch (playerPhase) {
+        case "empty":
+          logGlobalPlayer("播放鍵:阻擋:沒有播放清單", {
+            queueSize: playlist.length,
+            currentTrackId: currentTrack?.id ?? null,
+          });
+          return;
+        case "recovering":
+          logGlobalPlayer("播放鍵:阻擋:正在跳過錯誤音檔", {
+            queueSize: playlist.length,
+            currentTrackId: currentTrack?.id ?? null,
+          });
+          return;
+        case "ready":
+        case "ended":
+          logGlobalPlayer("播放鍵:重新開始清單", {
+            playerPhase,
+            queueSize: playlist.length,
+            currentTrackId: currentTrack?.id ?? null,
+          });
+          restartQueue();
+          return;
+        case "playing":
+        case "paused":
+          logGlobalPlayer("播放鍵:切換播放狀態", {
+            playerPhase,
+            queueSize: playlist.length,
+            currentTrackId: currentTrack?.id ?? null,
+          });
+          togglePlay();
+          return;
+        default:
+          return;
       }
-      if (!hasTrack || isQueueEnded || activeQueueIndex < 0) {
-        logGlobalPlayer("play-click:restart-queue", {
-          hasTrack,
-          isQueueEnded,
-          activeQueueIndex,
-          queueSize: playlist.length,
-          currentTrackId: currentTrack?.id ?? null,
-        });
-        restartQueue();
-        return;
-      }
-      logGlobalPlayer("play-click:toggle-play", {
-        currentTrackId: currentTrack?.id ?? null,
-        isPlaying,
-        queueSize: playlist.length,
-      });
-      togglePlay();
     },
     [
-      activeQueueIndex,
       currentTrack?.id,
-      hasQueue,
-      hasTrack,
-      isPlaying,
-      isQueueEnded,
+      playerPhase,
       playlist.length,
       restartQueue,
       togglePlay,
@@ -270,7 +383,7 @@ export default function GlobalPlayer() {
       }
       const nextLoop = !isLoop;
       setIsLoop(nextLoop);
-      logGlobalPlayer("loop-click:toggled", {
+      logGlobalPlayer("循環鍵:切換", {
         previousLoop: isLoop,
         nextLoop,
         isQueueEnded,
@@ -278,7 +391,7 @@ export default function GlobalPlayer() {
         currentTrackId: currentTrack?.id ?? null,
       });
       if (nextLoop && isQueueEnded) {
-        logGlobalPlayer("loop-click:restart-queue-because-ended", {
+        logGlobalPlayer("循環鍵:播放結束後立即重播", {
           queueSize: playlist.length,
           currentTrackId: currentTrack?.id ?? null,
         });
@@ -322,9 +435,9 @@ export default function GlobalPlayer() {
                 type="button"
                 className="companion-overlay__close btn-danger"
                 onClick={handleOverlayClose}
-                aria-label="Close companion mode"
+                aria-label="關閉陪伴模式"
               >
-                Close
+                關閉
               </button>
             </header>
 
@@ -341,8 +454,8 @@ export default function GlobalPlayer() {
                   <div className="companion-overlay__text">
                     <div className="companion-overlay__speaker-row">
                       <strong className="companion-overlay__speaker">{trackSpeaker}</strong>
-                      <span className={`player-now__chip ${isPlaying ? "is-playing" : "is-paused"}`}>
-                        {isPlaying ? "PLAYING" : "PAUSED"}
+                      <span className={`player-now__chip ${playerStatusClass}`}>
+                        {playerStatusLabel}
                       </span>
                       {hasVoiceTrack ? (
                         <span
@@ -363,18 +476,19 @@ export default function GlobalPlayer() {
                     type="button"
                     className="companion-overlay__btn companion-overlay__btn--play btn-primary"
                     onClick={handleTogglePlay}
-                    aria-label={isPlaying ? "Pause playback" : "Start playback"}
+                    aria-label={playButtonConfig.ariaLabel}
+                    disabled={playButtonConfig.disabled}
                   >
-                    <i className={`fa-solid ${isPlaying ? "fa-pause" : "fa-play"}`} aria-hidden="true" />
+                    <i className={`fa-solid ${playButtonConfig.icon}`} aria-hidden="true" />
                     <span className="companion-overlay__btn-text" aria-hidden="true">
-                      {isPlaying ? "Pause" : "Play"}
+                      {playButtonConfig.label}
                     </span>
                   </button>
                   <button
                     type="button"
                     className="companion-overlay__btn companion-overlay__btn--close btn-danger"
                     onClick={handleOverlayClose}
-                    aria-label="Close companion mode"
+                    aria-label="關閉陪伴模式"
                   >
                     <i className="fa-solid fa-xmark" aria-hidden="true" />
                   </button>
@@ -407,8 +521,8 @@ export default function GlobalPlayer() {
           </div>
         ) : null}
 
-        <div className={`player-controls-container ${hasStartedPlayback ? "" : "is-idle"}`}>
-          {hasStartedPlayback && !showCompanionOverlay ? (
+        <div className={`player-controls-container ${hasQueue ? "" : "is-idle"}`}>
+          {hasQueue && !showCompanionOverlay ? (
             <section className="player-now" aria-live="polite">
               {displayTrack.avatarUrl ? (
                 <img
@@ -421,14 +535,14 @@ export default function GlobalPlayer() {
                   {getSpeakerInitial(trackSpeaker)}
                 </div>
               )}
-              <div className="player-now__body">
-                <div className="player-now__title-row">
-                  <strong className="player-now__name">{trackSpeaker}</strong>
-                  <span className={`player-now__chip ${isPlaying ? "is-playing" : "is-paused"}`}>
-                    {isPlaying ? "PLAYING" : "PAUSED"}
-                  </span>
-                  <span className="player-now__chip is-secondary">{queuePositionText}</span>
-                </div>
+                <div className="player-now__body">
+                  <div className="player-now__title-row">
+                    <strong className="player-now__name">{trackSpeaker}</strong>
+                    <span className={`player-now__chip ${playerStatusClass}`}>
+                      {playerStatusLabel}
+                    </span>
+                    <span className="player-now__chip is-secondary">{queuePositionText}</span>
+                  </div>
                 <p className="player-now__meta">{nowMetaPrimary}</p>
                 <p className="player-now__sub">{nowMetaSecondary}</p>
               </div>
@@ -436,10 +550,10 @@ export default function GlobalPlayer() {
           ) : null}
 
           <div className="player-core">
-            <div className={`player-controls ${hasStartedPlayback ? "" : "is-idle"}`}>
+            <div className={`player-controls ${hasQueue ? "" : "is-idle"}`}>
               <button
                 className="control-btn btn-secondary"
-                title="Previous"
+                title="上一首"
                 onClick={() => hasQueue && playPrev()}
                 disabled={!hasQueue || playlist.length <= 1}
               >
@@ -448,14 +562,14 @@ export default function GlobalPlayer() {
               <button
                 className="control-btn play-pause-btn btn-primary"
                 onClick={handleTogglePlay}
-                disabled={!canPlay}
-                aria-label={isPlaying ? "Pause" : "Play"}
+                disabled={playButtonConfig.disabled}
+                aria-label={playButtonConfig.ariaLabel}
               >
-                <i className={`fa-solid ${hasTrack && isPlaying ? "fa-pause" : "fa-play"}`} aria-hidden="true" />
+                <i className={`fa-solid ${playButtonConfig.icon}`} aria-hidden="true" />
               </button>
               <button
                 className="control-btn btn-secondary"
-                title="Next"
+                title="下一首"
                 onClick={() => hasQueue && playNext()}
                 disabled={!hasQueue || playlist.length <= 1}
               >
@@ -463,21 +577,22 @@ export default function GlobalPlayer() {
               </button>
             </div>
 
-            {hasStartedPlayback ? (
+            {hasQueue ? (
               <div className="player-actions">
                 <button
                   className={`control-btn control-btn--loop btn-secondary ${isLoop ? "is-active" : ""}`}
-                  title={isLoop ? "Disable repeat" : "Enable repeat"}
+                  title={isLoop ? "關閉循環播放" : "開啟循環播放"}
                   onClick={handleLoopToggle}
-                  aria-label={isLoop ? "Disable repeat" : "Enable repeat"}
+                  aria-label={isLoop ? "關閉循環播放" : "開啟循環播放"}
                 >
                   <i className="fa-solid fa-repeat" aria-hidden="true" />
                 </button>
                 {playlist.length ? (
                   <button
                     className={`control-btn btn-secondary ${isExpanded ? "is-active" : ""}`}
-                    title={isExpanded ? "Hide queue" : "Show queue"}
+                    title={isExpanded ? "收合播放清單" : "展開播放清單"}
                     onClick={handleQueueToggle}
+                    aria-label={isExpanded ? "收合播放清單" : "展開播放清單"}
                   >
                     <i className="fa-solid fa-list" aria-hidden="true" />
                   </button>
@@ -487,39 +602,53 @@ export default function GlobalPlayer() {
           </div>
         </div>
 
-        {isQueueEnded && hasQueue ? (
+        {showPlaybackNotice ? (
+          <div className={`player-notice player-notice--${playbackNotice.type || "info"}`} role="status" aria-live="polite">
+            <p className="player-notice__text">{playbackNotice.message}</p>
+            <button
+              type="button"
+              className="player-notice__dismiss"
+              onClick={clearPlaybackNotice}
+              aria-label="關閉提示"
+            >
+              <i className="fa-solid fa-xmark" aria-hidden="true" />
+            </button>
+          </div>
+        ) : null}
+
+        {playerPhase === "ended" && hasQueue ? (
           <div className="player-ended-cta" role="status" aria-live="polite">
-            <p className="player-ended-cta__title">Playback ended. Start from beginning?</p>
+            <p className="player-ended-cta__title">{endedTitle}</p>
             <div className="player-ended-cta__actions">
               <button
                 type="button"
                 className="player-ended-cta__btn btn-secondary"
                 onClick={handleRestartFromBeginning}
               >
-                Restart
+                重新播放
               </button>
               <button
                 type="button"
                 className="player-ended-cta__btn player-ended-cta__btn--primary btn-primary"
                 onClick={handleEnableLoopFromBeginning}
               >
-                Loop play
+                開啟循環重播
               </button>
             </div>
           </div>
         ) : null}
 
-        {!hasTrack && !hasQueue ? <div className="player-empty-hint">{FALLBACK_EMPTY_HINT}</div> : null}
+        {!hasQueue ? <div className="player-empty-hint">{FALLBACK_EMPTY_HINT}</div> : null}
 
-        {hasStartedPlayback && playlist.length ? (
+        {playlist.length ? (
           <div className={`player-queue-panel ${isExpanded ? "is-open" : ""}`}>
             <div className="player-queue-header">
               <div>
-                <p className="eyebrow">Queue</p>
-                <strong>{playlist.length} tracks</strong>
+                <p className="eyebrow">播放清單</p>
+                <strong>{playlist.length} 首音檔</strong>
               </div>
               <button type="button" className="queue-toggle btn-secondary" onClick={handleQueueToggle}>
-                {isExpanded ? "Hide" : "Show"}
+                {isExpanded ? "收合" : "展開"}
               </button>
             </div>
             {isExpanded ? (
@@ -542,7 +671,7 @@ export default function GlobalPlayer() {
                       <button
                         type="button"
                         className="queue-track__delete"
-                        aria-label="Remove track"
+                        aria-label="移除此音檔"
                         onClick={() => removeTrack(track.id)}
                       >
                         <i className="fa-solid fa-xmark" aria-hidden="true" />

@@ -171,7 +171,7 @@ export async function GET(request) {
 export async function POST(request) {
   try {
     const session = requireSessionUser();
-    const user = await ensureActiveCustomer(session.userId);
+    const user = await ensureActiveCustomer(session);
     const body = await request.json();
     const payload = sanitizeCreatePayload(body);
     const created = await createHomeCard({
@@ -196,3 +196,4 @@ export async function POST(request) {
     );
   }
 }
+

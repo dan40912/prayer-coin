@@ -13,7 +13,7 @@ function normalizeRemarks(value) {
 export async function POST(request) {
   try {
     const session = requireSessionUser();
-    const user = await ensureActiveCustomer(session.userId);
+    const user = await ensureActiveCustomer(session);
 
     const payload = await request.json().catch(() => null);
     const cardIdRaw = payload?.cardId;
@@ -110,3 +110,4 @@ export async function POST(request) {
     return NextResponse.json({ message: "檢舉失敗，請稍後再試" }, { status: 500 });
   }
 }
+

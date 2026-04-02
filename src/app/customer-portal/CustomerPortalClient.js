@@ -14,6 +14,7 @@ import CustomerWithdrawPanel from "@/components/customer/CustomerWithdrawPanel";
 import { useAuthSession } from "@/hooks/useAuthSession";
 
 import { saveAuthSession } from "@/lib/auth-storage";
+import { buildOvercomerSlug } from "@/lib/overcomer";
 
 
 
@@ -206,7 +207,7 @@ export default function CustomerPortalPage() {
 
   const [profileSaving, setProfileSaving] = useState(false);
 
-  const [profileForm, setProfileForm] = useState({ avatarUrl: "", bio: "" });
+  const [profileForm, setProfileForm] = useState({ avatarUrl: "", bio: "", publicProfileEnabled: true });
 
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
 
@@ -426,6 +427,9 @@ export default function CustomerPortalPage() {
   const walletBalance = Number(profile?.walletBalance ?? 0);
   const formattedWalletBalance = walletBalance.toLocaleString("zh-TW", { minimumFractionDigits: 0, maximumFractionDigits: 2 });
   const walletDisplayValue = profileLoading ? "載入中..." : profileError ? "—" : formattedWalletBalance;
+  const isPublicProfileEnabled = profile?.publicProfileEnabled ?? authUser?.publicProfileEnabled ?? true;
+  const overcomerSlug = buildOvercomerSlug({ username: profile?.username ?? authUser?.username ?? "" });
+  const publicProfilePath = overcomerSlug ? `/overcomer/${encodeURIComponent(overcomerSlug)}` : "";
 
   const handleOpenProfileModal = () => {
     setProfileStatus(null);
@@ -433,6 +437,7 @@ export default function CustomerPortalPage() {
     setProfileForm({
       avatarUrl: currentAvatar,
       bio: profile?.bio ?? "",
+      publicProfileEnabled: profile?.publicProfileEnabled ?? true,
     });
     resetAvatarFileSelection(currentAvatar);
     setIsProfileModalOpen(true);
@@ -549,6 +554,7 @@ export default function CustomerPortalPage() {
       const payload = {
         avatarUrl: nextAvatarUrl || null,
         bio: trimmedBio || null,
+        publicProfileEnabled: Boolean(profileForm.publicProfileEnabled),
       };
 
       const res = await fetch("/api/customer/profile", {
@@ -569,6 +575,7 @@ export default function CustomerPortalPage() {
       setProfileForm({
         avatarUrl: savedAvatar,
         bio: data.bio ?? "",
+        publicProfileEnabled: Boolean(data.publicProfileEnabled),
       });
       resetAvatarFileSelection(savedAvatar);
       setToast({ type: "success", message: "個人檔案已更新" });
@@ -584,6 +591,7 @@ export default function CustomerPortalPage() {
           isBlocked: data.isBlocked,
           avatarUrl: savedAvatar,
           bio: data.bio,
+          publicProfileEnabled: data.publicProfileEnabled,
         });
       }
     } catch (error) {
@@ -1098,6 +1106,22 @@ export default function CustomerPortalPage() {
                   )}
                 </div>
 
+                <div className="cp-profile__visibility">
+                  <strong>{isPublicProfileEnabled ? "公開個人頁已開啟" : "公開個人頁已關閉"}</strong>
+                  <p className="cp-helper">
+                    開啟後，其他人可以在得勝者專區看到你的暱稱、大頭貼、個人簡介、公開代禱事項與未被隱藏的回應。
+                  </p>
+                  {isPublicProfileEnabled && publicProfilePath ? (
+                    <Link className="cp-link" href={publicProfilePath} prefetch={false}>
+                      查看我的公開頁
+                    </Link>
+                  ) : publicProfilePath ? (
+                    <p className="cp-helper">開啟公開個人頁後，網址會是：{publicProfilePath}</p>
+                  ) : (
+                    <p className="cp-helper">請先設定 Username，才能產生公開頁網址。</p>
+                  )}
+                </div>
+
                 <div className="cp-profile__actions">
                   <button
                     type="button"
@@ -1348,7 +1372,49 @@ export default function CustomerPortalPage() {
 
             </label>
 
+            <label className="cp-modal__toggle">
 
+              <input
+
+                type="checkbox"
+
+                checked={Boolean(profileForm.publicProfileEnabled)}
+
+                onChange={(event) =>
+
+                  setProfileForm((prev) => ({
+
+                    ...prev,
+
+                    publicProfileEnabled: event.target.checked,
+
+                  }))
+
+                }
+
+                disabled={profileSaving}
+
+              />
+
+              <span>開啟我的公開個人頁</span>
+
+            </label>
+
+            <p className="cp-helper">
+
+              關閉後，得勝者專區將不再顯示你的個人頁與公開入口；已被檢舉或隱藏的內容本來就不會展示。
+
+            </p>
+
+            {profileForm.publicProfileEnabled && publicProfilePath ? (
+
+              <Link href={publicProfilePath} prefetch={false} className="cp-link">
+
+                預覽公開個人頁
+
+              </Link>
+
+            ) : null}
 
             {profileStatus ? (
 

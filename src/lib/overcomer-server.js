@@ -3,15 +3,17 @@ import { buildOvercomerSlug } from "./overcomer";
 
 const RESPONSES_TAKE = 20;
 const CARDS_TAKE = 12;
+const INDEX_TAKE = 18;
 
 const OVERCOMER_SELECT = {
   id: true,
-  email: true,
   name: true,
   username: true,
   bio: true,
   avatarUrl: true,
   createdAt: true,
+  updatedAt: true,
+  publicProfileEnabled: true,
   homePrayerCards: {
     where: { isBlocked: false },
     orderBy: { createdAt: "desc" },
@@ -28,7 +30,16 @@ const OVERCOMER_SELECT = {
     },
   },
   prayerResponses: {
-    where: { isBlocked: false, homeCardId: { not: null } },
+    where: {
+      isBlocked: false,
+      reportCount: 0,
+      homeCardId: { not: null },
+      homeCard: {
+        is: {
+          isBlocked: false,
+        },
+      },
+    },
     orderBy: { createdAt: "desc" },
     take: RESPONSES_TAKE,
     select: {
@@ -49,11 +60,26 @@ const OVERCOMER_SELECT = {
       },
     },
   },
+  _count: {
+    select: {
+      homePrayerCards: true,
+      prayerResponses: true,
+    },
+  },
 };
+
+function enrichProfile(user) {
+  if (!user) return null;
+  return {
+    ...user,
+    slug: buildOvercomerSlug(user),
+    homePrayerCards: user.homePrayerCards ?? [],
+    prayerResponses: user.prayerResponses ?? [],
+  };
+}
 
 export async function readOvercomerProfile(username) {
   const raw = username?.trim();
-  console.log("[overcomer] readOvercomerProfile input", raw);
   if (!raw) return null;
 
   const normalized = raw.toLowerCase();
@@ -63,36 +89,67 @@ export async function readOvercomerProfile(username) {
     user = await prisma.user.findFirst({
       where: {
         username: { equals: normalized, mode: "insensitive" },
+        isBlocked: false,
+        publicProfileEnabled: true,
       },
       select: OVERCOMER_SELECT,
     });
   } catch (error) {
     console.warn("[overcomer] findFirst failed, fallback to findUnique", error);
-    user = await prisma.user.findUnique({
-      where: { username: normalized },
+    user = await prisma.user.findFirst({
+      where: {
+        username: normalized,
+        isBlocked: false,
+        publicProfileEnabled: true,
+      },
       select: OVERCOMER_SELECT,
     });
   }
 
-  if (!user) {
-    console.log("[overcomer] readOvercomerProfile result", null);
-    return null;
-  }
+  return enrichProfile(user);
+}
 
-  const enriched = {
-    ...user,
-    slug: buildOvercomerSlug(user),
-    homePrayerCards: user.homePrayerCards ?? [],
-    prayerResponses: user.prayerResponses ?? [],
-  };
-  console.log("[overcomer] readOvercomerProfile result", {
-    id: enriched.id,
-    username: enriched.username,
-    slug: enriched.slug,
-    cards: enriched.homePrayerCards.length,
-    responses: enriched.prayerResponses.length,
+export async function listPublicOvercomers() {
+  const users = await prisma.user.findMany({
+    where: {
+      isBlocked: false,
+      publicProfileEnabled: true,
+      username: { not: null },
+    },
+    orderBy: [
+      { updatedAt: "desc" },
+      { createdAt: "desc" },
+    ],
+    take: INDEX_TAKE,
+    select: {
+      id: true,
+      name: true,
+      username: true,
+      bio: true,
+      avatarUrl: true,
+      createdAt: true,
+      updatedAt: true,
+      homePrayerCards: {
+        where: { isBlocked: false },
+        select: { id: true },
+      },
+      prayerResponses: {
+        where: { isBlocked: false, reportCount: 0 },
+        select: { id: true },
+      },
+    },
   });
-  return enriched;
+
+  return users
+    .map((user) => ({
+      ...user,
+      _count: {
+        homePrayerCards: user.homePrayerCards?.length ?? 0,
+        prayerResponses: user.prayerResponses?.length ?? 0,
+      },
+      slug: buildOvercomerSlug(user),
+    }))
+    .filter((user) => Boolean(user.slug));
 }
 
 export function buildOvercomerCardPath(card) {

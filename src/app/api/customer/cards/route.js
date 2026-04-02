@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+﻿import { NextResponse } from "next/server";
 
 import { ensureActiveCustomer } from "@/lib/customer-access";
 import prisma from "@/lib/prisma";
@@ -7,7 +7,7 @@ import { requireSessionUser } from "@/lib/server-session";
 export async function GET() {
   try {
     const session = requireSessionUser();
-    const user = await ensureActiveCustomer(session.userId);
+    const user = await ensureActiveCustomer(session);
 
     const cards = await prisma.homePrayerCard.findMany({
       where: { ownerId: user.id },
@@ -38,3 +38,4 @@ export async function GET() {
     );
   }
 }
+

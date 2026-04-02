@@ -1,18 +1,20 @@
-﻿"use client";
+"use client";
 
 import { useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 
 import { saveAuthSession } from "@/lib/auth-storage";
+import { resolveSafeNextPath } from "@/lib/redirect-target";
 
 const initialForm = {
   email: "",
-  password: ""
+  password: "",
 };
 
 export default function LoginForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [form, setForm] = useState(initialForm);
   const [status, setStatus] = useState({ state: "idle", message: "" });
 
@@ -23,25 +25,29 @@ export default function LoginForm() {
   const handleSubmit = async (event) => {
     event.preventDefault();
     setStatus({ state: "loading", message: "" });
+    const nextPath = resolveSafeNextPath(searchParams?.get("next"), "/customer-portal");
 
     try {
       const response = await fetch("/api/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form)
+        body: JSON.stringify(form),
       });
 
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.message || "登入失敗，請稍後再試");
+        throw new Error(data.message || "登入失敗，請稍後再試。");
       }
 
       saveAuthSession(data.user);
 
-      setStatus({ state: "success", message: "登入成功！即將帶您進入會員中心。" });
+      setStatus({
+        state: "success",
+        message: nextPath === "/customer-portal" ? "登入成功，正在帶您進入會員中心。" : "登入成功，正在返回原本頁面。",
+      });
       setTimeout(() => {
-        router.push("/customer-portal");
+        router.replace(nextPath);
       }, 1200);
     } catch (error) {
       setStatus({ state: "error", message: error.message });
@@ -92,7 +98,7 @@ export default function LoginForm() {
             padding: "0.9rem 1rem",
             borderRadius: "0.75rem",
             background: status.state === "success" ? "rgba(34,197,94,0.15)" : "rgba(248,113,113,0.15)",
-            color: status.state === "success" ? "#166534" : "#991b1b"
+            color: status.state === "success" ? "#166534" : "#991b1b",
           }}
         >
           {status.message}

@@ -41,6 +41,8 @@ export default function CustomerWithdrawPanel({ profile, onProfileUpdate }) {
 
   const walletBalance = Number(profile?.walletBalance ?? 0);
   const hasAddress = Boolean((profile?.bscAddress ?? "").trim());
+  const isAddressVerified = Boolean(profile?.isAddressVerified && hasAddress);
+  const canSubmitWithdrawal = hasAddress && isAddressVerified;
 
   useEffect(() => {
     setAddressInput(profile?.bscAddress ?? "");
@@ -91,7 +93,7 @@ export default function CustomerWithdrawPanel({ profile, onProfileUpdate }) {
       }
 
       onProfileUpdate?.(payload);
-      setAddressFeedback("地址已儲存。");
+      setAddressFeedback(payload?.isAddressVerified ? "地址已儲存，且已通過驗證。" : "地址已儲存，需待驗證完成後才能提領。");
     } catch (caughtError) {
       setAddressFeedback(caughtError?.message || "儲存地址失敗");
     } finally {
@@ -182,15 +184,19 @@ export default function CustomerWithdrawPanel({ profile, onProfileUpdate }) {
                 step="0.01"
                 value={amount}
                 onChange={(event) => setAmount(event.target.value)}
-                disabled={submitting || !hasAddress}
+                disabled={submitting || !canSubmitWithdrawal}
                 required
               />
             </label>
-            <button type="submit" className="cp-button" disabled={submitting || !hasAddress}>
+            <button type="submit" className="cp-button" disabled={submitting || !canSubmitWithdrawal}>
               {submitting ? "送出中..." : "送出提領"}
             </button>
           </form>
           {!hasAddress ? <p className="cp-alert cp-alert--error">請先設定 BSC 地址。</p> : null}
+          {hasAddress && !isAddressVerified ? (
+            <p className="cp-alert cp-alert--error">目前地址尚未完成驗證，驗證完成後才能送出提領。</p>
+          ) : null}
+          {isAddressVerified ? <p className="cp-alert cp-alert--success">目前提領地址已驗證，可正常送出提領申請。</p> : null}
           {feedback ? <p className="cp-helper">{feedback}</p> : null}
         </article>
       </div>

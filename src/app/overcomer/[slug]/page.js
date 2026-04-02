@@ -35,21 +35,17 @@ function formatDateTime(value) {
 export const dynamic = "force-dynamic";
 
 export default async function OvercomerProfilePage({ params }) {
-  console.log("[overcomer] raw slug", params?.slug);
   const parsed = parseOvercomerSlug(params?.slug);
-  console.log("[overcomer] parsed slug", parsed);
   if (!parsed?.username) {
     return notFound();
   }
 
   const profile = await readOvercomerProfile(parsed.username);
-  console.log("[overcomer] profile exists", Boolean(profile));
   if (!profile) {
     return notFound();
   }
 
   const canonicalSlug = buildOvercomerSlug(profile);
-  console.log("[overcomer] canonical slug", canonicalSlug);
   if (!canonicalSlug) {
     return notFound();
   }
@@ -61,6 +57,9 @@ export default async function OvercomerProfilePage({ params }) {
   const avatarUrl = profile.avatarUrl?.trim() || DEFAULT_AVATAR;
   const cards = profile.homePrayerCards ?? [];
   const responses = profile.prayerResponses ?? [];
+  const totalCards = profile._count?.homePrayerCards ?? cards.length;
+  const totalResponses = profile._count?.prayerResponses ?? responses.length;
+  const latestCardLink = cards.length > 0 ? buildOvercomerCardPath(cards[0]) : null;
 
   return (
     <>
@@ -73,7 +72,22 @@ export default async function OvercomerProfilePage({ params }) {
           <div className="cp-profile__info">
             <h1>{profile.name || profile.username || "匿名使用者"}</h1>
             <p className="cp-helper">{profile.bio || "這位勇士尚未撰寫個人介紹。"}</p>
-            <p className="cp-meta">加入時間：{formatDateTime(profile.createdAt)}</p>
+            <div className="cp-card__meta">
+              <span>加入時間：{formatDateTime(profile.createdAt)}</span>
+              <span>最近更新：{formatDateTime(profile.updatedAt)}</span>
+              <span>公開代禱事項：{totalCards}</span>
+              <span>公開回應：{totalResponses}</span>
+            </div>
+            <div className="cp-profile__actions">
+              {latestCardLink ? (
+                <Link href={latestCardLink} prefetch={false} className="cp-button">
+                  為他代禱
+                </Link>
+              ) : null}
+              <Link href="/overcomer" prefetch={false} className="cp-button cp-button--ghost">
+                查看更多得勝者
+              </Link>
+            </div>
             <OvercomerReportButton
               targetUserId={profile.id}
               targetUsername={profile.username}

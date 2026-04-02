@@ -1,6 +1,11 @@
-﻿import { NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
+
 import prisma from "@/lib/prisma";
+import {
+  createCustomerSessionToken,
+  setCustomerSessionCookie,
+} from "@/lib/customer-session";
 
 const REQUIRED_FIELDS = [
   "fullName",
@@ -17,10 +22,9 @@ export async function POST(request) {
   try {
     const payload = await request.json();
 
-    // 檢查必填欄位
     for (const field of REQUIRED_FIELDS) {
       if (payload[field] === undefined || payload[field] === null) {
-        return NextResponse.json({ message: `${field} is required` }, { status: 400 });
+        return NextResponse.json({ message: `缺少必要欄位：${field}` }, { status: 400 });
       }
     }
 
@@ -34,27 +38,27 @@ export async function POST(request) {
     const acceptedTerms = Boolean(payload.acceptedTerms);
 
     if (!fullName || !username || !email) {
-      return NextResponse.json({ message: "請完整填寫必填欄位" }, { status: 400 });
+      return NextResponse.json({ message: "請填寫暱稱、Username 與電子信箱。" }, { status: 400 });
     }
 
     if (!/^[a-z0-9_-]{4,}$/i.test(username)) {
-      return NextResponse.json({ message: "Username 至少 4 碼，僅能包含英數、底線、減號" }, { status: 400 });
+      return NextResponse.json({ message: "Username 至少 4 碼，且只能包含英數、底線與減號。" }, { status: 400 });
     }
 
     if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) {
-      return NextResponse.json({ message: "請輸入有效的電子信箱" }, { status: 400 });
+      return NextResponse.json({ message: "請輸入有效的電子信箱。" }, { status: 400 });
     }
 
     if (password.length < 8) {
-      return NextResponse.json({ message: "密碼至少需要 8 碼" }, { status: 400 });
+      return NextResponse.json({ message: "密碼至少需要 8 碼。" }, { status: 400 });
     }
 
     if (password !== confirmPassword) {
-      return NextResponse.json({ message: "兩次輸入的密碼不一致" }, { status: 400 });
+      return NextResponse.json({ message: "兩次輸入的密碼不一致。" }, { status: 400 });
     }
 
     if (!acceptedTerms) {
-      return NextResponse.json({ message: "請先閱讀並同意條款" }, { status: 400 });
+      return NextResponse.json({ message: "請先閱讀並同意條款。" }, { status: 400 });
     }
 
     const existing = await prisma.user.findFirst({
@@ -64,7 +68,7 @@ export async function POST(request) {
     });
 
     if (existing) {
-      return NextResponse.json({ message: "Email 或 Username 已存在" }, { status: 409 });
+      return NextResponse.json({ message: "Email 或 Username 已存在。" }, { status: 409 });
     }
 
     const passwordHash = await bcrypt.hash(password, 12);
@@ -78,10 +82,22 @@ export async function POST(request) {
         country: country || null,
         passwordHash,
         acceptedTerms: true,
+        publicProfileEnabled: true,
+      },
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        username: true,
+        faithTradition: true,
+        country: true,
+        publicProfileEnabled: true,
+        sessionVersion: true,
+        createdAt: true,
       },
     });
 
-    return NextResponse.json(
+    const response = NextResponse.json(
       {
         user: {
           id: user.id,
@@ -90,13 +106,18 @@ export async function POST(request) {
           username: user.username,
           faithTradition: user.faithTradition,
           country: user.country,
+          publicProfileEnabled: user.publicProfileEnabled,
           createdAt: user.createdAt,
         },
       },
       { status: 201 }
     );
+
+    const sessionToken = createCustomerSessionToken(user);
+    setCustomerSessionCookie(response, sessionToken);
+    return response;
   } catch (error) {
     console.error("POST /api/auth/signup", error);
-    return NextResponse.json({ message: "建立帳戶時發生錯誤" }, { status: 500 });
+    return NextResponse.json({ message: "建立帳戶時發生錯誤。" }, { status: 500 });
   }
 }
