@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/admin-route-auth";
 import { logAdminAction, logSystemError } from "@/lib/logger";
 import prisma from "@/lib/prisma";
+import { resolveServerAudioUrl } from "@/lib/server-audio";
 
 function normalizeMessage(value) {
   if (typeof value !== "string") return null;
@@ -22,7 +23,7 @@ function buildResponseDetail(response) {
   return {
     id: response.id,
     message: response.message,
-    voiceUrl: response.voiceUrl,
+    voiceUrl: resolveServerAudioUrl(response.voiceUrl),
     isAnonymous: response.isAnonymous,
     isBlocked: response.isBlocked,
     reportCount: response.reportCount,
@@ -159,4 +160,3 @@ export async function PATCH(request, { params }) {
     return NextResponse.json({ message: "Failed to update prayer response" }, { status: 500 });
   }
 }
-

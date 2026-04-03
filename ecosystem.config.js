@@ -7,7 +7,9 @@ module.exports = {
       args: "start -- --port 3000", // 執行 npm start，指定 port（可改）
       interpreter: "none", // 不要用 node 直接執行 npm
       env: {
-        NODE_ENV: "production"
+        NODE_ENV: "production",
+        VOICES_STORAGE_DIR: "/home/startpraynow/prayer-coin-data/voices",
+        UPLOADS_STORAGE_DIR: "/home/startpraynow/prayer-coin-data/uploads"
       },
       watch: false, // 正式環境不要 watch
       instances: 1, // 若要 cluster，可改成 "max"
@@ -20,4 +22,3 @@ module.exports = {
     }
   ]
 };
-

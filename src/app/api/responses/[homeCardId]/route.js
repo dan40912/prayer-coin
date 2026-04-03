@@ -1,6 +1,6 @@
 ﻿import prisma from "@/lib/prisma";
 import { NextResponse } from "next/server";
-import { normalizeAudioUrl } from "@/lib/media-url";
+import { resolveServerAudioUrl } from "@/lib/server-audio";
 
 const SAFE_RESPONSE_SELECT = {
   id: true,
@@ -34,7 +34,7 @@ export async function GET(_req, { params }) {
     return NextResponse.json(
       responses.map((response) => ({
         ...response,
-        voiceUrl: normalizeAudioUrl(response.voiceUrl),
+        voiceUrl: resolveServerAudioUrl(response.voiceUrl),
       })),
       { status: 200 }
     );

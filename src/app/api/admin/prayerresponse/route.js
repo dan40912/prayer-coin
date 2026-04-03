@@ -2,6 +2,7 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { requireAdmin } from "@/lib/admin-route-auth";
+import { resolveServerAudioUrl } from "@/lib/server-audio";
 
 export async function GET(request) {
   const { error } = requireAdmin(request);
@@ -51,7 +52,10 @@ export async function GET(request) {
     ]);
 
     return NextResponse.json({
-      data: responses,
+      data: responses.map((response) => ({
+        ...response,
+        voiceUrl: resolveServerAudioUrl(response.voiceUrl),
+      })),
       pagination: {
         total,
         page,

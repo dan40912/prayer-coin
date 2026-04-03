@@ -3,6 +3,7 @@
 import { ensureActiveCustomer } from "@/lib/customer-access";
 import prisma from "@/lib/prisma";
 import { requireSessionUser } from "@/lib/server-session";
+import { resolveServerAudioUrl } from "@/lib/server-audio";
 import { processPendingResponseRewardsForUser } from "@/lib/tokenRewards";
 
 const RESPONSE_SELECT = {
@@ -50,7 +51,10 @@ export async function GET() {
     });
 
     return NextResponse.json({
-      responses,
+      responses: responses.map((response) => ({
+        ...response,
+        voiceUrl: resolveServerAudioUrl(response.voiceUrl),
+      })),
       walletBalance: Number(wallet?.walletBalance ?? 0),
     });
   } catch (error) {

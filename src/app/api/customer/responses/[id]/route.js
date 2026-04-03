@@ -3,6 +3,7 @@
 import { ensureActiveCustomer } from "@/lib/customer-access";
 import prisma from "@/lib/prisma";
 import { requireSessionUser } from "@/lib/server-session";
+import { resolveServerAudioUrl } from "@/lib/server-audio";
 
 const RESPONSE_SELECT = {
   id: true,
@@ -96,7 +97,10 @@ export async function PATCH(request, { params }) {
       select: RESPONSE_SELECT,
     });
 
-    return NextResponse.json(updated);
+    return NextResponse.json({
+      ...updated,
+      voiceUrl: resolveServerAudioUrl(updated.voiceUrl),
+    });
   } catch (error) {
     if (error?.code === "UNAUTHENTICATED") {
       return NextResponse.json({ message: "Please sign in." }, { status: 401 });
