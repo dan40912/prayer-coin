@@ -1,9 +1,13 @@
-﻿import fs from "fs";
 import path from "path";
+import { writeFile } from "node:fs/promises";
 
 import prisma from "@/lib/prisma";
 import { NextResponse } from "next/server";
 import { ensureActiveCustomer } from "@/lib/customer-access";
+import {
+  buildMediaPublicUrl,
+  ensureMediaWriteDirectory,
+} from "@/lib/server-media-storage";
 import { requireSessionUser } from "@/lib/server-session";
 import { computeRewardEligibleAt, readTokenRewardRule } from "@/lib/tokenRewards";
 
@@ -50,7 +54,9 @@ export async function POST(req) {
 
     if (!hasAudio && message.length < MIN_MESSAGE_LENGTH_WITHOUT_AUDIO) {
       return NextResponse.json(
-        { error: `Text response must be at least ${MIN_MESSAGE_LENGTH_WITHOUT_AUDIO} characters.` },
+        {
+          error: `Text response must be at least ${MIN_MESSAGE_LENGTH_WITHOUT_AUDIO} characters.`,
+        },
         { status: 422 }
       );
     }
@@ -70,12 +76,19 @@ export async function POST(req) {
     });
 
     if (!homeCard || homeCard.isBlocked) {
-      return NextResponse.json({ error: "Prayer card not found or unavailable." }, { status: 404 });
+      return NextResponse.json(
+        { error: "Prayer card not found or unavailable." },
+        { status: 404 }
+      );
     }
 
     const now = new Date();
-    const recentStart = new Date(now.getTime() - RECENT_WINDOW_MINUTES * 60 * 1000);
-    const sameCardCooldownStart = new Date(now.getTime() - SAME_CARD_COOLDOWN_MINUTES * 60 * 1000);
+    const recentStart = new Date(
+      now.getTime() - RECENT_WINDOW_MINUTES * 60 * 1000
+    );
+    const sameCardCooldownStart = new Date(
+      now.getTime() - SAME_CARD_COOLDOWN_MINUTES * 60 * 1000
+    );
 
     const [recentResponsesCount, sameCardRecentCount] = await Promise.all([
       prisma.prayerResponse.count({
@@ -110,25 +123,29 @@ export async function POST(req) {
     let voiceUrl = null;
     if (hasAudio) {
       if (Number(audio.size) > MAX_AUDIO_BYTES) {
-        return NextResponse.json({ error: "Voice file is too large." }, { status: 422 });
+        return NextResponse.json(
+          { error: "Voice file is too large." },
+          { status: 422 }
+        );
       }
 
       const bytes = Buffer.from(await audio.arrayBuffer());
       const folderName = resolveVoiceFolder(requestId);
       const sanitizedOriginal = sanitizeFileName(audio.name);
       const filename = `${Date.now()}-${sanitizedOriginal}`;
-      const folderPath = path.join(process.cwd(), "public", "voices", folderName);
+      const folderPath = await ensureMediaWriteDirectory("voices", [folderName]);
       const filePath = path.join(folderPath, filename);
 
-      fs.mkdirSync(folderPath, { recursive: true });
-      fs.writeFileSync(filePath, bytes);
-
-      voiceUrl = `/voices/${folderName}/${filename}`;
+      await writeFile(filePath, bytes);
+      voiceUrl = buildMediaPublicUrl("voices", [folderName, filename]);
     }
 
     const rewardRule = await readTokenRewardRule();
-    const isSelfResponse = Boolean(homeCard.ownerId) && homeCard.ownerId === session.userId;
-    const rewardEligibleAt = isSelfResponse ? null : computeRewardEligibleAt(rewardRule.observationDays, now);
+    const isSelfResponse =
+      Boolean(homeCard.ownerId) && homeCard.ownerId === session.userId;
+    const rewardEligibleAt = isSelfResponse
+      ? null
+      : computeRewardEligibleAt(rewardRule.observationDays, now);
 
     const response = await prisma.prayerResponse.create({
       data: {
@@ -158,11 +175,22 @@ export async function POST(req) {
       return NextResponse.json({ error: "Please sign in." }, { status: 401 });
     }
     if (err?.code === "ACCOUNT_BLOCKED") {
-      return NextResponse.json({ error: "Your account is blocked." }, { status: 403 });
+      return NextResponse.json(
+        { error: "Your account is blocked." },
+        { status: 403 }
+      );
+    }
+    if (err?.code === "MEDIA_STORAGE_NOT_CONFIGURED") {
+      return NextResponse.json(
+        { error: `Media storage is not configured. Set ${err.envName}.` },
+        { status: 503 }
+      );
     }
 
     console.error("Failed to create response:", err);
-    return NextResponse.json({ error: "Failed to create response" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Failed to create response" },
+      { status: 500 }
+    );
   }
 }
-

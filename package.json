@@ -16,6 +16,8 @@
     "db:migrate:prod": "prisma migrate deploy",
     "db:bundle": "node scripts/db/export-migration-bundle.cjs",
     "db:studio": "prisma studio",
+    "media:audit": "node scripts/audit-missing-media.js",
+    "media:migrate": "node scripts/migrate-media-to-storage.js",
     "seed:admins": "node scripts/seed-admins.js",
     "seed:demo": "node scripts/seed-demo.js",
     "qa": "node scripts/qa-flow.mjs",

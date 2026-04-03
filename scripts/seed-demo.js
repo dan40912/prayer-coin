@@ -4,13 +4,15 @@ const bcrypt = require("bcryptjs");
 const { spawnSync } = require("child_process");
 
 const { DEMO_PASSWORD, DEMO_USERS, DEMO_CATEGORIES, DEMO_CARDS } = require("./demo-fixtures");
+const { getConfiguredRoot, getLegacyRoot } = require("./lib/media-storage.cjs");
 
 const PROJECT_ROOT = path.resolve(__dirname, "..");
 const PRISMA_SCHEMA_PATH = path.join(PROJECT_ROOT, "prisma", "schema.prisma");
 const TEMP_PRISMA_DIR = path.join(PROJECT_ROOT, "tmp", "demo-prisma-seed");
 const TEMP_PRISMA_SCHEMA_PATH = path.join(TEMP_PRISMA_DIR, "schema.prisma");
 const TEMP_PRISMA_CLIENT_DIR = path.join(TEMP_PRISMA_DIR, "client");
-const DEMO_VOICE_DIR = path.join(PROJECT_ROOT, "public", "voices", "demo");
+const VOICES_ROOT = getConfiguredRoot("voices") || getLegacyRoot("voices");
+const DEMO_VOICE_DIR = path.join(VOICES_ROOT, "demo");
 const DEMO_AUDIO_URL_BASE = "/voices/demo";
 const DEMO_IMAGE_FALLBACK = "/img/categories/popular.jpg";
 const DEMO_RESPONSE_REWARD_DELAY_DAYS = 3;
@@ -187,11 +189,11 @@ function collectFallbackAudioSources() {
     return fallbackAudioSourcesCache;
   }
 
-  const root = path.join(PROJECT_ROOT, "public", "voices");
-  if (!fs.existsSync(root)) return [];
-
   const results = [];
-  const queue = [root];
+  const roots = [...new Set([VOICES_ROOT, getLegacyRoot("voices")].filter(Boolean))];
+  const queue = roots.filter((root) => fs.existsSync(root));
+
+  if (queue.length === 0) return [];
 
   while (queue.length > 0) {
     const current = queue.pop();
@@ -537,7 +539,7 @@ async function main() {
       users: userMap.size,
       cards: cardMap.size,
       responses: responsesCount,
-      audioDir: path.relative(PROJECT_ROOT, DEMO_VOICE_DIR),
+      audioDir: DEMO_VOICE_DIR,
       loginEmail: DEMO_USERS[0].email,
       loginPassword: DEMO_PASSWORD,
     };
