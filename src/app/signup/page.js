@@ -1,12 +1,15 @@
 ﻿import Link from "next/link";
 
 import { SiteFooter, SiteHeader } from "@/components/site-chrome";
+import { buildPageMetadata } from "@/lib/seo";
 import SignupForm from "./SignupForm";
 
-export const metadata = {
-  title: "註冊 | Start Pray 一起禱告吧",
-  description: "建立 Start Pray 帳號，開始發佈禱告內容並用文字或語音彼此陪伴。"
-};
+export const metadata = buildPageMetadata({
+  title: "註冊",
+  description: "建立 Start Pray 帳號，開始發佈禱告內容並用文字或語音彼此陪伴。",
+  path: "/signup",
+  noIndex: true,
+});
 
 const stepItems = [
   {

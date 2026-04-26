@@ -288,11 +288,7 @@ export default function SignupForm() {
               暫不填寫
             </option>
             <option>基督徒</option>
-            <option>佛教</option>
-            <option>伊斯蘭教</option>
-            <option>道教</option>
-            <option>一貫道</option>
-            <option>無信仰</option>
+            <option>其他信仰</option>
           </select>
           <span className="form-helper">可先略過，之後在會員中心補上。</span>
         </div>

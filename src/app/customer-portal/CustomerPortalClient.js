@@ -29,6 +29,8 @@ const FALLBACK_AVATARS = {
 const MAX_BIO_LENGTH = 360;
 
 const MAX_AVATAR_BYTES = 5 * 1024 * 1024;
+const MAX_STORY_AUDIO_BYTES = 30 * 1024 * 1024;
+const MAX_STORY_RECORD_SECONDS = 300;
 
 const REWARD_STATUS_LABELS = {
   PENDING: "審核中",
@@ -191,6 +193,14 @@ function buildShareUrl(card) {
   return href;
 }
 
+function getAudioExtension(mimeType = "") {
+  const value = mimeType.toLowerCase();
+  if (value.includes("mpeg")) return "mp3";
+  if (value.includes("mp4")) return "m4a";
+  if (value.includes("ogg")) return "ogg";
+  return "webm";
+}
+
 
 
 export default function CustomerPortalPage() {
@@ -207,15 +217,30 @@ export default function CustomerPortalPage() {
 
   const [profileSaving, setProfileSaving] = useState(false);
 
-  const [profileForm, setProfileForm] = useState({ avatarUrl: "", bio: "", publicProfileEnabled: true });
+  const [profileForm, setProfileForm] = useState({
+    avatarUrl: "",
+    bio: "",
+    publicProfileEnabled: true,
+    storyAudioUrl: "",
+    storyYoutubeUrl: "",
+  });
 
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
 
   const avatarFileInputRef = useRef(null);
+  const storyAudioFileInputRef = useRef(null);
+  const storyRecorderRef = useRef(null);
+  const storyRecordStreamRef = useRef(null);
+  const storyRecordChunksRef = useRef([]);
+  const storyRecordTimerRef = useRef(null);
 
   const [selectedAvatarFile, setSelectedAvatarFile] = useState(null);
 
   const [avatarPreview, setAvatarPreview] = useState("");
+  const [selectedStoryAudioFile, setSelectedStoryAudioFile] = useState(null);
+  const [storyAudioPreview, setStoryAudioPreview] = useState("");
+  const [storyRecording, setStoryRecording] = useState(false);
+  const [storyRecordSeconds, setStoryRecordSeconds] = useState(0);
 
 
 
@@ -291,10 +316,14 @@ export default function CustomerPortalPage() {
         URL.revokeObjectURL(avatarPreview);
 
       }
+      if (storyAudioPreview && storyAudioPreview.startsWith("blob:")) {
+        URL.revokeObjectURL(storyAudioPreview);
+      }
+      stopStoryRecording(true);
 
     },
 
-    [avatarPreview]
+    [avatarPreview, storyAudioPreview]
 
   );
 
@@ -326,6 +355,45 @@ export default function CustomerPortalPage() {
 
     }
 
+  }
+
+  function resetStoryAudioSelection(nextUrl = "") {
+    setSelectedStoryAudioFile(null);
+    setStoryAudioPreview((prev) => {
+      if (prev && prev.startsWith("blob:") && prev !== nextUrl) {
+        URL.revokeObjectURL(prev);
+      }
+      return nextUrl;
+    });
+
+    if (storyAudioFileInputRef.current) {
+      storyAudioFileInputRef.current.value = "";
+    }
+  }
+
+  function stopStoryRecording(discard = false) {
+    if (storyRecordTimerRef.current) {
+      clearInterval(storyRecordTimerRef.current);
+      storyRecordTimerRef.current = null;
+    }
+
+    const recorder = storyRecorderRef.current;
+    if (recorder && recorder.state !== "inactive") {
+      recorder.stop();
+    }
+
+    if (discard) {
+      storyRecordChunksRef.current = [];
+    }
+
+    if (storyRecordStreamRef.current) {
+      storyRecordStreamRef.current.getTracks().forEach((track) => track.stop());
+      storyRecordStreamRef.current = null;
+    }
+
+    storyRecorderRef.current = null;
+    setStoryRecording(false);
+    setStoryRecordSeconds(0);
   }
 
 
@@ -422,6 +490,13 @@ export default function CustomerPortalPage() {
     return () => clearTimeout(timer);
   }, [toast]);
 
+  useEffect(() => {
+    if (!storyRecording) return;
+    if (storyRecordSeconds >= MAX_STORY_RECORD_SECONDS) {
+      stopStoryRecording();
+    }
+  }, [storyRecordSeconds, storyRecording]);
+
   const resolvedName = profile?.name ?? authUser?.name ?? "未命名使用者";
   const resolvedEmail = profile?.email ?? authUser?.email ?? "尚未提供電子郵件";
   const walletBalance = Number(profile?.walletBalance ?? 0);
@@ -438,8 +513,11 @@ export default function CustomerPortalPage() {
       avatarUrl: currentAvatar,
       bio: profile?.bio ?? "",
       publicProfileEnabled: profile?.publicProfileEnabled ?? true,
+      storyAudioUrl: profile?.storyAudioUrl ?? "",
+      storyYoutubeUrl: profile?.storyYoutubeUrl ?? "",
     });
     resetAvatarFileSelection(currentAvatar);
+    resetStoryAudioSelection(profile?.storyAudioUrl ?? "");
     setIsProfileModalOpen(true);
   };
 
@@ -448,6 +526,8 @@ export default function CustomerPortalPage() {
     setIsProfileModalOpen(false);
     const latestAvatar = profile?.avatarUrl?.trim() || defaultAvatar;
     resetAvatarFileSelection(latestAvatar);
+    resetStoryAudioSelection(profile?.storyAudioUrl ?? "");
+    stopStoryRecording(true);
   };
 
   const updateProfileField = (field) => (event) => {
@@ -501,9 +581,102 @@ export default function CustomerPortalPage() {
     setProfileForm((prev) => ({ ...prev, avatarUrl: defaultAvatar }));
   };
 
+  const handleStoryAudioFileChange = (event) => {
+    const file = event.target.files?.[0];
+
+    if (!file) {
+      resetStoryAudioSelection(profileForm.storyAudioUrl || "");
+      return;
+    }
+
+    if (!file.type?.startsWith("audio/")) {
+      setProfileStatus({ type: "error", message: "請選擇音訊檔案" });
+      resetStoryAudioSelection(profileForm.storyAudioUrl || "");
+      return;
+    }
+
+    if (file.size > MAX_STORY_AUDIO_BYTES) {
+      setProfileStatus({ type: "error", message: "故事音訊不可超過 30MB" });
+      resetStoryAudioSelection(profileForm.storyAudioUrl || "");
+      return;
+    }
+
+    stopStoryRecording(true);
+    setProfileStatus(null);
+    setSelectedStoryAudioFile(file);
+    setStoryAudioPreview((prev) => {
+      if (prev && prev.startsWith("blob:")) URL.revokeObjectURL(prev);
+      return URL.createObjectURL(file);
+    });
+  };
+
+  const handleRemoveStoryAudio = () => {
+    stopStoryRecording(true);
+    resetStoryAudioSelection("");
+    setProfileForm((prev) => ({ ...prev, storyAudioUrl: "" }));
+  };
+
+  const handleStartStoryRecording = async () => {
+    if (storyRecording) return;
+
+    try {
+      setProfileStatus(null);
+      const stream = await navigator.mediaDevices.getUserMedia({
+        audio: {
+          channelCount: 1,
+          noiseSuppression: true,
+          echoCancellation: true,
+        },
+      });
+      storyRecordStreamRef.current = stream;
+      storyRecordChunksRef.current = [];
+
+      const options = MediaRecorder.isTypeSupported?.("audio/webm;codecs=opus")
+        ? { mimeType: "audio/webm;codecs=opus" }
+        : {};
+      const recorder = new MediaRecorder(stream, options);
+      storyRecorderRef.current = recorder;
+
+      recorder.addEventListener("dataavailable", (event) => {
+        if (event.data?.size > 0) {
+          storyRecordChunksRef.current.push(event.data);
+        }
+      });
+
+      recorder.addEventListener("stop", () => {
+        const chunks = storyRecordChunksRef.current;
+        storyRecordChunksRef.current = [];
+        if (!chunks.length) return;
+
+        const mimeType = recorder.mimeType || "audio/webm";
+        const blob = new Blob(chunks, { type: mimeType });
+        const extension = getAudioExtension(mimeType);
+        const file = new File([blob], `overcomer-story.${extension}`, { type: mimeType });
+        setSelectedStoryAudioFile(file);
+        setStoryAudioPreview((prev) => {
+          if (prev && prev.startsWith("blob:")) URL.revokeObjectURL(prev);
+          return URL.createObjectURL(blob);
+        });
+      });
+
+      recorder.start();
+      setStoryRecording(true);
+      setStoryRecordSeconds(0);
+      storyRecordTimerRef.current = window.setInterval(() => {
+        setStoryRecordSeconds((seconds) => seconds + 1);
+      }, 1000);
+    } catch (error) {
+      console.error("story recording failed:", error);
+      setProfileStatus({ type: "error", message: "無法啟用麥克風錄製故事" });
+      stopStoryRecording(true);
+    }
+  };
+
   const handleSaveProfile = async () => {
     const trimmedAvatar = (profileForm.avatarUrl || "").trim();
     const trimmedBio = profileForm.bio.trim();
+    const trimmedStoryYoutubeUrl = (profileForm.storyYoutubeUrl || "").trim();
+    let nextStoryAudioUrl = (profileForm.storyAudioUrl || "").trim();
     const defaultAvatarUrl = defaultAvatar;
 
     if (trimmedBio.length > MAX_BIO_LENGTH) {
@@ -520,6 +693,11 @@ export default function CustomerPortalPage() {
         type: "error",
         message: `圖片大小需小於 5MB，當前約 ${sizeInMb.toFixed(2)} MB`,
       });
+      return;
+    }
+
+    if (selectedStoryAudioFile && selectedStoryAudioFile.size > MAX_STORY_AUDIO_BYTES) {
+      setProfileStatus({ type: "error", message: "故事音訊不可超過 30MB" });
       return;
     }
 
@@ -551,10 +729,31 @@ export default function CustomerPortalPage() {
         nextAvatarUrl = defaultAvatarUrl;
       }
 
+      if (selectedStoryAudioFile) {
+        setProfileStatus({ type: "info", message: "故事音訊上傳中，請稍候..." });
+        const audioFormData = new FormData();
+        audioFormData.append("audio", selectedStoryAudioFile);
+
+        const audioUploadRes = await fetch("/api/customer/story-audio", {
+          method: "POST",
+          body: audioFormData,
+        });
+        const audioUploadPayload = await audioUploadRes.json().catch(() => null);
+
+        if (!audioUploadRes.ok || !audioUploadPayload?.url) {
+          throw new Error(audioUploadPayload?.message || "故事音訊上傳失敗");
+        }
+
+        nextStoryAudioUrl = audioUploadPayload.url;
+        setProfileStatus(null);
+      }
+
       const payload = {
         avatarUrl: nextAvatarUrl || null,
         bio: trimmedBio || null,
         publicProfileEnabled: Boolean(profileForm.publicProfileEnabled),
+        storyAudioUrl: nextStoryAudioUrl || null,
+        storyYoutubeUrl: trimmedStoryYoutubeUrl || null,
       };
 
       const res = await fetch("/api/customer/profile", {
@@ -576,8 +775,11 @@ export default function CustomerPortalPage() {
         avatarUrl: savedAvatar,
         bio: data.bio ?? "",
         publicProfileEnabled: Boolean(data.publicProfileEnabled),
+        storyAudioUrl: data.storyAudioUrl ?? "",
+        storyYoutubeUrl: data.storyYoutubeUrl ?? "",
       });
       resetAvatarFileSelection(savedAvatar);
+      resetStoryAudioSelection(data.storyAudioUrl ?? "");
       setToast({ type: "success", message: "個人檔案已更新" });
       setIsProfileModalOpen(false);
 
@@ -592,6 +794,8 @@ export default function CustomerPortalPage() {
           avatarUrl: savedAvatar,
           bio: data.bio,
           publicProfileEnabled: data.publicProfileEnabled,
+          storyAudioUrl: data.storyAudioUrl,
+          storyYoutubeUrl: data.storyYoutubeUrl,
         });
       }
     } catch (error) {
@@ -1370,6 +1574,64 @@ export default function CustomerPortalPage() {
 
               </small>
 
+            </label>
+
+            <label className="cp-modal__field">
+              <span>故事錄音</span>
+              <input
+                ref={storyAudioFileInputRef}
+                type="file"
+                accept="audio/*"
+                onChange={handleStoryAudioFileChange}
+                disabled={profileSaving || storyRecording}
+              />
+              <small className="cp-helper">
+                可上傳音訊檔，或直接錄製最多 5 分鐘的信仰故事。
+              </small>
+            </label>
+
+            <div className="cp-modal__story-actions">
+              <button
+                type="button"
+                className="cp-button cp-button--ghost"
+                onClick={storyRecording ? () => stopStoryRecording() : handleStartStoryRecording}
+                disabled={profileSaving}
+              >
+                {storyRecording ? `停止錄音 ${storyRecordSeconds}s` : "開始錄製故事"}
+              </button>
+              {(storyAudioPreview || profileForm.storyAudioUrl) && !storyRecording ? (
+                <button
+                  type="button"
+                  className="cp-link cp-link--muted"
+                  onClick={handleRemoveStoryAudio}
+                  disabled={profileSaving}
+                >
+                  移除故事錄音
+                </button>
+              ) : null}
+            </div>
+
+            {storyAudioPreview || profileForm.storyAudioUrl ? (
+              <audio
+                className="cp-modal__audio"
+                controls
+                preload="metadata"
+                src={storyAudioPreview || profileForm.storyAudioUrl}
+              />
+            ) : null}
+
+            <label className="cp-modal__field">
+              <span>YouTube 故事連結</span>
+              <input
+                type="url"
+                value={profileForm.storyYoutubeUrl}
+                onChange={updateProfileField("storyYoutubeUrl")}
+                placeholder="https://www.youtube.com/watch?v=..."
+                disabled={profileSaving}
+              />
+              <small className="cp-helper">
+                支援 youtube.com/watch、youtube.com/embed 與 youtu.be 連結。
+              </small>
             </label>
 
             <label className="cp-modal__toggle">

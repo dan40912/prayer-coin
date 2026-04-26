@@ -1,11 +1,15 @@
 import nextDynamic from "next/dynamic";
 
+import { buildPageMetadata } from "@/lib/seo";
+
 export const dynamic = "force-dynamic";
 
-export const metadata = {
-  title: "我的禱告管理 | Start Pray 一起禱告吧",
-  description: "查看與管理你建立的禱告卡、回應互動與個人內容設定。",
-};
+export const metadata = buildPageMetadata({
+  title: "會員中心",
+  description: "登入後管理你的代禱事項、禱告回應、公開個人頁與錢包資訊。",
+  path: "/customer-portal",
+  noIndex: true,
+});
 
 const CustomerPortalClient = nextDynamic(
   () => import("./CustomerPortalClient"),
@@ -14,7 +18,7 @@ const CustomerPortalClient = nextDynamic(
     loading: () => (
       <main className="cp-main">
         <section className="cp-section">
-          <p className="cp-helper">載入會員中心中...</p>
+          <p className="cp-helper">會員中心載入中...</p>
         </section>
       </main>
     ),

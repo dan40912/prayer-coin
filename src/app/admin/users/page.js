@@ -18,6 +18,9 @@ function createEmptyEditForm() {
     country: "",
     avatarUrl: "",
     bio: "",
+    storyAudioUrl: "",
+    storyYoutubeUrl: "",
+    storyUpdatedAt: null,
     solanaAddress: "",
     bscAddress: "",
     isAddressVerified: false,
@@ -38,6 +41,9 @@ function mapUserToEditForm(user) {
     country: user.country || "",
     avatarUrl: user.avatarUrl || "",
     bio: user.bio || "",
+    storyAudioUrl: user.storyAudioUrl || "",
+    storyYoutubeUrl: user.storyYoutubeUrl || "",
+    storyUpdatedAt: user.storyUpdatedAt || null,
     solanaAddress: user.solanaAddress || "",
     bscAddress: user.bscAddress || "",
     isAddressVerified: Boolean(user.isAddressVerified),
@@ -57,6 +63,8 @@ function sanitizeForPayload(form) {
     country: form.country,
     avatarUrl: form.avatarUrl,
     bio: form.bio,
+    storyAudioUrl: form.storyAudioUrl,
+    storyYoutubeUrl: form.storyYoutubeUrl,
     solanaAddress: form.solanaAddress,
     bscAddress: form.bscAddress,
     isAddressVerified: Boolean(form.isAddressVerified),
@@ -504,6 +512,17 @@ export default function AdminUsersPage() {
                       <span>建立：{editForm.createdAt ? new Date(editForm.createdAt).toLocaleString() : "-"}</span>
                       <span>更新：{editForm.updatedAt ? new Date(editForm.updatedAt).toLocaleString() : "-"}</span>
                     </div>
+                    <div className="admin-editor__preview-meta">
+                      <span>故事更新：{editForm.storyUpdatedAt ? new Date(editForm.storyUpdatedAt).toLocaleString() : "-"}</span>
+                    </div>
+                    {editForm.storyAudioUrl ? (
+                      <audio className="admin-editor__audio" controls preload="none" src={editForm.storyAudioUrl} />
+                    ) : null}
+                    {editForm.storyYoutubeUrl ? (
+                      <a className="admin-editor__preview-link" href={editForm.storyYoutubeUrl} target="_blank" rel="noreferrer">
+                        開啟 YouTube 故事
+                      </a>
+                    ) : null}
                     {publicProfileHref ? (
                       <a className="admin-editor__preview-link" href={publicProfileHref} target="_blank" rel="noreferrer">
                         開啟公開頁面
@@ -581,6 +600,26 @@ export default function AdminUsersPage() {
                         value={editForm.bio}
                         onChange={(event) => handleEditField("bio", event.target.value)}
                         placeholder="請輸入公開個人簡介"
+                      />
+                    </label>
+
+                    <label className="admin-editor__field admin-editor__field--full">
+                      <span>故事音訊 URL</span>
+                      <input
+                        type="url"
+                        value={editForm.storyAudioUrl}
+                        onChange={(event) => handleEditField("storyAudioUrl", event.target.value)}
+                        placeholder="/voices/profile-stories/..."
+                      />
+                    </label>
+
+                    <label className="admin-editor__field admin-editor__field--full">
+                      <span>YouTube 故事連結</span>
+                      <input
+                        type="url"
+                        value={editForm.storyYoutubeUrl}
+                        onChange={(event) => handleEditField("storyYoutubeUrl", event.target.value)}
+                        placeholder="https://www.youtube.com/watch?v=..."
                       />
                     </label>
 

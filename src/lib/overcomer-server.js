@@ -11,6 +11,9 @@ const OVERCOMER_SELECT = {
   username: true,
   bio: true,
   avatarUrl: true,
+  storyAudioUrl: true,
+  storyYoutubeUrl: true,
+  storyUpdatedAt: true,
   createdAt: true,
   updatedAt: true,
   publicProfileEnabled: true,
@@ -89,7 +92,6 @@ export async function readOvercomerProfile(username) {
     user = await prisma.user.findFirst({
       where: {
         username: { equals: normalized, mode: "insensitive" },
-        isBlocked: false,
         publicProfileEnabled: true,
       },
       select: OVERCOMER_SELECT,
@@ -99,7 +101,6 @@ export async function readOvercomerProfile(username) {
     user = await prisma.user.findFirst({
       where: {
         username: normalized,
-        isBlocked: false,
         publicProfileEnabled: true,
       },
       select: OVERCOMER_SELECT,

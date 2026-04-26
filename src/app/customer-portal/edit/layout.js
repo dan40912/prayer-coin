@@ -1,7 +1,11 @@
-export const metadata = {
-  title: "編輯禱告卡 | Start Pray 一起禱告吧",
-  description: "管理你已建立的禱告卡，更新內容、分類與分享設定。",
-};
+import { buildPageMetadata } from "@/lib/seo";
+
+export const metadata = buildPageMetadata({
+  title: "編輯代禱事項",
+  description: "登入後管理與編輯你的代禱事項。",
+  path: "/customer-portal/edit",
+  noIndex: true,
+});
 
 export default function CustomerPortalEditLayout({ children }) {
   return children;

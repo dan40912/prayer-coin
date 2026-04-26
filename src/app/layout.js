@@ -8,6 +8,7 @@ import { SiteFooter, SiteHeader } from "@/components/site-chrome";
 import GlobalPlayerGate from "@/components/GlobalPlayerGate";
 import { AudioProvider } from "@/context/AudioContext";
 import { readSiteSettings } from "@/lib/siteSettings";
+import { SITE_NAME, SITE_URL, absoluteUrl, buildPageMetadata } from "@/lib/seo";
 
 const openSans = Open_Sans({ subsets: ["latin"], variable: "--font-sans" });
 const raleway = Raleway({ subsets: ["latin"], variable: "--font-raleway" });
@@ -18,8 +19,24 @@ const poppins = Poppins({
 });
 
 export const metadata = {
-  title: "Start Pray 一起禱告吧",
-  description: "在 Start Pray 發佈禱告需求、收到文字與語音回應，讓每一份需要都被看見與陪伴。",
+  metadataBase: new URL(SITE_URL),
+  ...buildPageMetadata({
+    title: {
+      default: "Start Pray 一起禱告吧",
+      template: `%s | ${SITE_NAME}`,
+    },
+    description: "Start Pray 是一個讓人分享代禱事項、用文字與語音彼此回應，並看見得勝者故事的禱告平台。",
+    path: "/",
+  }),
+  applicationName: SITE_NAME,
+  category: "faith community",
+  keywords: ["Start Pray", "禱告", "代禱", "基督信仰", "見證", "得勝者", "語音禱告"],
+  authors: [{ name: SITE_NAME, url: SITE_URL }],
+  creator: SITE_NAME,
+  publisher: SITE_NAME,
+  formatDetection: {
+    telephone: false,
+  },
 };
 
 export const dynamic = "force-dynamic";
@@ -43,8 +60,8 @@ function extractPathFromHeaders(requestHeaders) {
       if (parsed.pathname) {
         return parsed.pathname;
       }
-    } catch (error) {
-      // ignore malformed values
+    } catch {
+      // Ignore malformed values.
     }
   }
 
@@ -61,6 +78,28 @@ function shouldBypassMaintenance(pathname) {
   );
 }
 
+function StructuredData() {
+  const data = {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    name: SITE_NAME,
+    url: SITE_URL,
+    inLanguage: "zh-Hant-TW",
+    potentialAction: {
+      "@type": "SearchAction",
+      target: `${SITE_URL}/prayfor?search={search_term_string}`,
+      "query-input": "required name=search_term_string",
+    },
+  };
+
+  return (
+    <script
+      type="application/ld+json"
+      dangerouslySetInnerHTML={{ __html: JSON.stringify(data) }}
+    />
+  );
+}
+
 export default async function RootLayout({ children }) {
   const requestHeaders = headers();
   const requestPath = extractPathFromHeaders(requestHeaders);
@@ -71,6 +110,7 @@ export default async function RootLayout({ children }) {
       return (
         <html lang="zh-Hant" className={`${openSans.variable} ${raleway.variable} ${poppins.variable}`}>
           <head>
+            <meta name="robots" content="noindex,nofollow" />
             <link
               rel="stylesheet"
               href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
@@ -113,11 +153,11 @@ export default async function RootLayout({ children }) {
                       color: "#38bdf8",
                     }}
                   >
-                    Server 500 Error
+                    維護中
                   </div>
-                  <h1 style={{ marginBottom: "1rem" }}>目前站點維護中</h1>
+                  <h1 style={{ marginBottom: "1rem" }}>Start Pray 暫時維護中</h1>
                   <p style={{ lineHeight: 1.8 }}>
-                    站點正在進行必要維護，完成後會自動恢復。若有緊急問題，請透過下方信箱聯絡我們。
+                    我們正在調整服務，請稍後再回來。若有緊急需求，請聯絡客服信箱。
                   </p>
                 </div>
                 <div style={{ display: "flex", justifyContent: "center", gap: "1rem", flexWrap: "wrap" }}>
@@ -135,7 +175,7 @@ export default async function RootLayout({ children }) {
                       fontWeight: 600,
                     }}
                   >
-                    聯絡我們
+                    聯絡客服
                   </a>
                 </div>
               </div>
@@ -150,6 +190,7 @@ export default async function RootLayout({ children }) {
   return (
     <html lang="zh-Hant" className={`${openSans.variable} ${raleway.variable} ${poppins.variable}`}>
       <head>
+        <link rel="canonical" href={absoluteUrl(requestPath || "/")} />
         <link
           rel="stylesheet"
           href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
@@ -157,6 +198,7 @@ export default async function RootLayout({ children }) {
         />
       </head>
       <body className="admin-layout">
+        <StructuredData />
         <AudioProvider>
           {children}
           <GlobalPlayerGate />

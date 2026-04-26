@@ -106,10 +106,10 @@ function getAvatarFallback(name) {
 function getResponderProfileHref(response) {
   if (!response || response.isAnonymous) return null;
   const responder = response.responder;
-  const slug = buildOvercomerSlug(responder);
-  if (slug) {
-    console.log("[overcomer] profileHref slug", slug);
+  if (!responder || responder.isBlocked || responder.publicProfileEnabled === false) {
+    return null;
   }
+  const slug = buildOvercomerSlug(responder);
   if (!slug) return null;
   return `/overcomer/${encodeURIComponent(slug)}`;
 }

@@ -1,7 +1,11 @@
-export const metadata = {
-  title: "新增禱告卡 | Start Pray 一起禱告吧",
-  description: "建立新的禱告內容，設定標題、描述、圖片與分類，邀請更多人一起守望。",
-};
+import { buildPageMetadata } from "@/lib/seo";
+
+export const metadata = buildPageMetadata({
+  title: "新增代禱事項",
+  description: "登入後建立新的代禱事項。",
+  path: "/customer-portal/create",
+  noIndex: true,
+});
 
 export default function CustomerPortalCreateLayout({ children }) {
   return children;

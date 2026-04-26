@@ -8,11 +8,9 @@ import OvercomerReportButton from "@/components/OvercomerReportButton";
 import ResponseReportButton from "@/components/ResponseReportButton";
 import { buildOvercomerCardPath, buildOvercomerResponsePath, readOvercomerProfile } from "@/lib/overcomer-server";
 import { buildOvercomerSlug, parseOvercomerSlug } from "@/lib/overcomer";
-
-export const metadata = {
-  title: "得勝者頁面 | Start Pray 一起禱告吧",
-  description: "查看公開分享的禱告與回應紀錄，彼此鼓勵並持續守望。"
-};
+import { resolveServerAudioUrl } from "@/lib/server-audio";
+import { buildYoutubeEmbedUrl } from "@/lib/youtube";
+import { buildPageMetadata, plainText } from "@/lib/seo";
 
 const DEFAULT_AVATAR = "https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&w=320&q=80";
 
@@ -33,6 +31,39 @@ function formatDateTime(value) {
 }
 
 export const dynamic = "force-dynamic";
+
+export async function generateMetadata({ params }) {
+  const parsed = parseOvercomerSlug(params?.slug);
+  if (!parsed?.username) {
+    return buildPageMetadata({
+      title: "得勝者",
+      description: "查看 Start Pray 得勝者公開分享的信仰故事、代禱事項與回應紀錄。",
+      path: "/overcomer",
+    });
+  }
+
+  const profile = await readOvercomerProfile(parsed.username);
+  if (!profile) {
+    return buildPageMetadata({
+      title: "得勝者",
+      description: "查看 Start Pray 得勝者公開分享的信仰故事、代禱事項與回應紀錄。",
+      path: "/overcomer",
+    });
+  }
+
+  const displayName = profile.name || profile.username || "得勝者";
+  const description =
+    plainText(profile.bio, 150) ||
+    `認識 ${displayName} 在 Start Pray 的信仰故事、代禱事項與禱告回應。`;
+
+  return buildPageMetadata({
+    title: `${displayName} 的得勝者故事`,
+    description,
+    path: `/overcomer/${encodeURIComponent(buildOvercomerSlug(profile))}`,
+    image: profile.avatarUrl || DEFAULT_AVATAR,
+    type: "profile",
+  });
+}
 
 export default async function OvercomerProfilePage({ params }) {
   const parsed = parseOvercomerSlug(params?.slug);
@@ -60,6 +91,8 @@ export default async function OvercomerProfilePage({ params }) {
   const totalCards = profile._count?.homePrayerCards ?? cards.length;
   const totalResponses = profile._count?.prayerResponses ?? responses.length;
   const latestCardLink = cards.length > 0 ? buildOvercomerCardPath(cards[0]) : null;
+  const storyAudioUrl = resolveServerAudioUrl(profile.storyAudioUrl);
+  const storyYoutubeEmbedUrl = buildYoutubeEmbedUrl(profile.storyYoutubeUrl);
 
   return (
     <>
@@ -95,6 +128,44 @@ export default async function OvercomerProfilePage({ params }) {
             />
           </div>
         </section>
+
+        {(storyAudioUrl || storyYoutubeEmbedUrl) ? (
+          <section className="cp-section cp-section--story">
+            <div className="cp-section__head">
+              <div>
+                <h2>得勝者故事</h2>
+                <p>聽見 {profile.name || profile.username || "這位得勝者"} 的信仰歷程、理念與代禱負擔。</p>
+              </div>
+            </div>
+            <div className="cp-story-media">
+              {storyAudioUrl ? (
+                <article className="cp-story-media__item">
+                  <h3>故事錄音</h3>
+                  <audio controls preload="metadata" src={storyAudioUrl}>
+                    你的瀏覽器不支援音訊播放。
+                  </audio>
+                  {profile.storyUpdatedAt ? (
+                    <p className="cp-helper">更新：{formatDateTime(profile.storyUpdatedAt)}</p>
+                  ) : null}
+                </article>
+              ) : null}
+              {storyYoutubeEmbedUrl ? (
+                <article className="cp-story-media__item">
+                  <h3>YouTube 影片</h3>
+                  <div className="cp-story-media__video">
+                    <iframe
+                      src={storyYoutubeEmbedUrl}
+                      title={`${profile.name || profile.username || "得勝者"} 的 YouTube 故事`}
+                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                      allowFullScreen
+                      loading="lazy"
+                    />
+                  </div>
+                </article>
+              ) : null}
+            </div>
+          </section>
+        ) : null}
 
         <section className="cp-section cp-section--cards">
           <div className="cp-section__head">

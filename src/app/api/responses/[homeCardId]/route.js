@@ -14,6 +14,9 @@ const SAFE_RESPONSE_SELECT = {
     select: {
       name: true,
       avatarUrl: true,
+      username: true,
+      publicProfileEnabled: true,
+      isBlocked: true,
     },
   },
 };

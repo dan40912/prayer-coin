@@ -3,12 +3,14 @@ import { NextResponse } from "next/server";
 import { readAdminSessionFromRequest } from "@/lib/admin-session";
 import { logAdminAction, logSystemError } from "@/lib/logger";
 import prisma from "@/lib/prisma";
+import { normalizeYoutubeUrl } from "@/lib/youtube";
 
 const ADMIN_ROLES = new Set(["SUPER", "ADMIN"]);
 const MAX_NAME_LENGTH = 80;
 const MAX_USERNAME_LENGTH = 40;
 const MAX_TEXT_LENGTH = 191;
 const MAX_BIO_LENGTH = 1000;
+const MAX_URL_LENGTH = 2048;
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 function requireAdmin(request) {
@@ -76,6 +78,17 @@ function toEditablePayload(body) {
   const bio = normalizeString(body.bio, MAX_BIO_LENGTH);
   if (bio !== undefined) payload.bio = bio;
 
+  const storyAudioUrl = normalizeString(body.storyAudioUrl, MAX_URL_LENGTH);
+  if (storyAudioUrl !== undefined) payload.storyAudioUrl = storyAudioUrl;
+
+  if (Object.prototype.hasOwnProperty.call(body, "storyYoutubeUrl")) {
+    if (body.storyYoutubeUrl === null || body.storyYoutubeUrl === undefined || body.storyYoutubeUrl === "") {
+      payload.storyYoutubeUrl = null;
+    } else if (typeof body.storyYoutubeUrl === "string") {
+      payload.storyYoutubeUrl = normalizeYoutubeUrl(body.storyYoutubeUrl);
+    }
+  }
+
   const solanaAddress = normalizeString(body.solanaAddress, MAX_TEXT_LENGTH);
   if (solanaAddress !== undefined) payload.solanaAddress = solanaAddress;
 
@@ -98,6 +111,9 @@ const USER_SELECT_FIELDS = {
   country: true,
   avatarUrl: true,
   bio: true,
+  storyAudioUrl: true,
+  storyYoutubeUrl: true,
+  storyUpdatedAt: true,
   solanaAddress: true,
   bscAddress: true,
   isAddressVerified: true,
@@ -147,6 +163,13 @@ export async function PATCH(request, { params }) {
       return NextResponse.json({ message: "No editable fields provided" }, { status: 400 });
     }
 
+    if (
+      Object.prototype.hasOwnProperty.call(updateData, "storyAudioUrl") ||
+      Object.prototype.hasOwnProperty.call(updateData, "storyYoutubeUrl")
+    ) {
+      updateData.storyUpdatedAt = new Date();
+    }
+
     const existing = await prisma.user.findUnique({
       where: { id: params.id },
       select: { id: true },
@@ -180,6 +203,10 @@ export async function PATCH(request, { params }) {
     }
 
     if (err instanceof Error && err.message === "Invalid email format") {
+      return NextResponse.json({ message: err.message }, { status: 400 });
+    }
+
+    if (err instanceof Error && err.message.includes("YouTube")) {
       return NextResponse.json({ message: err.message }, { status: 400 });
     }
 

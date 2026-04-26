@@ -11,6 +11,7 @@ import {
 } from "@/lib/homeCards";
 import { sanitizeHtmlForDisplay, sanitizeHtmlToPlainText } from "@/lib/htmlSanitizer";
 import { resolveServerAudioUrl } from "@/lib/server-audio";
+import { buildPageMetadata } from "@/lib/seo";
 
 import "@/styles/theme-detail.css";
 
@@ -51,22 +52,29 @@ function buildPrayerMetaDescription(description) {
 export async function generateMetadata({ params }) {
   const id = parseId(params?.id);
   if (!id) {
-    return {
-      title: "禱告內容 | Start Pray 一起禱告吧",
+    return buildPageMetadata({
+      title: "禱告內容",
       description: "讓我們一起禱告，願這份需要被看見並得到回應。",
-    };
+      path: "/prayfor",
+      image: "/img/categories/popular.jpg",
+    });
   }
   const card = await readHomeCard(id);
   if (!card) {
-    return {
-      title: "禱告內容 | Start Pray 一起禱告吧",
+    return buildPageMetadata({
+      title: "禱告內容",
       description: "讓我們一起禱告，願這份需要被看見並得到回應。",
-    };
+      path: "/prayfor",
+      image: "/img/categories/popular.jpg",
+    });
   }
-  return {
-    title: "禱告內容 | Start Pray 一起禱告吧",
+  return buildPageMetadata({
+    title: card.title ? `${card.title} - 禱告內容` : "禱告內容",
     description: buildPrayerMetaDescription(card.description),
-  };
+    path: `/prayfor/${card.id}`,
+    image: card.image || "/img/categories/popular.jpg",
+    type: "article",
+  });
 }
 
 export default async function PrayerDetailPage({ params }) {

@@ -6,6 +6,7 @@ import { readBanner } from "@/lib/banner";
 import { readActiveCategories } from "@/lib/homeCategories";
 import { readHomeCards } from "@/lib/homeCards";
 import { readHomeStats } from "@/lib/homeStats";
+import { buildPageMetadata } from "@/lib/seo";
 
 export const dynamic = "force-dynamic";
 
@@ -23,10 +24,12 @@ function normalizeCta(cta, fallback) {
   return { label, href };
 }
 
-export const metadata = {
-  title: "首頁 | Start Pray 一起禱告吧",
-  description: "在 Start Pray 發佈禱告需求、收到文字與語音回應，讓每一份需要都被看見與陪伴。",
-};
+export const metadata = buildPageMetadata({
+  title: "Start Pray 一起禱告吧",
+  description: "分享代禱事項、用文字與語音彼此回應，並透過得勝者故事看見信仰中的陪伴與盼望。",
+  path: "/",
+  image: DEFAULT_HERO_IMAGE,
+});
 
 export default async function HomeLandingPage() {
   const [banner, categories, topCards, stats] = await Promise.all([

@@ -164,6 +164,9 @@ export async function POST(req) {
           select: {
             name: true,
             avatarUrl: true,
+            username: true,
+            publicProfileEnabled: true,
+            isBlocked: true,
           },
         },
       },

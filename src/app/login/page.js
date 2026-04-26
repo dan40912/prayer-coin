@@ -1,13 +1,16 @@
 ﻿import Link from "next/link";
 
 import { SiteFooter, SiteHeader } from "@/components/site-chrome";
+import { buildPageMetadata } from "@/lib/seo";
 
 import LoginForm from "./LoginForm";
 
-export const metadata = {
-  title: "登入 | Start Pray 一起禱告吧",
-  description: "登入 Start Pray 會員中心，管理你的禱告內容、留言互動與個人資料。"
-};
+export const metadata = buildPageMetadata({
+  title: "登入",
+  description: "登入 Start Pray 會員中心，管理你的禱告內容、留言互動與個人資料。",
+  path: "/login",
+  noIndex: true,
+});
 
 export default function LoginPage() {
   return (

@@ -22,6 +22,9 @@ model User {
 
   avatarUrl      String?
   bio            String?
+  storyAudioUrl  String?          @db.Text
+  storyYoutubeUrl String?         @db.Text
+  storyUpdatedAt DateTime?
   isBlocked      Boolean          @default(false)
   reportCount    Int              @default(0)
   sessionVersion Int              @default(0)

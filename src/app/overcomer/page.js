@@ -4,11 +4,13 @@ import "@/styles/theme-customer.css";
 
 import { SiteFooter, SiteHeader } from "@/components/site-chrome";
 import { listPublicOvercomers } from "@/lib/overcomer-server";
+import { buildPageMetadata } from "@/lib/seo";
 
-export const metadata = {
-  title: "得勝者專區 | Start Pray 一起禱告吧",
-  description: "探索公開個人頁面，延續代禱、回應與同行的見證。",
-};
+export const metadata = buildPageMetadata({
+  title: "得勝者",
+  description: "認識 Start Pray 上願意分享信仰故事、發佈代禱事項並回應他人的得勝者。",
+  path: "/overcomer",
+});
 
 export const dynamic = "force-dynamic";
 
@@ -39,29 +41,29 @@ export default async function OvercomerIndexPage() {
         <section className="cp-section">
           <div className="cp-section__head">
             <div>
-              <h1>得勝者專區</h1>
-              <p>把故事從單次回應延伸成持續同行。你可以在這裡找到公開個人頁，回到那些仍在被守望的人身上。</p>
+              <h1>得勝者</h1>
+              <p>認識願意分享信仰故事、發佈代禱事項，並用禱告回應他人的 Start Pray 成員。</p>
             </div>
             <Link href="/signup" prefetch={false} className="cp-button">
-              建立我的公開頁
+              加入 Start Pray
             </Link>
           </div>
 
           <div className="home-stats__container">
             <article className="home-stats__item">
-              <span className="home-stats__label">公開個人頁</span>
+              <span className="home-stats__label">公開得勝者</span>
               <strong className="home-stats__value">{overcomers.length}</strong>
-              <p className="home-stats__hint">目前可瀏覽的得勝者頁面</p>
+              <p className="home-stats__hint">願意公開分享故事與代禱參與的成員</p>
             </article>
             <article className="home-stats__item">
-              <span className="home-stats__label">公開代禱事項</span>
+              <span className="home-stats__label">代禱事項</span>
               <strong className="home-stats__value">{totalCards.toLocaleString("zh-TW")}</strong>
-              <p className="home-stats__hint">仍在等待同行與代禱的故事</p>
+              <p className="home-stats__hint">由得勝者發佈的代禱內容</p>
             </article>
             <article className="home-stats__item">
-              <span className="home-stats__label">公開回應</span>
+              <span className="home-stats__label">禱告回應</span>
               <strong className="home-stats__value">{totalResponses.toLocaleString("zh-TW")}</strong>
-              <p className="home-stats__hint">已留下來的聲音與鼓勵</p>
+              <p className="home-stats__hint">他們參與並回應的代禱內容</p>
             </article>
           </div>
         </section>
@@ -69,16 +71,16 @@ export default async function OvercomerIndexPage() {
         <section className="cp-section cp-section--cards">
           <div className="cp-section__head">
             <div>
-              <h2>最近更新的公開頁</h2>
-              <p>優先顯示最近有更新的個人頁，讓使用者有明確回訪理由。</p>
+              <h2>正在參與的得勝者</h2>
+              <p>點進個人頁，看見他的自我介紹、故事、代禱事項與回應。</p>
             </div>
           </div>
 
           {overcomers.length === 0 ? (
             <div className="cp-empty">
-              <p>目前尚未有公開的得勝者頁面。</p>
+              <p>目前尚未有公開的得勝者資料。</p>
               <Link href="/customer-portal" prefetch={false} className="cp-link">
-                前往會員中心開啟公開個人頁
+                前往會員中心完善公開個人頁
               </Link>
             </div>
           ) : (
@@ -86,14 +88,14 @@ export default async function OvercomerIndexPage() {
               {overcomers.map((item) => {
                 const profileHref = `/overcomer/${encodeURIComponent(item.slug)}`;
                 const avatarUrl = item.avatarUrl?.trim() || DEFAULT_AVATAR;
-                const displayName = item.name || item.username || "匿名使用者";
-                const bio = item.bio?.trim() || "這位使用者尚未補充個人介紹。";
+                const displayName = item.name || item.username || "未命名使用者";
+                const bio = item.bio?.trim() || "尚未填寫自我介紹。";
 
                 return (
                   <article key={item.id} className="cp-card">
                     <div className="cp-card__layout cp-card__layout--profile">
                       <Link href={profileHref} prefetch={false} className="cp-overcomer-card__avatar">
-                        <img src={avatarUrl} alt={`${displayName} 大頭貼`} loading="lazy" />
+                        <img src={avatarUrl} alt={`${displayName} 的頭像`} loading="lazy" />
                       </Link>
                       <div className="cp-card__content">
                         <div className="cp-card__header">
@@ -105,18 +107,18 @@ export default async function OvercomerIndexPage() {
                         </div>
 
                         <div className="cp-card__meta">
-                          <span>加入時間：{formatDateTime(item.createdAt)}</span>
-                          <span>最近更新：{formatDateTime(item.updatedAt)}</span>
+                          <span>加入：{formatDateTime(item.createdAt)}</span>
+                          <span>更新：{formatDateTime(item.updatedAt)}</span>
                           <span>代禱事項：{Number(item?._count?.homePrayerCards ?? 0).toLocaleString("zh-TW")}</span>
                           <span>回應：{Number(item?._count?.prayerResponses ?? 0).toLocaleString("zh-TW")}</span>
                         </div>
 
                         <div className="cp-card__actions">
                           <Link href={profileHref} className="cp-button" prefetch={false}>
-                            查看公開頁
+                            查看故事
                           </Link>
                           <Link href="/prayfor" className="cp-button cp-button--ghost" prefetch={false}>
-                            瀏覽更多代禱事項
+                            前往代禱牆
                           </Link>
                         </div>
                       </div>

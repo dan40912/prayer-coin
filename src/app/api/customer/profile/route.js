@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { ensureActiveCustomer } from "@/lib/customer-access";
 import prisma from "@/lib/prisma";
 import { requireSessionUser } from "@/lib/server-session";
+import { normalizeYoutubeUrl } from "@/lib/youtube";
 
 const MAX_BIO_LENGTH = 360;
 const BSC_ADDRESS_REGEX = /^0x[a-fA-F0-9]{40}$/;
@@ -15,6 +16,9 @@ function buildSelectFields() {
     username: true,
     bio: true,
     avatarUrl: true,
+    storyAudioUrl: true,
+    storyYoutubeUrl: true,
+    storyUpdatedAt: true,
     bscAddress: true,
     isAddressVerified: true,
     publicProfileEnabled: true,
@@ -78,6 +82,33 @@ function sanitizeProfilePayload(body) {
       throw new Error("公開個人頁設定必須是布林值。");
     }
     result.publicProfileEnabled = body.publicProfileEnabled;
+  }
+
+  if (Object.prototype.hasOwnProperty.call(body, "storyAudioUrl")) {
+    if (body.storyAudioUrl === null || body.storyAudioUrl === undefined || body.storyAudioUrl === "") {
+      result.storyAudioUrl = null;
+    } else if (typeof body.storyAudioUrl === "string") {
+      const trimmed = body.storyAudioUrl.trim();
+      if (!trimmed) {
+        result.storyAudioUrl = null;
+      } else if (/^https?:\/\//i.test(trimmed) || trimmed.startsWith("/voices/")) {
+        result.storyAudioUrl = trimmed;
+      } else {
+        throw new Error("故事音訊網址必須是有效網址或 /voices 路徑");
+      }
+    } else {
+      throw new Error("故事音訊欄位格式錯誤");
+    }
+  }
+
+  if (Object.prototype.hasOwnProperty.call(body, "storyYoutubeUrl")) {
+    if (body.storyYoutubeUrl === null || body.storyYoutubeUrl === undefined || body.storyYoutubeUrl === "") {
+      result.storyYoutubeUrl = null;
+    } else if (typeof body.storyYoutubeUrl === "string") {
+      result.storyYoutubeUrl = normalizeYoutubeUrl(body.storyYoutubeUrl);
+    } else {
+      throw new Error("YouTube 連結欄位格式錯誤");
+    }
   }
 
   if (Object.prototype.hasOwnProperty.call(body, "bscAddress")) {
@@ -155,6 +186,13 @@ export async function PATCH(request) {
       if (nextAddress !== currentAddress) {
         updates.isAddressVerified = false;
       }
+    }
+
+    if (
+      Object.prototype.hasOwnProperty.call(updates, "storyAudioUrl") ||
+      Object.prototype.hasOwnProperty.call(updates, "storyYoutubeUrl")
+    ) {
+      updates.storyUpdatedAt = new Date();
     }
 
     const updated = await prisma.user.update({
