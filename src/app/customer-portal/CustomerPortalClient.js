@@ -31,6 +31,7 @@ const MAX_BIO_LENGTH = 360;
 const MAX_AVATAR_BYTES = 5 * 1024 * 1024;
 const MAX_STORY_AUDIO_BYTES = 30 * 1024 * 1024;
 const MAX_STORY_RECORD_SECONDS = 300;
+const STORY_COUNTDOWN_START = 3;
 
 const REWARD_STATUS_LABELS = {
   PENDING: "審核中",
@@ -201,6 +202,16 @@ function getAudioExtension(mimeType = "") {
   return "webm";
 }
 
+function formatStorySeconds(totalSeconds) {
+  const minutes = Math.floor(totalSeconds / 60)
+    .toString()
+    .padStart(2, "0");
+  const seconds = Math.max(0, totalSeconds % 60)
+    .toString()
+    .padStart(2, "0");
+  return `${minutes}:${seconds}`;
+}
+
 
 
 export default function CustomerPortalPage() {
@@ -233,14 +244,18 @@ export default function CustomerPortalPage() {
   const storyRecordStreamRef = useRef(null);
   const storyRecordChunksRef = useRef([]);
   const storyRecordTimerRef = useRef(null);
+  const storyDiscardRecordingOnStopRef = useRef(false);
 
   const [selectedAvatarFile, setSelectedAvatarFile] = useState(null);
 
   const [avatarPreview, setAvatarPreview] = useState("");
   const [selectedStoryAudioFile, setSelectedStoryAudioFile] = useState(null);
   const [storyAudioPreview, setStoryAudioPreview] = useState("");
+  const [storyRecorderStep, setStoryRecorderStep] = useState("idle");
+  const [storyCountdownValue, setStoryCountdownValue] = useState(null);
   const [storyRecording, setStoryRecording] = useState(false);
   const [storyRecordSeconds, setStoryRecordSeconds] = useState(0);
+  const [storyRecordError, setStoryRecordError] = useState("");
 
 
 
@@ -369,6 +384,10 @@ export default function CustomerPortalPage() {
     if (storyAudioFileInputRef.current) {
       storyAudioFileInputRef.current.value = "";
     }
+    setStoryRecorderStep("idle");
+    setStoryCountdownValue(null);
+    setStoryRecordSeconds(0);
+    setStoryRecordError("");
   }
 
   function stopStoryRecording(discard = false) {
@@ -379,10 +398,10 @@ export default function CustomerPortalPage() {
 
     const recorder = storyRecorderRef.current;
     if (recorder && recorder.state !== "inactive") {
+      storyDiscardRecordingOnStopRef.current = Boolean(discard);
       recorder.stop();
-    }
-
-    if (discard) {
+    } else if (discard) {
+      storyDiscardRecordingOnStopRef.current = false;
       storyRecordChunksRef.current = [];
     }
 
@@ -393,7 +412,11 @@ export default function CustomerPortalPage() {
 
     storyRecorderRef.current = null;
     setStoryRecording(false);
-    setStoryRecordSeconds(0);
+    if (discard) {
+      setStoryRecorderStep("idle");
+      setStoryCountdownValue(null);
+      setStoryRecordSeconds(0);
+    }
   }
 
 
@@ -496,6 +519,24 @@ export default function CustomerPortalPage() {
       stopStoryRecording();
     }
   }, [storyRecordSeconds, storyRecording]);
+
+  useEffect(() => {
+    if (!isProfileModalOpen || storyRecorderStep !== "countdown") return;
+    if (storyCountdownValue === null) return;
+
+    if (storyCountdownValue === 0) {
+      setStoryCountdownValue(null);
+      const starter = window.setTimeout(() => beginStoryRecording(), 500);
+      return () => window.clearTimeout(starter);
+    }
+
+    const timer = window.setTimeout(() => {
+      setStoryCountdownValue((value) => (value !== null ? value - 1 : null));
+    }, 1000);
+
+    return () => window.clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isProfileModalOpen, storyCountdownValue, storyRecorderStep]);
 
   const resolvedName = profile?.name ?? authUser?.name ?? "未命名使用者";
   const resolvedEmail = profile?.email ?? authUser?.email ?? "尚未提供電子郵件";
@@ -617,10 +658,13 @@ export default function CustomerPortalPage() {
   };
 
   const handleStartStoryRecording = async () => {
-    if (storyRecording) return;
+    if (storyRecording || storyRecorderStep === "countdown") return;
 
     try {
       setProfileStatus(null);
+      setStoryRecordError("");
+      storyDiscardRecordingOnStopRef.current = false;
+      resetStoryAudioSelection("");
       const stream = await navigator.mediaDevices.getUserMedia({
         audio: {
           channelCount: 1,
@@ -630,11 +674,30 @@ export default function CustomerPortalPage() {
       });
       storyRecordStreamRef.current = stream;
       storyRecordChunksRef.current = [];
+      setStoryRecorderStep("countdown");
+      setStoryCountdownValue(STORY_COUNTDOWN_START);
+    } catch (error) {
+      console.error("story recording failed:", error);
+      setStoryRecordError("需要麥克風權限才能錄製故事。");
+      setProfileStatus({ type: "error", message: "無法啟用麥克風錄製故事" });
+      stopStoryRecording(true);
+    }
+  };
+
+  function beginStoryRecording() {
+    if (!storyRecordStreamRef.current) {
+      setStoryRecorderStep("idle");
+      setStoryRecordError("無法取得麥克風串流，請重新開始錄音。");
+      return;
+    }
+
+    try {
+      storyRecordChunksRef.current = [];
 
       const options = MediaRecorder.isTypeSupported?.("audio/webm;codecs=opus")
         ? { mimeType: "audio/webm;codecs=opus" }
         : {};
-      const recorder = new MediaRecorder(stream, options);
+      const recorder = new MediaRecorder(storyRecordStreamRef.current, options);
       storyRecorderRef.current = recorder;
 
       recorder.addEventListener("dataavailable", (event) => {
@@ -644,9 +707,19 @@ export default function CustomerPortalPage() {
       });
 
       recorder.addEventListener("stop", () => {
+        if (storyDiscardRecordingOnStopRef.current) {
+          storyDiscardRecordingOnStopRef.current = false;
+          storyRecordChunksRef.current = [];
+          setStoryRecorderStep("idle");
+          return;
+        }
+
         const chunks = storyRecordChunksRef.current;
         storyRecordChunksRef.current = [];
-        if (!chunks.length) return;
+        if (!chunks.length) {
+          setStoryRecorderStep("idle");
+          return;
+        }
 
         const mimeType = recorder.mimeType || "audio/webm";
         const blob = new Blob(chunks, { type: mimeType });
@@ -657,19 +730,29 @@ export default function CustomerPortalPage() {
           if (prev && prev.startsWith("blob:")) URL.revokeObjectURL(prev);
           return URL.createObjectURL(blob);
         });
+        setStoryRecordError("");
+        setStoryRecorderStep("review");
       });
 
       recorder.start();
       setStoryRecording(true);
+      setStoryRecorderStep("recording");
       setStoryRecordSeconds(0);
       storyRecordTimerRef.current = window.setInterval(() => {
         setStoryRecordSeconds((seconds) => seconds + 1);
       }, 1000);
     } catch (error) {
       console.error("story recording failed:", error);
-      setProfileStatus({ type: "error", message: "無法啟用麥克風錄製故事" });
+      setStoryRecordError("錄音啟動失敗，請檢查權限後再試。");
+      setProfileStatus({ type: "error", message: "錄音啟動失敗，請檢查權限後再試。" });
       stopStoryRecording(true);
     }
+  }
+
+  const handleRerecordStoryAudio = async () => {
+    stopStoryRecording(true);
+    resetStoryAudioSelection("");
+    await handleStartStoryRecording();
   };
 
   const handleSaveProfile = async () => {
@@ -1576,49 +1659,105 @@ export default function CustomerPortalPage() {
 
             </label>
 
-            <label className="cp-modal__field">
-              <span>故事錄音</span>
-              <input
-                ref={storyAudioFileInputRef}
-                type="file"
-                accept="audio/*"
-                onChange={handleStoryAudioFileChange}
-                disabled={profileSaving || storyRecording}
-              />
-              <small className="cp-helper">
-                可上傳音訊檔，或直接錄製最多 5 分鐘的信仰故事。
-              </small>
-            </label>
+            <div className="cp-story-recorder">
+              <label className="cp-modal__field">
+                <span>故事錄音</span>
+                <input
+                  ref={storyAudioFileInputRef}
+                  type="file"
+                  accept="audio/*"
+                  onChange={handleStoryAudioFileChange}
+                  disabled={profileSaving || storyRecording || storyRecorderStep === "countdown"}
+                />
+                <small className="cp-helper">
+                  可上傳音訊檔，或直接錄製最多 5 分鐘的信仰故事。
+                </small>
+              </label>
 
-            <div className="cp-modal__story-actions">
-              <button
-                type="button"
-                className="cp-button cp-button--ghost"
-                onClick={storyRecording ? () => stopStoryRecording() : handleStartStoryRecording}
-                disabled={profileSaving}
-              >
-                {storyRecording ? `停止錄音 ${storyRecordSeconds}s` : "開始錄製故事"}
-              </button>
-              {(storyAudioPreview || profileForm.storyAudioUrl) && !storyRecording ? (
-                <button
-                  type="button"
-                  className="cp-link cp-link--muted"
-                  onClick={handleRemoveStoryAudio}
-                  disabled={profileSaving}
-                >
-                  移除故事錄音
-                </button>
+              {storyRecordError ? <p className="cp-alert cp-alert--error">{storyRecordError}</p> : null}
+
+              {storyRecorderStep === "countdown" ? (
+                <div className="cp-story-recorder__panel" aria-live="polite">
+                  <strong>準備錄音</strong>
+                  <span>倒數結束後將自動開始。</span>
+                  <div className="cp-story-recorder__count">{storyCountdownValue}</div>
+                  <button
+                    type="button"
+                    className="cp-button cp-button--ghost"
+                    onClick={() => stopStoryRecording(true)}
+                    disabled={profileSaving}
+                  >
+                    取消
+                  </button>
+                </div>
+              ) : storyRecorderStep === "recording" ? (
+                <div className="cp-story-recorder__panel" aria-live="polite">
+                  <strong>錄音中</strong>
+                  <span>最長可錄製 5 分鐘。</span>
+                  <div className="cp-story-recorder__timer">{formatStorySeconds(storyRecordSeconds)}</div>
+                  <button
+                    type="button"
+                    className="cp-button cp-button--danger"
+                    onClick={() => stopStoryRecording()}
+                    disabled={profileSaving}
+                  >
+                    停止錄音
+                  </button>
+                </div>
+              ) : (
+                <div className="cp-modal__story-actions">
+                  <button
+                    type="button"
+                    className="cp-button cp-button--ghost"
+                    onClick={handleStartStoryRecording}
+                    disabled={profileSaving}
+                  >
+                    開始錄製故事
+                  </button>
+                  {(storyAudioPreview || profileForm.storyAudioUrl) && !storyRecording ? (
+                    <button
+                      type="button"
+                      className="cp-link cp-link--muted"
+                      onClick={handleRemoveStoryAudio}
+                      disabled={profileSaving}
+                    >
+                      移除故事錄音
+                    </button>
+                  ) : null}
+                </div>
+              )}
+
+              {storyAudioPreview || profileForm.storyAudioUrl ? (
+                <div className="cp-story-recorder__review">
+                  <audio
+                    className="cp-modal__audio"
+                    controls
+                    preload="metadata"
+                    src={storyAudioPreview || profileForm.storyAudioUrl}
+                  />
+                  {selectedStoryAudioFile ? (
+                    <div className="cp-story-recorder__actions">
+                      <button
+                        type="button"
+                        className="cp-button cp-button--ghost"
+                        onClick={handleRerecordStoryAudio}
+                        disabled={profileSaving}
+                      >
+                        重新錄音
+                      </button>
+                      <button
+                        type="button"
+                        className="cp-button"
+                        onClick={handleSaveProfile}
+                        disabled={profileSaving}
+                      >
+                        {profileSaving ? "上傳中..." : "上傳並儲存"}
+                      </button>
+                    </div>
+                  ) : null}
+                </div>
               ) : null}
             </div>
-
-            {storyAudioPreview || profileForm.storyAudioUrl ? (
-              <audio
-                className="cp-modal__audio"
-                controls
-                preload="metadata"
-                src={storyAudioPreview || profileForm.storyAudioUrl}
-              />
-            ) : null}
 
             <label className="cp-modal__field">
               <span>YouTube 故事連結</span>
