@@ -7,9 +7,9 @@ export const metadata = {
 
 const coreValues = [
   { title: "真實陪伴", description: "結合文字與語音禱告，讓彼此的生命故事被聽見，取代快速、片段的社群互動。" },
-  { title: "透明信任", description: "以區塊鏈紀錄代幣發放與消耗，打造可追蹤、可驗證的守望流程。" },
+  { title: "透明信任", description: "以清楚的紀錄、審核流程與公開說明，打造可追蹤、可理解的守望流程。" },
   { title: "共享資源", description: "提供 API 與 SDK，讓教會、非營利組織與開發者能快速串接，延伸禱告網絡。" },
-  { title: "合規守護", description: "遵循區域法規、重視資料隱私，確保每筆禱告、每次代幣交易都在安全環境中進行。" }
+  { title: "合規守護", description: "遵循區域法規、重視資料隱私，確保每筆禱告與每次互動都在安全環境中進行。" }
 ];
 
 
@@ -36,18 +36,18 @@ const milestones = [
   { title: "2025 10 · Global Rollout", description: "10 開發基礎功能 和社群測試" },
   { title: "2025 11 · 上GCP和購買正式URL", description: "徵求有意願參加的行銷或開發人員" },
   { title: "2025 12 · 預備英文網站", description: "徵求翻譯 或 管理員" },
-  { title: "2026 01 · 上Github 開源", description: "提供非錢包版本給大家使用" },
-  { title: "2026 04 · 預備禱告發送成功後，可以獲得代幣作為紀念", description: "僅自行使用" },
-  { title: "2026 05 · 鼓勵更多使用者參與使用", description: "持有數量減少" },
-  { title: "2026 07 · 預備區塊鏈禱告保存器", description: "環境搭建預計五個月" },
+  { title: "2026 01 · 開放協作", description: "提供可部署版本給教會與社群夥伴使用" },
+  { title: "2026 04 · 優化禱告提交體驗", description: "讓使用者更容易分享需要，也更容易收到回應" },
+  { title: "2026 05 · 鼓勵更多使用者參與使用", description: "持續改善新手流程與社群互動" },
+  { title: "2026 07 · 預備禱告保存與查詢系統", description: "強化資料整理、搜尋與長期保存能力" },
 ];
 
 // 創建新的資訊結構，取代舊的 teamFocuses
 const engagementPoints = [
     {
-        icon: "💖", // 捐款與支持圖標
-        title: "非營利模式與透明捐贈",
-        description: "Start Pray **不收取任何費用**。若您願意支持平臺運行，我們接受 **USDT** 或 Email 聯繫直接捐贈。您將收到平臺運營的**透明帳目報告**。"
+        icon: "💖", // 支持圖標
+        title: "非營利模式與透明支持",
+        description: "Start Pray **不收取任何費用**。若您願意支持平臺運行，歡迎透過 Email 聯繫我們。您將收到平臺運營的**透明帳目報告**。"
     },
     {
         icon: "🤝", // 合作與管理圖標

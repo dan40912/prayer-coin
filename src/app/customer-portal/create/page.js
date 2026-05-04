@@ -6,6 +6,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 
+import PrayerLocationField from "@/components/PrayerLocationField";
 import { SiteFooter, SiteHeader } from "@/components/site-chrome";
 import { useAuthSession } from "@/hooks/useAuthSession";
 import { buildCardMetaArray } from "@/lib/card-meta";
@@ -14,6 +15,15 @@ const HERO_POINTS = [
   "清楚分享當前需要，讓代禱者快速抓住重點",
   "條列式說明能幫助大家更容易進入禱告的負擔",
 ];
+
+const APPROXIMATE_LOCATION_LABEL = "\u5927\u81f4\u4f4d\u7f6e";
+const TAIPEI_LOCATION = {
+  locationKey: "",
+  locationCity: APPROXIMATE_LOCATION_LABEL,
+  locationCountry: "",
+  locationLat: "25.033000",
+  locationLng: "121.565400",
+};
 
 const INITIAL_FORM = {
   title: "",
@@ -25,6 +35,8 @@ const INITIAL_FORM = {
   meta: "",
   detailsHref: "",
   voiceHref: "",
+  ...TAIPEI_LOCATION,
+  isPrivate: false,
 };
 
 const MAX_UPLOAD_BYTES = 10 * 1024 * 1024;
@@ -41,7 +53,8 @@ function normalizeUploadedImage(item) {
   if (!item || typeof item !== "object") return null;
   const url = typeof item.url === "string" ? item.url.trim() : "";
   if (!isInternalUploadUrl(url)) return null;
-  const name = typeof item.name === "string" && item.name.trim() ? item.name.trim() : "uploaded-image";
+  const name =
+    typeof item.name === "string" && item.name.trim() ? item.name.trim() : "uploaded-image";
   return { url, name };
 }
 
@@ -73,9 +86,9 @@ export default function CustomerPortalCreatePage() {
 
       const hasDraftContent = Boolean(
         draft?.form?.title?.trim?.() ||
-          draft?.form?.description?.trim?.() ||
-          draft?.form?.image?.trim?.() ||
-          (Array.isArray(draft?.uploadedImages) && draft.uploadedImages.length)
+        draft?.form?.description?.trim?.() ||
+        draft?.form?.image?.trim?.() ||
+        (Array.isArray(draft?.uploadedImages) && draft.uploadedImages.length)
       );
       if (!hasDraftContent) return;
 
@@ -86,9 +99,20 @@ export default function CustomerPortalCreatePage() {
             .slice(0, MAX_GALLERY_IMAGES)
         : [];
       const draftCover = typeof draft?.form?.image === "string" ? draft.form.image.trim() : "";
-      const safeCoverImage = isInternalUploadUrl(draftCover) ? draftCover : safeUploadedImages[0]?.url || "";
+      const safeCoverImage = isInternalUploadUrl(draftCover)
+        ? draftCover
+        : safeUploadedImages[0]?.url || "";
 
-      setForm((prev) => ({ ...prev, ...draft.form, image: safeCoverImage }));
+      setForm((prev) => ({
+        ...prev,
+        ...draft.form,
+        image: safeCoverImage,
+        locationKey: "",
+        locationCity: APPROXIMATE_LOCATION_LABEL,
+        locationCountry: "",
+        locationLat: draft.form?.locationLat || TAIPEI_LOCATION.locationLat,
+        locationLng: draft.form?.locationLng || TAIPEI_LOCATION.locationLng,
+      }));
       setUploadedImages(safeUploadedImages);
       if (Number.isFinite(draft.categoryId)) {
         setCategoryId((prev) => prev ?? draft.categoryId);
@@ -105,10 +129,7 @@ export default function CustomerPortalCreatePage() {
   useEffect(() => {
     if (typeof window === "undefined") return;
     const hasContent = Boolean(
-      form.title.trim() ||
-        form.description.trim() ||
-        form.image.trim() ||
-        uploadedImages.length
+      form.title.trim() || form.description.trim() || form.image.trim() || uploadedImages.length
     );
     if (!hasContent) {
       window.localStorage.removeItem(DRAFT_STORAGE_KEY);
@@ -166,18 +187,25 @@ export default function CustomerPortalCreatePage() {
     };
   }, []);
 
-  useEffect(() => () => {
-    if (redirectTimer) {
-      clearTimeout(redirectTimer);
-    }
-  }, [redirectTimer]);
+  useEffect(
+    () => () => {
+      if (redirectTimer) {
+        clearTimeout(redirectTimer);
+      }
+    },
+    [redirectTimer]
+  );
 
   const updateFormField = (field) => (event) => {
-    const value = event.target.value;
+    const value = event.target.type === "checkbox" ? event.target.checked : event.target.value;
     setForm((prev) => ({ ...prev, [field]: value }));
     if (field === "image") {
       setStatus(null);
     }
+  };
+
+  const updateLocation = (nextLocation) => {
+    setForm((prev) => ({ ...prev, ...nextLocation }));
   };
 
   const handleFileChange = async (event) => {
@@ -335,6 +363,12 @@ export default function CustomerPortalCreatePage() {
       detailsHref: form.detailsHref.trim(),
       voiceHref: form.voiceHref.trim(),
       categoryId,
+      locationKey: form.locationKey,
+      locationCity: form.locationCity.trim(),
+      locationCountry: form.locationCountry.trim(),
+      locationLat: form.locationLat.trim(),
+      locationLng: form.locationLng.trim(),
+      isPrivate: Boolean(form.isPrivate),
     };
 
     try {
@@ -350,7 +384,10 @@ export default function CustomerPortalCreatePage() {
       }
 
       await response.json();
-      setStatus({ type: "success", message: "禱告卡已建立" });
+      setStatus({
+        type: "success",
+        message: "禱告卡已建立，大致位置可顯示在全球禱告室。",
+      });
       setForm(INITIAL_FORM);
       setUploadedImages([]);
       if (typeof window !== "undefined") {
@@ -398,7 +435,10 @@ export default function CustomerPortalCreatePage() {
 
         <form className="customer-create__form" onSubmit={handleSubmit}>
           {status ? (
-            <div className={`customer-create__status customer-create__status--${status.type}`} role="alert">
+            <div
+              className={`customer-create__status customer-create__status--${status.type}`}
+              role="alert"
+            >
               {status.message}
             </div>
           ) : null}
@@ -434,6 +474,24 @@ export default function CustomerPortalCreatePage() {
             </label>
           </div>
 
+          <PrayerLocationField value={form} onChange={updateLocation} disabled={submitting} />
+
+          <div className="customer-create__privacy-card">
+            <label>
+              <input
+                type="checkbox"
+                checked={form.isPrivate}
+                onChange={updateFormField("isPrivate")}
+              />
+              <span>
+                <strong>內容不公開，只顯示匿名大致位置光點</strong>
+                <small>
+                  勾選後，全球禱告室只會顯示大致位置光點與統計，不公開標題、內文、圖片、上傳者與詳情頁。
+                </small>
+              </span>
+            </label>
+          </div>
+
           <div className="customer-create__row">
             <label className="customer-create__file-label">
               <span>上傳圖片（最多 3 張）</span>
@@ -445,7 +503,8 @@ export default function CustomerPortalCreatePage() {
                 disabled={isUploadingImage || uploadedImages.length >= MAX_GALLERY_IMAGES}
               />
               <small className="cp-helper">
-                支援 JPG、PNG、WEBP，每張上限 10MB，最多 {MAX_GALLERY_IMAGES} 張。圖片上傳後會壓縮儲存；不支援外部圖片網址。
+                支援 JPG、PNG、WEBP，每張上限 10MB，最多 {MAX_GALLERY_IMAGES}{" "}
+                張。圖片上傳後會壓縮儲存；不支援外部圖片網址。
               </small>
             </label>
             {uploadedImages.length ? (
@@ -496,7 +555,11 @@ export default function CustomerPortalCreatePage() {
           </div>
 
           <div className="customer-create__actions">
-            <button type="submit" className="button button--primary" disabled={submitting || isUploadingImage}>
+            <button
+              type="submit"
+              className="button button--primary"
+              disabled={submitting || isUploadingImage}
+            >
               {submitting ? "建立中..." : "建立禱告卡"}
             </button>
             <Link href="/customer-portal" className="button button--ghost" prefetch={false}>
@@ -585,6 +648,41 @@ export default function CustomerPortalCreatePage() {
           background: rgba(2, 6, 23, 0.35);
         }
 
+        .customer-create__privacy-card {
+          border: 1px solid rgba(125, 211, 252, 0.26);
+          border-radius: 16px;
+          background: rgba(14, 165, 233, 0.1);
+          padding: 0.9rem;
+        }
+
+        .customer-create__privacy-card label {
+          display: flex;
+          align-items: flex-start;
+          gap: 0.75rem;
+          color: #e2f6ff;
+        }
+
+        .customer-create__privacy-card input {
+          width: 20px;
+          height: 20px;
+          margin-top: 0.15rem;
+          accent-color: #38bdf8;
+        }
+
+        .customer-create__privacy-card span {
+          display: grid;
+          gap: 0.25rem;
+        }
+
+        .customer-create__privacy-card strong {
+          color: #ffffff;
+        }
+
+        .customer-create__privacy-card small {
+          color: rgba(226, 232, 240, 0.76);
+          line-height: 1.55;
+        }
+
         .customer-create__preview img {
           width: 100%;
           height: 100%;
@@ -646,6 +744,14 @@ export default function CustomerPortalCreatePage() {
 
           .customer-create__actions {
             flex-direction: column;
+            position: sticky;
+            bottom: 0.65rem;
+            z-index: 20;
+            border: 1px solid rgba(148, 163, 184, 0.28);
+            border-radius: 16px;
+            background: rgba(2, 6, 23, 0.86);
+            padding: 0.65rem;
+            backdrop-filter: blur(14px);
           }
 
           .customer-create__actions :global(.button) {
@@ -742,12 +848,10 @@ export default function CustomerPortalCreatePage() {
           max-width: 100%;
         }
 
-        .customer-create__file-label input[type='file'] {
+        .customer-create__file-label input[type="file"] {
           width: 100%;
         }
       `}</style>
     </>
   );
 }
-
-

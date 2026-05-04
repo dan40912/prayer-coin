@@ -15,7 +15,7 @@ const TERMS_SECTIONS = [
     title: "使用原則",
     items: [
       "使用者應確保所提交之祈禱、資料與討論符合所在地法律與社群準則。",
-      "平台所呈現之影響力數據僅供參考，並非法律、財務或醫療專業建議。",
+      "平台所呈現之影響力數據僅供參考，並非法律、醫療或其他專業建議。",
       "任何捐款或資源動員行動請依組織內部審核流程辦理，Start Pray 不介入資金保管。"
     ]
   },
@@ -35,7 +35,7 @@ const RISK_CARDS = [
   {
     heading: "法遵風險",
     description:
-      "各國宗教、公益與金融相關法規差異甚大，使用者應依所在地之法律完成必要申報、稅務與治理程序。"
+      "各國宗教、公益與資料治理相關法規差異甚大，使用者應依所在地之法律完成必要申報與治理程序。"
   },
   {
     heading: "內容風險",
@@ -155,7 +155,7 @@ export default function DisclaimerPage() {
             </div>
             <div className="legal-timeline__item">
               <span>2025 Q3</span>
-              <p>與支付夥伴簽署 SLA，新增合作風險與備援流程。</p>
+              <p>補充第三方服務合作風險與備援流程。</p>
             </div>
           </div>
         </section>

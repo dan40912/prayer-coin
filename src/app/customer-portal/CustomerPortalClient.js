@@ -14,6 +14,7 @@ import CustomerWithdrawPanel from "@/components/customer/CustomerWithdrawPanel";
 import { useAuthSession } from "@/hooks/useAuthSession";
 
 import { saveAuthSession } from "@/lib/auth-storage";
+import { HIDE_CRYPTO_UI } from "@/lib/featureFlags";
 import { buildOvercomerSlug } from "@/lib/overcomer";
 
 
@@ -1322,7 +1323,7 @@ export default function CustomerPortalPage() {
 
       <SiteHeader activePath="/customer-portal" />
 
-      <main className="cp-main">
+      <main className={`cp-main${HIDE_CRYPTO_UI ? " cp-main--hide-crypto" : ""}`}>
 
         {toast ? (
 
@@ -1470,7 +1471,9 @@ export default function CustomerPortalPage() {
 
 
 
-            <CustomerWithdrawPanel profile={profile} onProfileUpdate={setProfile} />
+            {!HIDE_CRYPTO_UI ? (
+              <CustomerWithdrawPanel profile={profile} onProfileUpdate={setProfile} />
+            ) : null}
 
             <section className="cp-section cp-section--cards">
 

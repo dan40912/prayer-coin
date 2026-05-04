@@ -3,6 +3,8 @@
 import fallbackCards from "@/data/homeCards.json";
 import { ensureActiveCustomer } from "@/lib/customer-access";
 import { createHomeCard, readHomeCards } from "@/lib/homeCards";
+import { sanitizePrayerLocationPayload } from "@/lib/prayerLocations";
+import prisma from "@/lib/prisma";
 import { requireSessionUser } from "@/lib/server-session";
 
 const GALLERY_PREFIX = "gallery::";
@@ -55,6 +57,8 @@ function sanitizeCreatePayload(body) {
     detailsHref: body.detailsHref?.trim(),
     voiceHref: body.voiceHref?.trim(),
     categoryId: Number(body.categoryId),
+    isPrivate: Boolean(body.isPrivate),
+    ...sanitizePrayerLocationPayload(body),
   };
 }
 
@@ -91,7 +95,13 @@ function filterFallbackCards(options = {}) {
 
   if (query) {
     results = results.filter((card) => {
-      const haystack = [card?.title, card?.description, Array.isArray(card?.meta) ? card.meta.join(" ") : "", Array.isArray(card?.tags) ? card.tags.join(" ") : "", card?.category?.name]
+      const haystack = [
+        card?.title,
+        card?.description,
+        Array.isArray(card?.meta) ? card.meta.join(" ") : "",
+        Array.isArray(card?.tags) ? card.tags.join(" ") : "",
+        card?.category?.name,
+      ]
         .map(toLowerSafe)
         .join(" ");
 
@@ -174,10 +184,32 @@ export async function POST(request) {
     const user = await ensureActiveCustomer(session);
     const body = await request.json();
     const payload = sanitizeCreatePayload(body);
-    const created = await createHomeCard({
+    let created = await createHomeCard({
       ...payload,
       ownerId: user.id,
     });
+    const expectedDetailsHref = `/prayfor/${created.id}`;
+    if (created.detailsHref !== expectedDetailsHref) {
+      created = await prisma.homePrayerCard.update({
+        where: { id: created.id },
+        data: { detailsHref: expectedDetailsHref },
+        include: {
+          category: true,
+          owner: {
+            select: {
+              name: true,
+              username: true,
+              avatarUrl: true,
+            },
+          },
+          _count: {
+            select: {
+              responses: true,
+            },
+          },
+        },
+      });
+    }
     return NextResponse.json(created, { status: 201 });
   } catch (error) {
     if (error?.code === "UNAUTHENTICATED") {
@@ -192,8 +224,7 @@ export async function POST(request) {
     console.error("-------------------------");
     return NextResponse.json(
       { message: error.message || "Failed to create card" },
-      { status: 400 },
+      { status: 400 }
     );
   }
 }
-

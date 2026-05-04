@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 
 import AdminHintPanel from "@/components/admin/AdminHintPanel";
 import { useAdminFeedback } from "@/components/admin/useAdminFeedback";
+import { HIDE_CRYPTO_UI } from "@/lib/featureFlags";
 
 const numberFormatter = new Intl.NumberFormat("zh-TW", { maximumFractionDigits: 0 });
 const percentFormatter = new Intl.NumberFormat("zh-TW", {
@@ -217,7 +218,9 @@ export default function AdminDashboardPage() {
       rows.push(["封鎖使用者", metrics.blockedUsers]);
       rows.push(["禱告事項數", metrics.totalPrayers]);
       rows.push(["留言數", metrics.totalResponses]);
-      rows.push(["平均錢包餘額", metrics.averageWallet.toFixed(2)]);
+      if (!HIDE_CRYPTO_UI) {
+        rows.push(["平均錢包餘額", metrics.averageWallet.toFixed(2)]);
+      }
 
       rows.push([]);
       rows.push(["高風險使用者 Top 5"]);
@@ -280,7 +283,7 @@ export default function AdminDashboardPage() {
       { id: "blocked-ratio", label: "封鎖比例", value: formatPercent(blockedRatio), footnote: `${formatInteger(metrics.blockedUsers)} 人` },
       { id: "total-prayers", label: "禱告事項", value: formatInteger(metrics.totalPrayers), footnote: "總卡片數" },
       { id: "total-responses", label: "留言與錄音", value: formatInteger(metrics.totalResponses), footnote: "總回應數" },
-      { id: "average-wallet", label: "平均錢包餘額", value: formatCurrency(metrics.averageWallet), footnote: "系統內點數" },
+      { id: "average-wallet", label: "平均系統數值", value: formatCurrency(metrics.averageWallet), footnote: "內部統計" },
     ],
     [blockedRatio, metrics.averageWallet, metrics.blockedUsers, metrics.totalPrayers, metrics.totalResponses, metrics.totalUsers],
   );
@@ -309,7 +312,7 @@ export default function AdminDashboardPage() {
 
       <section className="admin-dashboard__kpis">
         {metricsLoading ? (
-          Array.from({ length: 5 }).map((_, index) => (
+          Array.from({ length: HIDE_CRYPTO_UI ? 4 : 5 }).map((_, index) => (
             <article key={index} className="dashboard-kpi admin-dashboard--loading">
               <p className="dashboard-kpi__label">載入中...</p>
               <div className="dashboard-kpi__value-row">
@@ -326,7 +329,7 @@ export default function AdminDashboardPage() {
             </button>
           </article>
         ) : (
-          metricCards.map((card) => (
+          metricCards.filter((card) => !HIDE_CRYPTO_UI || card.id !== "average-wallet").map((card) => (
             <article key={card.id} className="dashboard-kpi">
               <p className="dashboard-kpi__label">{card.label}</p>
               <div className="dashboard-kpi__value-row">

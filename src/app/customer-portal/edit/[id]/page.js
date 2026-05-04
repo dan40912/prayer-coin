@@ -3,8 +3,18 @@
 import { useEffect, useMemo, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 
+import PrayerLocationField from "@/components/PrayerLocationField";
 import { SiteFooter, SiteHeader } from "@/components/site-chrome";
-import { buildCardMetaArray, parseCardMeta } from "@/lib/card-meta";
+import { parseCardMeta } from "@/lib/card-meta";
+
+const APPROXIMATE_LOCATION_LABEL = "\u5927\u81f4\u4f4d\u7f6e";
+const TAIPEI_LOCATION = {
+  locationKey: "",
+  locationCity: APPROXIMATE_LOCATION_LABEL,
+  locationCountry: "",
+  locationLat: "25.033000",
+  locationLng: "121.565400",
+};
 
 const EMPTY_FORM = {
   title: "",
@@ -17,6 +27,8 @@ const EMPTY_FORM = {
   detailsHref: "",
   voiceHref: "",
   categoryId: "",
+  ...TAIPEI_LOCATION,
+  isPrivate: false,
 };
 const MAX_UPLOAD_BYTES = 5 * 1024 * 1024;
 const MAX_GALLERY_IMAGES = 3;
@@ -35,6 +47,12 @@ function mapCardToForm(card) {
     detailsHref: card.detailsHref ?? "",
     voiceHref: card.voiceHref ?? "",
     categoryId: card.category?.id ? String(card.category.id) : "",
+    locationKey: "",
+    locationCity: APPROXIMATE_LOCATION_LABEL,
+    locationCountry: "",
+    locationLat: card.locationLat != null ? String(card.locationLat) : TAIPEI_LOCATION.locationLat,
+    locationLng: card.locationLng != null ? String(card.locationLng) : TAIPEI_LOCATION.locationLng,
+    isPrivate: Boolean(card.isPrivate),
   };
 }
 
@@ -53,17 +71,25 @@ export default function CustomerPortalEditCardPage() {
   const [isUploadingImage, setIsUploadingImage] = useState(false);
 
   const tagsPreview = useMemo(
-    () => form.tags.split(",").map((tag) => tag.trim()).filter(Boolean),
-    [form.tags],
+    () =>
+      form.tags
+        .split(",")
+        .map((tag) => tag.trim())
+        .filter(Boolean),
+    [form.tags]
   );
 
   const metaPreview = useMemo(
-    () => form.meta.split("\n").map((line) => line.trim()).filter(Boolean),
-    [form.meta],
+    () =>
+      form.meta
+        .split("\n")
+        .map((line) => line.trim())
+        .filter(Boolean),
+    [form.meta]
   );
   const galleryUrls = useMemo(
     () => galleryImages.map((item) => item.url).filter(Boolean),
-    [galleryImages],
+    [galleryImages]
   );
 
   useEffect(() => {
@@ -125,8 +151,12 @@ export default function CustomerPortalEditCardPage() {
   }, [cardId]);
 
   const updateField = (field) => (event) => {
-    const value = event.target.value;
+    const value = event.target.type === "checkbox" ? event.target.checked : event.target.value;
     setForm((prev) => ({ ...prev, [field]: value }));
+  };
+
+  const updateLocation = (nextLocation) => {
+    setForm((prev) => ({ ...prev, ...nextLocation }));
   };
 
   const handleGalleryUpload = async (event) => {
@@ -140,7 +170,9 @@ export default function CustomerPortalEditCardPage() {
       return;
     }
 
-    const imageFiles = files.filter((file) => file.type.startsWith("image/")).slice(0, availableSlots);
+    const imageFiles = files
+      .filter((file) => file.type.startsWith("image/"))
+      .slice(0, availableSlots);
     if (!imageFiles.length) {
       setStatus({ type: "error", message: "請選擇圖片檔案" });
       return;
@@ -230,6 +262,12 @@ export default function CustomerPortalEditCardPage() {
       meta: metaPreview,
       detailsHref: form.detailsHref,
       voiceHref: form.voiceHref,
+      locationKey: form.locationKey,
+      locationCity: form.locationCity.trim(),
+      locationCountry: form.locationCountry.trim(),
+      locationLat: form.locationLat.trim(),
+      locationLng: form.locationLng.trim(),
+      isPrivate: Boolean(form.isPrivate),
       categoryId: Number(form.categoryId),
     };
 
@@ -248,7 +286,10 @@ export default function CustomerPortalEditCardPage() {
       const updated = await response.json();
       setCard(updated);
       setForm(mapCardToForm(updated));
-      setStatus({ type: "success", message: "祈禱卡片已更新" });
+      setStatus({
+        type: "success",
+        message: "祈禱卡片已更新，大致位置可顯示在全球禱告室。",
+      });
     } catch (error) {
       setStatus({ type: "error", message: error.message || "更新失敗" });
     } finally {
@@ -324,6 +365,24 @@ export default function CustomerPortalEditCardPage() {
                 </label>
               </div>
 
+              <PrayerLocationField value={form} onChange={updateLocation} disabled={saving} />
+
+              <div className="cp-private-toggle">
+                <label>
+                  <input
+                    type="checkbox"
+                    checked={form.isPrivate}
+                    onChange={updateField("isPrivate")}
+                  />
+                  <span>
+                    <strong>內容不公開，只顯示匿名大致位置光點</strong>
+                    <small>
+                      勾選後，前台不顯示標題、內文、圖片、上傳者與詳情頁；全球禱告室只保留大致位置光點。
+                    </small>
+                  </span>
+                </label>
+              </div>
+
               <div className="cp-form__grid">
                 <label>
                   <span>圖片替代文字</span>
@@ -331,7 +390,11 @@ export default function CustomerPortalEditCardPage() {
                 </label>
                 <label>
                   <span>分享詳情連結</span>
-                  <input type="url" value={form.detailsHref} onChange={updateField("detailsHref")} />
+                  <input
+                    type="url"
+                    value={form.detailsHref}
+                    onChange={updateField("detailsHref")}
+                  />
                 </label>
               </div>
 
@@ -355,13 +418,21 @@ export default function CustomerPortalEditCardPage() {
                 <strong>儲存前快速檢查</strong>
                 <ul>
                   <li>標題：{form.title || "--"}</li>
-                  <li>分類：{categories.find((item) => String(item.id) === form.categoryId)?.name || "--"}</li>
+                  <li>
+                    分類：
+                    {categories.find((item) => String(item.id) === form.categoryId)?.name || "--"}
+                  </li>
                   <li>標籤：{tagsPreview.length ? tagsPreview.join(", ") : "--"}</li>
                 </ul>
               </div>
 
               <div className="cp-form__actions">
-                <button type="button" className="cp-button cp-button--ghost" onClick={handleBack} disabled={saving}>
+                <button
+                  type="button"
+                  className="cp-button cp-button--ghost"
+                  onClick={handleBack}
+                  disabled={saving}
+                >
                   取消
                 </button>
                 <button type="submit" className="cp-button" disabled={saving}>
@@ -375,6 +446,37 @@ export default function CustomerPortalEditCardPage() {
         </section>
       </main>
       <SiteFooter />
+      <style jsx>{`
+        .cp-private-toggle {
+          border: 1px solid rgba(37, 99, 235, 0.22);
+          border-radius: 14px;
+          background: rgba(37, 99, 235, 0.08);
+          padding: 0.9rem;
+        }
+
+        .cp-private-toggle label {
+          display: flex;
+          align-items: flex-start;
+          gap: 0.75rem;
+        }
+
+        .cp-private-toggle input {
+          width: 20px;
+          height: 20px;
+          margin-top: 0.15rem;
+          accent-color: #2563eb;
+        }
+
+        .cp-private-toggle span {
+          display: grid;
+          gap: 0.25rem;
+        }
+
+        .cp-private-toggle small {
+          color: #475569;
+          line-height: 1.55;
+        }
+      `}</style>
     </>
   );
 }

@@ -19,6 +19,7 @@ export default async function sitemap() {
   const staticRoutes = [
     route("/", now, 1, "daily"),
     route("/prayfor", now, 0.95, "daily"),
+    route("/global-prayer-room", now, 0.9, "daily"),
     route("/overcomer", now, 0.85, "daily"),
     route("/about", now, 0.65, "monthly"),
     route("/howto", now, 0.65, "monthly"),
@@ -28,7 +29,7 @@ export default async function sitemap() {
 
   const [cards, users] = await Promise.all([
     prisma.homePrayerCard.findMany({
-      where: { isBlocked: false },
+      where: { isBlocked: false, isPrivate: false },
       orderBy: { updatedAt: "desc" },
       take: 5000,
       select: {
@@ -60,7 +61,12 @@ export default async function sitemap() {
     .map((user) => {
       const slug = buildOvercomerSlug(user);
       if (!slug) return null;
-      return route(`/overcomer/${encodeURIComponent(slug)}`, user.updatedAt || user.createdAt || now, 0.75, "weekly");
+      return route(
+        `/overcomer/${encodeURIComponent(slug)}`,
+        user.updatedAt || user.createdAt || now,
+        0.75,
+        "weekly"
+      );
     })
     .filter(Boolean);
 

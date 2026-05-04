@@ -20,6 +20,7 @@
     "media:migrate": "node scripts/migrate-media-to-storage.js",
     "seed:admins": "node scripts/seed-admins.js",
     "seed:demo": "node scripts/seed-demo.js",
+    "seed:prayers": "node scripts/seed-prayers.js",
     "qa": "node scripts/qa-flow.mjs",
     "qa:full": "node scripts/qa-flow.mjs full",
     "progress:sync": "python scripts/update_progress_tracker.py --event manual",
@@ -34,12 +35,13 @@
     "bcryptjs": "^3.0.3",
     "next": "^14.2.35",
     "otplib": "^12.0.1",
+    "prisma": "^6.19.2",
     "qrcode": "^1.5.4",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "sanitize-html": "^2.17.1",
     "sharp": "^0.33.5",
-    "prisma": "^6.19.2"
+    "three": "^0.184.0"
   },
   "devDependencies": {
     "eslint": "^8.57.1",

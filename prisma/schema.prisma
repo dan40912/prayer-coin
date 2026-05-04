@@ -8,76 +8,76 @@ datasource db {
 }
 
 model User {
-  id             String           @id @default(cuid())
-  email          String           @unique
+  id             String   @id @default(cuid())
+  email          String   @unique
   name           String?
-  username       String?          @unique
+  username       String?  @unique
   faithTradition String?
   country        String?
   solanaAddress  String?
   passwordHash   String?
-  acceptedTerms  Boolean          @default(false)
-  createdAt      DateTime         @default(now())
-  updatedAt      DateTime         @updatedAt
+  acceptedTerms  Boolean  @default(false)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
 
-  avatarUrl      String?
-  bio            String?
-  storyAudioUrl  String?          @db.Text
-  storyYoutubeUrl String?         @db.Text
-  storyUpdatedAt DateTime?
-  isBlocked      Boolean          @default(false)
-  reportCount    Int              @default(0)
-  sessionVersion Int              @default(0)
-  publicProfileEnabled Boolean    @default(true)
+  avatarUrl            String?
+  bio                  String?
+  storyAudioUrl        String?   @db.Text
+  storyYoutubeUrl      String?   @db.Text
+  storyUpdatedAt       DateTime?
+  isBlocked            Boolean   @default(false)
+  reportCount          Int       @default(0)
+  sessionVersion       Int       @default(0)
+  publicProfileEnabled Boolean   @default(true)
 
-  walletBalance      Decimal          @default(0.00) @db.Decimal(10,2)
-  bscAddress         String?          @db.VarChar(191)
-  isAddressVerified  Boolean          @default(false)
-  transactions       TokenTransaction[]
+  walletBalance     Decimal            @default(0.00) @db.Decimal(10, 2)
+  bscAddress        String?            @db.VarChar(191)
+  isAddressVerified Boolean            @default(false)
+  transactions      TokenTransaction[]
 
-  prayerRequests   PrayerRequest[]
-  prayerResponses  PrayerResponse[]
-  prayerResponseReports PrayerResponseReport[]
-  homePrayerCardReports HomePrayerCardReport[]
-  overcomerReportsSent     OvercomerUserReport[] @relation("OvercomerReportsSent")
-  overcomerReportsReceived OvercomerUserReport[] @relation("OvercomerReportsReceived")
-  homePrayerCards  HomePrayerCard[]
-  resetToken       String?   @db.VarChar(255)
-  resetTokenExpiry DateTime?
+  prayerRequests           PrayerRequest[]
+  prayerResponses          PrayerResponse[]
+  prayerResponseReports    PrayerResponseReport[]
+  homePrayerCardReports    HomePrayerCardReport[]
+  overcomerReportsSent     OvercomerUserReport[]  @relation("OvercomerReportsSent")
+  overcomerReportsReceived OvercomerUserReport[]  @relation("OvercomerReportsReceived")
+  homePrayerCards          HomePrayerCard[]
+  resetToken               String?                @db.VarChar(255)
+  resetTokenExpiry         DateTime?
 
   @@map("user")
 }
 
 model PrayerRequest {
-  id          String          @id @default(cuid())
-  slug        String          @unique
+  id          String       @id @default(cuid())
+  slug        String       @unique
   title       String
   description String
-  status      PrayerStatus    @default(DRAFT)
-  createdAt   DateTime        @default(now())
-  updatedAt   DateTime        @updatedAt
+  status      PrayerStatus @default(DRAFT)
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
 
-  ownerId     String?
-  owner       User?           @relation(fields: [ownerId], references: [id])
+  ownerId String?
+  owner   User?   @relation(fields: [ownerId], references: [id])
 
-  responses   PrayerResponse[]
+  responses PrayerResponse[]
 
   @@map("prayerrequest")
 }
 
 model PrayerResponse {
-  id                String        @id @default(cuid())
+  id                String       @id @default(cuid())
   message           String
   voiceUrl          String?
-  tokensAwarded     Decimal       @default(0) @db.Decimal(10,2)
-  isSettled         Boolean       @default(false)
-  isAnonymous       Boolean       @default(false)
-  isBlocked         Boolean       @default(false)
-  reportCount       Int           @default(0)
-  rewardStatus      RewardStatus  @default(PENDING)
+  tokensAwarded     Decimal      @default(0) @db.Decimal(10, 2)
+  isSettled         Boolean      @default(false)
+  isAnonymous       Boolean      @default(false)
+  isBlocked         Boolean      @default(false)
+  reportCount       Int          @default(0)
+  rewardStatus      RewardStatus @default(PENDING)
   rewardEligibleAt  DateTime?
   rewardEvaluatedAt DateTime?
-  createdAt         DateTime      @default(now())
+  createdAt         DateTime     @default(now())
 
   prayerRequestId String?
   prayerRequest   PrayerRequest? @relation(fields: [prayerRequestId], references: [id])
@@ -85,45 +85,45 @@ model PrayerResponse {
   homeCardId Int?
   homeCard   HomePrayerCard? @relation(fields: [homeCardId], references: [id])
 
-  responderId String?
-  responder   User? @relation(fields: [responderId], references: [id])
-  tokenTransactions TokenTransaction[] @relation("PrayerResponseTransactions")
-  reports        PrayerResponseReport[]
+  responderId       String?
+  responder         User?                  @relation(fields: [responderId], references: [id])
+  tokenTransactions TokenTransaction[]     @relation("PrayerResponseTransactions")
+  reports           PrayerResponseReport[]
 
   @@map("prayerresponse")
 }
 
 model HomePrayerCardReport {
-  id          Int             @id @default(autoincrement())
-  cardId      Int
-  card        HomePrayerCard  @relation(fields: [cardId], references: [id], onDelete: Cascade)
-  reporterId  String
-  reporter    User            @relation(fields: [reporterId], references: [id])
-  reason      String
-  remarks     String?
-  createdAt   DateTime        @default(now())
+  id         Int            @id @default(autoincrement())
+  cardId     Int
+  card       HomePrayerCard @relation(fields: [cardId], references: [id], onDelete: Cascade)
+  reporterId String
+  reporter   User           @relation(fields: [reporterId], references: [id])
+  reason     String
+  remarks    String?
+  createdAt  DateTime       @default(now())
 
+  @@unique([cardId, reporterId])
   @@index([cardId])
   @@index([reason])
   @@index([createdAt])
-  @@unique([cardId, reporterId])
   @@map("home_prayer_card_report")
 }
 
 model PrayerResponseReport {
-  id          Int             @id @default(autoincrement())
-  responseId  String
-  response    PrayerResponse  @relation(fields: [responseId], references: [id], onDelete: Cascade)
-  reporterId  String
-  reporter    User            @relation(fields: [reporterId], references: [id])
-  reason      String
-  remarks     String?
-  createdAt   DateTime        @default(now())
+  id         Int            @id @default(autoincrement())
+  responseId String
+  response   PrayerResponse @relation(fields: [responseId], references: [id], onDelete: Cascade)
+  reporterId String
+  reporter   User           @relation(fields: [reporterId], references: [id])
+  reason     String
+  remarks    String?
+  createdAt  DateTime       @default(now())
 
+  @@unique([responseId, reporterId])
   @@index([responseId])
   @@index([reason])
   @@index([createdAt])
-  @@unique([responseId, reporterId])
   @@map("prayer_response_report")
 }
 
@@ -137,10 +137,10 @@ model OvercomerUserReport {
   remarks      String?
   createdAt    DateTime @default(now())
 
+  @@unique([targetUserId, reporterId])
   @@index([targetUserId])
   @@index([reporterId])
   @@index([createdAt])
-  @@unique([targetUserId, reporterId])
   @@map("overcomer_user_report")
 }
 
@@ -172,61 +172,66 @@ model SiteSetting {
 }
 
 model TokenRewardRule {
-  id               Int      @id @default(1)
-  rewardTokens     Decimal  @default(10.00) @db.Decimal(10,2)
-  observationDays  Int      @default(3)
-  allowedReports   Int      @default(0)
-  updatedAt        DateTime @updatedAt
-  updatedBy        String?
+  id              Int      @id @default(1)
+  rewardTokens    Decimal  @default(10.00) @db.Decimal(10, 2)
+  observationDays Int      @default(3)
+  allowedReports  Int      @default(0)
+  updatedAt       DateTime @updatedAt
+  updatedBy       String?
 
   @@map("token_reward_rule")
 }
 
 model HomePrayerCategory {
-  id          Int               @id @default(autoincrement())
+  id          Int              @id @default(autoincrement())
   name        String
-  slug        String            @unique
+  slug        String           @unique
   description String?
-  sortOrder   Int               @default(0)
-  isActive    Boolean           @default(true)
-  createdAt   DateTime          @default(now())
-  updatedAt   DateTime          @default(now()) @updatedAt
+  sortOrder   Int              @default(0)
+  isActive    Boolean          @default(true)
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @default(now()) @updatedAt
   cards       HomePrayerCard[]
 
   @@map("home_prayer_category")
 }
 
 model HomePrayerCard {
-  id           Int                @id @default(autoincrement())
-  slug         String             @unique
-  image        String
-  alt          String?
-  title        String
-  description  String
-  tags         Json
-  meta         Json
-  detailsHref  String
-  voiceHref    String?
-  sortOrder    Int                @default(0)
-  categoryId   Int
-  category     HomePrayerCategory @relation(fields: [categoryId], references: [id])
-  createdAt    DateTime           @default(now())
-  updatedAt    DateTime           @default(now()) @updatedAt
+  id              Int                @id @default(autoincrement())
+  slug            String             @unique
+  image           String
+  alt             String?
+  title           String
+  description     String
+  tags            Json
+  meta            Json
+  detailsHref     String
+  voiceHref       String?
+  locationCity    String?            @db.VarChar(120)
+  locationCountry String?            @db.VarChar(120)
+  locationLat     Decimal?           @db.Decimal(9, 6)
+  locationLng     Decimal?           @db.Decimal(9, 6)
+  isPrivate       Boolean            @default(false)
+  sortOrder       Int                @default(0)
+  categoryId      Int
+  category        HomePrayerCategory @relation(fields: [categoryId], references: [id])
+  createdAt       DateTime           @default(now())
+  updatedAt       DateTime           @default(now()) @updatedAt
 
-  ownerId      String?
-  owner        User?              @relation(fields: [ownerId], references: [id])
+  ownerId String?
+  owner   User?   @relation(fields: [ownerId], references: [id])
 
-  responses    PrayerResponse[]
-  tokenTransactions TokenTransaction[] @relation("HomePrayerCardTransactions")
-  reports      HomePrayerCardReport[]
+  responses         PrayerResponse[]
+  tokenTransactions TokenTransaction[]     @relation("HomePrayerCardTransactions")
+  reports           HomePrayerCardReport[]
 
-  isBlocked    Boolean            @default(false)
-  reportCount  Int                @default(0)
-  isSettled    Boolean            @default(false)
-  settledAmount Decimal?          @db.Decimal(10,2)
+  isBlocked     Boolean  @default(false)
+  reportCount   Int      @default(0)
+  isSettled     Boolean  @default(false)
+  settledAmount Decimal? @db.Decimal(10, 2)
 
-  @@map("home_prayer_card")
   @@index([categoryId])
+  @@map("home_prayer_card")
 }
 
 enum RewardStatus {
@@ -288,43 +293,43 @@ model AdminAccount {
 }
 
 model TokenTransaction {
-  id                String             @id @default(cuid())
+  id                String            @id @default(cuid())
   userId            String
-  user              User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user              User              @relation(fields: [userId], references: [id], onDelete: Cascade)
   type              TransactionType
-  status            TransactionStatus  @default(PENDING)
-  amount            Decimal            @db.Decimal(10,2)
+  status            TransactionStatus @default(PENDING)
+  amount            Decimal           @db.Decimal(10, 2)
   relatedHomeCardId Int?
-  relatedHomeCard   HomePrayerCard?    @relation("HomePrayerCardTransactions", fields: [relatedHomeCardId], references: [id])
+  relatedHomeCard   HomePrayerCard?   @relation("HomePrayerCardTransactions", fields: [relatedHomeCardId], references: [id])
   relatedResponseId String?
-  relatedResponse   PrayerResponse?    @relation("PrayerResponseTransactions", fields: [relatedResponseId], references: [id])
-  txHash            String?            @db.VarChar(191)
-  targetAddress     String?            @db.VarChar(191)
-  gasFee            Decimal?           @db.Decimal(10,8)
+  relatedResponse   PrayerResponse?   @relation("PrayerResponseTransactions", fields: [relatedResponseId], references: [id])
+  txHash            String?           @db.VarChar(191)
+  targetAddress     String?           @db.VarChar(191)
+  gasFee            Decimal?          @db.Decimal(10, 8)
   metadata          Json?
-  createdAt         DateTime           @default(now())
-  updatedAt         DateTime           @updatedAt
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
 
-  @@map("token_transaction")
   @@index([userId, createdAt])
   @@index([type, status])
+  @@map("token_transaction")
 }
 
 model AdminLog {
-  id           Int               @id @default(autoincrement())
-  category     AdminLogCategory
-  level        AdminLogLevel     @default(INFO)
-  message      String
-  action       String?
-  actorId      String?
-  actorEmail   String?
-  targetType   String?
-  targetId     String?
-  requestPath  String?
-  metadata     Json?
-  createdAt    DateTime          @default(now())
+  id          Int              @id @default(autoincrement())
+  category    AdminLogCategory
+  level       AdminLogLevel    @default(INFO)
+  message     String
+  action      String?
+  actorId     String?
+  actorEmail  String?
+  targetType  String?
+  targetId    String?
+  requestPath String?
+  metadata    Json?
+  createdAt   DateTime         @default(now())
 
-  @@map("admin_log")
   @@index([category, createdAt])
   @@index([createdAt])
+  @@map("admin_log")
 }

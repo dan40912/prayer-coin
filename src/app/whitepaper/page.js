@@ -16,7 +16,7 @@ const TERMS_SECTIONS = [
     title: "使用原則",
     items: [
       "使用者應確保所提交之祈禱、資料與討論符合所在地法律與社群準則。",
-      "平台所呈現之影響力數據僅供參考，並非法律、財務或醫療專業建議。",
+      "平台所呈現之影響力數據僅供參考，並非法律、醫療或其他專業建議。",
       "任何捐款或資源動員行動請依組織內部審核流程辦理，Start Pray 不介入資金保管。"
     ]
   },
@@ -36,7 +36,7 @@ const RISK_CARDS = [
   {
     heading: "法遵風險",
     description:
-      "各國宗教、公益與金融相關法規差異甚大，使用者應依所在地之法律完成必要申報、稅務與治理程序。"
+      "各國宗教、公益與資料治理相關法規差異甚大，使用者應依所在地之法律完成必要申報與治理程序。"
   },
   {
     heading: "內容風險",
@@ -64,8 +64,8 @@ export default function WhitepaperPage() {
       <main className="whitepaper-page">
  <section id="tech-roadmap">
 <div className="roadmap-header">
-<h2>Start Pray 技術路線圖：從中心化到去中心化</h2>
-<p>我們的發展分為四個階段，旨在逐步提升平台的透明度、可信度與用戶內容的永久性。</p>
+<h2>Start Pray 技術路線圖：從穩定服務到開放協作</h2>
+<p>我們的發展分為四個階段，旨在逐步提升平台的穩定度、透明度、可信度與內容保存能力。</p>
 {/* 突出顯示當前階段 */}
 <div className="current-status-tag">
 目前階段：Phase 0（中心化啟動）
@@ -82,7 +82,7 @@ export default function WhitepaperPage() {
   </div>
   <div className="stage-content">
     <p className="stage-goal">
-      **現階段：** 平台已上線並運作。所有帳戶和交易都集中儲存在我們的資料庫中，包含模擬的 Start Pray 代幣餘額。
+      **現階段：** 平台已上線並運作。帳戶、禱告卡與回應紀錄集中儲存在我們的資料庫中，便於快速維護與改善體驗。
     </p>
     <p className="stage-focus">
       **核心重點：** 快速啟動、最小可行產品 (MVP)。所有信任度基於我們的隱私和透明政策。
@@ -97,36 +97,36 @@ export default function WhitepaperPage() {
 <div className="roadmap-stage next-stage" data-phase="1">
   <div className="stage-title-wrap">
     <span className="stage-label">Phase 1</span>
-    <h3 className="stage-title">數位資產發行</h3>
+    <h3 className="stage-title">透明營運報告</h3>
   </div>
   <div className="stage-content">
     <p className="stage-goal">
-      **目標：** 在 Binance Smart Chain (BSC) 上正式發行 Start Pray 代幣。代幣具備公開的經濟模型、多重簽名管理和專業審計。
+      **目標：** 建立定期營運報告，公開說明平台維護、內容治理、資料保護與社群參與狀況。
     </p>
     <p className="stage-focus">
-      **核心重點：** 發行官方數位貨幣。代幣可在市場上流通，但用戶的內容和資料仍集中管理。
+      **核心重點：** 讓使用者和合作夥伴能理解平台如何運作、如何處理資料，以及如何維護社群安全。
     </p>
     <p className="stage-risk">
-      **風險/挑戰：** 代幣發行與合規性、市場流動性。
+      **風險/挑戰：** 報告格式、資料揭露範圍與隱私保護需要持續校準。
     </p>
   </div>
 </div>
 
-{/* Phase 2: 內容混合上鏈 */}
+{/* Phase 2: 內容保存與驗證 */}
 <div className="roadmap-stage" data-phase="2">
   <div className="stage-title-wrap">
     <span className="stage-label">Phase 2</span>
-    <h3 className="stage-title">內容混合上鏈</h3>
+    <h3 className="stage-title">內容保存與驗證</h3>
   </div>
   <div className="stage-content">
     <p className="stage-goal">
-      **目標：** 透過將用戶的音訊/文字內容的「指紋」（CID 或 Hash）寫入區塊鏈，來驗證內容的真實性和時間戳。
+      **目標：** 建立內容版本紀錄與時間戳，協助使用者確認禱告內容、語音與回應的建立時間。
     </p>
     <p className="stage-focus">
-      **核心重點：** 內容不可竄改性。內容檔案儲存在去中心化儲存（如 IPFS），確保內容來源可驗證。
+      **核心重點：** 內容可追蹤、可備份、可查詢，並在必要時提供清楚的異動紀錄。
     </p>
     <p className="stage-risk">
-      **風險/挑戰：** 混合架構的複雜性、資料同步。
+      **風險/挑戰：** 備份成本、資料同步與使用者刪除權之間需要取得平衡。
     </p>
   </div>
 </div>
@@ -135,17 +135,17 @@ export default function WhitepaperPage() {
 <div className="roadmap-stage" data-phase="3">
   <div className="stage-title-wrap">
     <span className="stage-label">Phase 3</span>
-    <h3 className="stage-title">永久透明與治理</h3>
+    <h3 className="stage-title">長期保存與治理</h3>
   </div>
   <div className="stage-content">
     <p className="stage-goal">
-      **目標：** 內容實現永久去中心化儲存 (Arweave 等)。建立驗證器供公眾查詢，並讓社群能參與平台決策（治理）。
+      **目標：** 建立長期保存機制與社群治理流程，讓重要見證、禱告紀錄與平台決策能被妥善保存。
     </p>
     <p className="stage-focus">
-      **核心重點：** 永久保存與社群自治。最大限度地提升平台的透明度和去中心化程度。
+      **核心重點：** 長期保存與社群參與，最大限度提升平台的透明度與可信度。
     </p>
     <p className="stage-risk">
-      **風險/挑戰：** 儲存成本、去中心化治理實施。
+      **風險/挑戰：** 儲存成本、審核權限與社群治理流程設計。
     </p>
   </div>
 </div>

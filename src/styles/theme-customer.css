@@ -8,6 +8,12 @@
   color: var(--text-main);
 }
 
+.cp-main--hide-crypto .cp-profile__meta > span:nth-of-type(2),
+.cp-main--hide-crypto .home-stats__container > .home-stats__item:first-of-type,
+.cp-main--hide-crypto .cp-reply__meta > span:nth-child(n + 3) {
+  display: none !important;
+}
+
 .cp-profile,
 .cp-section,
 .cp-card,

@@ -1,0 +1,75 @@
+.fa-solid {
+  display: inline-block;
+  min-width: 1em;
+  font-style: normal;
+  font-variant: normal;
+  line-height: 1;
+  text-align: center;
+  text-rendering: auto;
+}
+
+.fa-solid::before {
+  display: inline-block;
+}
+
+.fa-microphone::before {
+  content: "🎙";
+}
+
+.fa-rotate-right::before {
+  content: "↻";
+}
+
+.fa-paper-plane::before {
+  content: "➤";
+}
+
+.fa-pause::before {
+  content: "Ⅱ";
+}
+
+.fa-play::before {
+  content: "▶";
+}
+
+.fa-spinner::before {
+  content: "◌";
+}
+
+.fa-wave-square::before {
+  content: "≋";
+}
+
+.fa-xmark::before {
+  content: "×";
+}
+
+.fa-backward-step::before {
+  content: "⏮";
+}
+
+.fa-forward-step::before {
+  content: "⏭";
+}
+
+.fa-repeat::before {
+  content: "↺";
+}
+
+.fa-list::before {
+  content: "☰";
+}
+
+.fa-share-nodes::before {
+  content: "↗";
+}
+
+.fa-spin {
+  animation: faLiteSpin 1s linear infinite;
+}
+
+@keyframes faLiteSpin {
+  to {
+    transform: rotate(360deg);
+  }
+}

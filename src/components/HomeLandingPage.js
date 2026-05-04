@@ -1,123 +1,161 @@
 import Link from "next/link";
 
+import HomeGlobeHero from "@/components/HomeGlobeHero";
 import HomePrayerExplorer from "@/components/HomePrayerExplorer";
 import { SiteFooter, SiteHeader } from "@/components/site-chrome";
-import { readBanner } from "@/lib/banner";
 import { readActiveCategories } from "@/lib/homeCategories";
 import { readHomeCards } from "@/lib/homeCards";
 import { readHomeStats } from "@/lib/homeStats";
+import prisma from "@/lib/prisma";
 import { buildPageMetadata } from "@/lib/seo";
 
 export const dynamic = "force-dynamic";
 
-const DEFAULT_PRIMARY_CTA = { label: "發布代禱需求", href: "/customer-portal/create" };
-const DEFAULT_SECONDARY_CTA = { label: "先看平台怎麼運作", href: "/howto" };
-const DEFAULT_HERO_IMAGE = "/img/categories/popular.jpg";
+const PAGE_TEXT = {
+  trustTitle: "平台資訊",
+  aboutTitle: "關於 Start Pray",
+  aboutCopy: "了解我們如何把代禱需要整理成更容易被看見與回應的空間。",
+  howtoTitle: "使用方式",
+  howtoCopy: "快速了解如何發布代禱、回應他人，以及在全球禱告室中看見位置光點。",
+  policyTitle: "資料與說明",
+  policyCopy: "閱讀平台治理、資料隱私與使用邊界，讓分享與代禱更安心。",
+  learnMore: "了解更多",
+  guide: "查看教學",
+  whitepaper: "查看說明",
+};
 
-function normalizeCta(cta, fallback) {
-  const label = cta?.label?.trim?.() || fallback.label;
-  const href = cta?.href?.trim?.() || fallback.href;
+function toGlobalPrayerPayload(card) {
+  const isPrivate = Boolean(card.isPrivate);
 
-  if (!href.startsWith("/")) return fallback;
-  if (href.startsWith("/legacy")) return fallback;
+  return {
+    id: card.id,
+    isPrivate,
+    title: isPrivate ? "匿名代禱" : card.title,
+    description: isPrivate ? "這是一個匿名代禱需要，請一起守望。" : card.description,
+    createdAt: card.createdAt?.toISOString?.() ?? null,
+    locationCity: card.locationCity,
+    locationCountry: card.locationCountry,
+    locationLat: Number(card.locationLat),
+    locationLng: Number(card.locationLng),
+    category: isPrivate ? null : card.category,
+    owner: isPrivate ? null : card.owner,
+    responseCount: isPrivate ? 0 : card._count?.responses ?? 0,
+  };
+}
 
-  return { label, href };
+function buildHeroStats(stats, globalPrayers) {
+  const oneDayAgo = Date.now() - 24 * 60 * 60 * 1000;
+  const locationLights = new Set(
+    globalPrayers.map((prayer) => {
+      const lat = Number(prayer.locationLat);
+      const lng = Number(prayer.locationLng);
+      return `${prayer.locationCity || "approx"}::${lat.toFixed(3)}::${lng.toFixed(3)}`;
+    })
+  ).size;
+  const todayNew = globalPrayers.filter((prayer) => {
+    const time = prayer.createdAt ? new Date(prayer.createdAt).getTime() : 0;
+    return Number.isFinite(time) && time >= oneDayAgo;
+  }).length;
+
+  return {
+    totalPrayers: stats.totalPrayerCards.toLocaleString("zh-TW"),
+    locationLights: locationLights.toLocaleString("zh-TW"),
+    todayNew: todayNew.toLocaleString("zh-TW"),
+  };
+}
+
+function toClientValue(value) {
+  if (value == null) return value;
+  if (value instanceof Date) return value.toISOString();
+  if (typeof value !== "object") return value;
+  if (typeof value.toNumber === "function") return value.toNumber();
+  if (Array.isArray(value)) return value.map(toClientValue);
+
+  return Object.fromEntries(Object.entries(value).map(([key, entry]) => [key, toClientValue(entry)]));
 }
 
 export const metadata = buildPageMetadata({
-  title: "Start Pray 一起禱告吧",
-  description: "分享代禱事項、用文字與語音彼此回應，並透過得勝者故事看見信仰中的陪伴與盼望。",
+  title: "Start Pray",
+  description: "在全球禱告室中看見代禱需要，一起為世界各地守望。",
   path: "/",
-  image: DEFAULT_HERO_IMAGE,
+  image: "/img/categories/popular.jpg",
 });
 
 export default async function HomeLandingPage() {
-  const [banner, categories, topCards, stats] = await Promise.all([
-    readBanner(),
+  const [categories, topCards, stats, globalPrayerCards] = await Promise.all([
     readActiveCategories(),
     readHomeCards({ sort: "responses", limit: 12 }),
     readHomeStats(),
+    prisma.homePrayerCard.findMany({
+      where: {
+        isBlocked: false,
+        locationCity: { not: null },
+        locationLat: { not: null },
+        locationLng: { not: null },
+      },
+      orderBy: [{ createdAt: "desc" }],
+      take: 80,
+      select: {
+        id: true,
+        isPrivate: true,
+        title: true,
+        description: true,
+        createdAt: true,
+        locationCity: true,
+        locationCountry: true,
+        locationLat: true,
+        locationLng: true,
+        category: { select: { name: true, slug: true } },
+        owner: { select: { name: true, username: true } },
+        _count: { select: { responses: true } },
+      },
+    }),
   ]);
 
-  const primaryCta = normalizeCta(banner?.primaryCta, DEFAULT_PRIMARY_CTA);
-  const secondaryCta = normalizeCta(banner?.secondaryCta, DEFAULT_SECONDARY_CTA);
-  const heroImage = banner?.heroImage || DEFAULT_HERO_IMAGE;
+  const globalPrayers = globalPrayerCards.map(toGlobalPrayerPayload);
+  const heroStats = buildHeroStats(stats, globalPrayers);
+  const clientCategories = toClientValue(categories);
+  const clientTopCards = toClientValue(topCards);
 
   return (
     <>
-      <SiteHeader activePath="/prayfor" />
+      <SiteHeader activePath="/" />
 
-      <main>
-        <section className="hero hero--full hero--fade" style={{ backgroundImage: `url(${heroImage})` }}>
-          <div className="hero__overlay" />
-          <div className="hero__content">
-            {/* <span className="badge-soft hero__badge">{banner?.eyebrow || "START PRAY"}</span> */}
-            <h1>{banner?.headline || "說出你的需要，讓人用禱告回應你"}</h1>
-            {/* <h2>{banner?.subheadline || "你可以發出代禱請求，也可以用聲音陪伴他人。"}</h2> */}
-            {/* <p>{banner?.description || "在這裡，代禱不是被滑過，而是被真實地聽見。"}</p> */}
-            <div className="hero__buttons">
-              <Link href={primaryCta.href} className="button button--primary" prefetch={false}>
-                {primaryCta.label}
-              </Link>
-              <Link href={secondaryCta.href} className="button button--ghost" prefetch={false}>
-                {secondaryCta.label}
-              </Link>
-            </div>
-          </div>
-        </section>
+      <main className="home-page">
+        <HomeGlobeHero
+          prayers={globalPrayers}
+          primaryHref="/global-prayer-room"
+          secondaryHref="/customer-portal/create"
+          stats={heroStats}
+        />
 
-        <section className="section home-stats" aria-label="平台數據摘要">
-          <div className="home-stats__container">
-            <article className="home-stats__item">
-              <span className="home-stats__icon" aria-hidden="true">
-                🙏
-              </span>
-              <span className="home-stats__label">代禱事項</span>
-              <strong className="home-stats__value">{stats.totalPrayerCards.toLocaleString("zh-TW")}</strong>
-            </article>
-            <article className="home-stats__item">
-              <span className="home-stats__icon" aria-hidden="true">
-                👥
-              </span>
-              <span className="home-stats__label">參與使用者</span>
-              <strong className="home-stats__value">{stats.totalUsers.toLocaleString("zh-TW")}</strong>
-            </article>
-            <article className="home-stats__item">
-              <span className="home-stats__icon" aria-hidden="true">
-                🎧
-              </span>
-              <span className="home-stats__label">語音回應</span>
-              <strong className="home-stats__value">{stats.totalVoiceResponses.toLocaleString("zh-TW")}</strong>
-            </article>
-          </div>
-        </section>
-
-        <section >
-          <HomePrayerExplorer initialCategories={categories} initialCards={topCards} />
+        <section>
+          <HomePrayerExplorer initialCategories={clientCategories} initialCards={clientTopCards} />
         </section>
 
         <section className="section bg-legal-links" id="trust-links">
           <div className="section__container">
+            <h2>{PAGE_TEXT.trustTitle}</h2>
             <div className="info-links-grid">
               <div className="info-link-group">
-                <h3>平台定位</h3>
-                <p>了解 Start Pray 的核心價值、適合對象與服務邊界。</p>
+                <h3>{PAGE_TEXT.aboutTitle}</h3>
+                <p>{PAGE_TEXT.aboutCopy}</p>
                 <Link href="/about" className="link-arrow" prefetch={false}>
-                  前往 About
+                  {PAGE_TEXT.learnMore}
                 </Link>
               </div>
               <div className="info-link-group">
-                <h3>使用方式</h3>
-                <p>一步步看發布、留言、語音回應與後續追蹤方式。</p>
+                <h3>{PAGE_TEXT.howtoTitle}</h3>
+                <p>{PAGE_TEXT.howtoCopy}</p>
                 <Link href="/howto" className="link-arrow" prefetch={false}>
-                  前往 HowTo
+                  {PAGE_TEXT.guide}
                 </Link>
               </div>
               <div className="info-link-group">
-                <h3>條款與說明</h3>
-                <p>查看白皮書、使用條款與平台規範，建立使用信任。</p>
+                <h3>{PAGE_TEXT.policyTitle}</h3>
+                <p>{PAGE_TEXT.policyCopy}</p>
                 <Link href="/whitepaper" className="link-arrow" prefetch={false}>
-                  前往條款
+                  {PAGE_TEXT.whitepaper}
                 </Link>
               </div>
             </div>

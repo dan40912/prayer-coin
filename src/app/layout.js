@@ -1,6 +1,7 @@
 import "./globals.css";
 import "@/styles/theme-modern.css";
 import "@/styles/admin.css";
+import "@/styles/fontawesome-lite.css";
 import { headers } from "next/headers";
 import { Open_Sans, Raleway, Poppins } from "next/font/google";
 
@@ -25,7 +26,8 @@ export const metadata = {
       default: "Start Pray 一起禱告吧",
       template: `%s | ${SITE_NAME}`,
     },
-    description: "Start Pray 是一個讓人分享代禱事項、用文字與語音彼此回應，並看見得勝者故事的禱告平台。",
+    description:
+      "Start Pray 是一個讓人分享代禱事項、用文字與語音彼此回應，並看見得勝者故事的禱告平台。",
     path: "/",
   }),
   applicationName: SITE_NAME,
@@ -93,10 +95,7 @@ function StructuredData() {
   };
 
   return (
-    <script
-      type="application/ld+json"
-      dangerouslySetInnerHTML={{ __html: JSON.stringify(data) }}
-    />
+    <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(data) }} />
   );
 }
 
@@ -108,14 +107,12 @@ export default async function RootLayout({ children }) {
     const settings = await readSiteSettings();
     if (settings?.maintenanceMode) {
       return (
-        <html lang="zh-Hant" className={`${openSans.variable} ${raleway.variable} ${poppins.variable}`}>
+        <html
+          lang="zh-Hant"
+          className={`${openSans.variable} ${raleway.variable} ${poppins.variable}`}
+        >
           <head>
             <meta name="robots" content="noindex,nofollow" />
-            <link
-              rel="stylesheet"
-              href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
-              referrerPolicy="no-referrer"
-            />
           </head>
           <body className="admin-layout">
             <SiteHeader />
@@ -126,7 +123,8 @@ export default async function RootLayout({ children }) {
                 alignItems: "center",
                 justifyContent: "center",
                 padding: "4rem 1.5rem",
-                background: "linear-gradient(160deg, rgba(15, 23, 42, 0.92), rgba(37, 99, 235, 0.65))",
+                background:
+                  "linear-gradient(160deg, rgba(15, 23, 42, 0.92), rgba(37, 99, 235, 0.65))",
               }}
             >
               <div
@@ -160,7 +158,14 @@ export default async function RootLayout({ children }) {
                     我們正在調整服務，請稍後再回來。若有緊急需求，請聯絡客服信箱。
                   </p>
                 </div>
-                <div style={{ display: "flex", justifyContent: "center", gap: "1rem", flexWrap: "wrap" }}>
+                <div
+                  style={{
+                    display: "flex",
+                    justifyContent: "center",
+                    gap: "1rem",
+                    flexWrap: "wrap",
+                  }}
+                >
                   <a
                     href="mailto:startpraynow@gmail.com"
                     style={{
@@ -191,11 +196,6 @@ export default async function RootLayout({ children }) {
     <html lang="zh-Hant" className={`${openSans.variable} ${raleway.variable} ${poppins.variable}`}>
       <head>
         <link rel="canonical" href={absoluteUrl(requestPath || "/")} />
-        <link
-          rel="stylesheet"
-          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
-          referrerPolicy="no-referrer"
-        />
       </head>
       <body className="admin-layout">
         <StructuredData />

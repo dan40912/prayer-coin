@@ -5,6 +5,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import AdminHintPanel from "@/components/admin/AdminHintPanel";
 import { useAdminFeedback } from "@/components/admin/useAdminFeedback";
 import { useDebouncedValue } from "@/hooks/useDebouncedValue";
+import { HIDE_CRYPTO_UI } from "@/lib/featureFlags";
 
 const PAGE_SIZE = 10;
 
@@ -474,7 +475,12 @@ export default function AdminUsersPage() {
       </section>
 
       {editorOpen ? (
-        <div className="admin-editor" role="dialog" aria-modal="true" aria-label="使用者編輯">
+        <div
+          className={`admin-editor${HIDE_CRYPTO_UI ? " admin-editor--hide-crypto" : ""}`}
+          role="dialog"
+          aria-modal="true"
+          aria-label="使用者編輯"
+        >
           <div className="admin-editor__backdrop" onClick={requestCloseEditor} />
           <section className="admin-editor__dialog">
             <header className="admin-editor__header">
@@ -623,35 +629,41 @@ export default function AdminUsersPage() {
                       />
                     </label>
 
-                    <label className="admin-editor__field">
-                      <span>Solana 地址</span>
-                      <input
-                        type="text"
-                        value={editForm.solanaAddress}
-                        onChange={(event) => handleEditField("solanaAddress", event.target.value)}
-                        placeholder="Solana wallet"
-                      />
-                    </label>
+                    {!HIDE_CRYPTO_UI ? (
+                      <>
+                        <label className="admin-editor__field">
+                          <span>Solana 地址</span>
+                          <input
+                            type="text"
+                            value={editForm.solanaAddress}
+                            onChange={(event) => handleEditField("solanaAddress", event.target.value)}
+                            placeholder="Solana wallet"
+                          />
+                        </label>
 
-                    <label className="admin-editor__field">
-                      <span>BSC 地址</span>
-                      <input
-                        type="text"
-                        value={editForm.bscAddress}
-                        onChange={(event) => handleEditField("bscAddress", event.target.value)}
-                        placeholder="BSC wallet"
-                      />
-                    </label>
+                        <label className="admin-editor__field">
+                          <span>BSC 地址</span>
+                          <input
+                            type="text"
+                            value={editForm.bscAddress}
+                            onChange={(event) => handleEditField("bscAddress", event.target.value)}
+                            placeholder="BSC wallet"
+                          />
+                        </label>
+                      </>
+                    ) : null}
                   </div>
 
-                  <label className="admin-editor__checkbox">
-                    <input
-                      type="checkbox"
-                      checked={editForm.isAddressVerified}
-                      onChange={(event) => handleEditField("isAddressVerified", event.target.checked)}
-                    />
-                    <span>錢包地址已驗證</span>
-                  </label>
+                  {!HIDE_CRYPTO_UI ? (
+                    <label className="admin-editor__checkbox">
+                      <input
+                        type="checkbox"
+                        checked={editForm.isAddressVerified}
+                        onChange={(event) => handleEditField("isAddressVerified", event.target.checked)}
+                      />
+                      <span>錢包地址已驗證</span>
+                    </label>
+                  ) : null}
                 </section>
 
                 <footer className="admin-editor__actions">

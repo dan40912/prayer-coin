@@ -23,7 +23,7 @@ export default function LoginPage() {
             <section className="auth-card">
               <div>
                 <h1>歡迎回來</h1>
-                <p>登入後即可管理禱告內容、追蹤互動數據並查看代幣餘額。</p>
+                <p>登入後即可管理禱告內容、追蹤互動數據並整理個人資料。</p>
               </div>
 
               {/* <div className="social-buttons">

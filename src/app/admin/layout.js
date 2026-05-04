@@ -6,6 +6,7 @@ import { useEffect, useMemo, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 
 import AdminRouteHints from "@/components/admin/AdminRouteHints";
+import { HIDE_CRYPTO_UI } from "@/lib/featureFlags";
 
 const ADMIN_RESTRICTED_PATHS = ["/admin/users", "/admin/wallet", "/admin/log", "/admin/settings"];
 
@@ -76,8 +77,9 @@ export default function AdminLayout({ children }) {
   }, [pathname]);
 
   const visibleNavItems = useMemo(() => {
-    if (!session?.role) return NAV_ITEMS;
-    return NAV_ITEMS.filter((item) => item.roles.includes(session.role));
+    const items = HIDE_CRYPTO_UI ? NAV_ITEMS.filter((item) => item.href !== "/admin/wallet") : NAV_ITEMS;
+    if (!session?.role) return items;
+    return items.filter((item) => item.roles.includes(session.role));
   }, [session]);
 
   const currentNavLabel = useMemo(() => {

@@ -1,6 +1,7 @@
 "use client";
 
 import AdminHintPanel from "@/components/admin/AdminHintPanel";
+import { HIDE_CRYPTO_UI } from "@/lib/featureFlags";
 
 const DEFAULT_HINT = {
   title: "後台操作提示",
@@ -80,6 +81,8 @@ function resolveHint(pathname) {
 }
 
 export default function AdminRouteHints({ pathname }) {
+  if (HIDE_CRYPTO_UI && pathname?.startsWith("/admin/wallet")) return null;
+
   const hint = resolveHint(pathname);
   if (!hint) return null;
 

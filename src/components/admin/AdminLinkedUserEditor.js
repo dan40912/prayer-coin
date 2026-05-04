@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { HIDE_CRYPTO_UI } from "@/lib/featureFlags";
 
 function createEmptyForm() {
   return {
@@ -186,7 +187,12 @@ export default function AdminLinkedUserEditor({
   const publicProfileHref = form.username ? `/overcomer/${form.username}` : "";
 
   return (
-    <div className="admin-editor admin-editor--child" role="dialog" aria-modal="true" aria-label={`${roleLabel}編輯`}>
+    <div
+      className={`admin-editor admin-editor--child${HIDE_CRYPTO_UI ? " admin-editor--hide-crypto" : ""}`}
+      role="dialog"
+      aria-modal="true"
+      aria-label={`${roleLabel}編輯`}
+    >
       <div className="admin-editor__backdrop" onClick={() => void requestClose()} />
       <section className="admin-editor__dialog">
         <header className="admin-editor__header">
@@ -307,35 +313,41 @@ export default function AdminLinkedUserEditor({
                   />
                 </label>
 
-                <label className="admin-editor__field">
-                  <span>Solana 地址</span>
-                  <input
-                    type="text"
-                    value={form.solanaAddress}
-                    onChange={(event) => handleEditField("solanaAddress", event.target.value)}
-                    placeholder="Solana wallet"
-                  />
-                </label>
+                {!HIDE_CRYPTO_UI ? (
+                  <>
+                    <label className="admin-editor__field">
+                      <span>Solana 地址</span>
+                      <input
+                        type="text"
+                        value={form.solanaAddress}
+                        onChange={(event) => handleEditField("solanaAddress", event.target.value)}
+                        placeholder="Solana wallet"
+                      />
+                    </label>
 
-                <label className="admin-editor__field">
-                  <span>BSC 地址</span>
-                  <input
-                    type="text"
-                    value={form.bscAddress}
-                    onChange={(event) => handleEditField("bscAddress", event.target.value)}
-                    placeholder="BSC wallet"
-                  />
-                </label>
+                    <label className="admin-editor__field">
+                      <span>BSC 地址</span>
+                      <input
+                        type="text"
+                        value={form.bscAddress}
+                        onChange={(event) => handleEditField("bscAddress", event.target.value)}
+                        placeholder="BSC wallet"
+                      />
+                    </label>
+                  </>
+                ) : null}
               </div>
 
-              <label className="admin-editor__checkbox">
-                <input
-                  type="checkbox"
-                  checked={form.isAddressVerified}
-                  onChange={(event) => handleEditField("isAddressVerified", event.target.checked)}
-                />
-                <span>錢包地址已驗證</span>
-              </label>
+              {!HIDE_CRYPTO_UI ? (
+                <label className="admin-editor__checkbox">
+                  <input
+                    type="checkbox"
+                    checked={form.isAddressVerified}
+                    onChange={(event) => handleEditField("isAddressVerified", event.target.checked)}
+                  />
+                  <span>錢包地址已驗證</span>
+                </label>
+              ) : null}
             </section>
 
             <footer className="admin-editor__actions">
@@ -352,4 +364,3 @@ export default function AdminLinkedUserEditor({
     </div>
   );
 }
-

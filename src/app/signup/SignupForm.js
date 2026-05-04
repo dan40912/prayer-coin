@@ -345,21 +345,6 @@ export default function SignupForm() {
           />
         </div>
         <div className="form-group">
-          {/* <label className="form-label" htmlFor="sol-address">
-            Solana 收款地址 <span className="required-badge">必填</span>
-          </label>
-          <input
-            className="form-control"
-            type="text"
-            id="sol-address"
-            placeholder="例：6hF...pQ1"
-            value={form.solanaAddress}
-            onChange={updateField("solanaAddress")}
-            required
-          />
-          <span className="form-helper">請確認地址正確，代幣獎勵將直接發送至此地址。</span> */}
-        </div>
-        <div className="form-group">
           <label className="form-label" htmlFor="signup-password">
             設定密碼 <span className="required-badge">必填</span>
           </label>

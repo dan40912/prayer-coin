@@ -34,10 +34,10 @@ export async function POST(request) {
 
     const card = await prisma.homePrayerCard.findUnique({
       where: { id: cardId },
-      select: { id: true, reportCount: true, title: true },
+      select: { id: true, isBlocked: true, isPrivate: true, reportCount: true, title: true },
     });
 
-    if (!card) {
+    if (!card || card.isBlocked || card.isPrivate) {
       return NextResponse.json({ message: "找不到這則禱告事項" }, { status: 404 });
     }
 

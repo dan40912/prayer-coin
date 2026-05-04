@@ -72,10 +72,11 @@ export async function POST(req) {
         id: true,
         ownerId: true,
         isBlocked: true,
+        isPrivate: true,
       },
     });
 
-    if (!homeCard || homeCard.isBlocked) {
+    if (!homeCard || homeCard.isBlocked || homeCard.isPrivate) {
       return NextResponse.json(
         { error: "Prayer card not found or unavailable." },
         { status: 404 }

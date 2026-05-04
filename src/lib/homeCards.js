@@ -7,13 +7,13 @@ const CARD_DEFAULT_INCLUDE = {
       name: true,
       username: true,
       avatarUrl: true,
-    }
+    },
   },
   _count: {
     select: {
-      responses: true
-    }
-  }
+      responses: true,
+    },
+  },
 };
 
 function parseLimit(limit) {
@@ -26,7 +26,8 @@ function parseLimit(limit) {
 
 function buildWhereClause({ categorySlug, categoryId, search }) {
   const where = {
-    isBlocked: false
+    isBlocked: false,
+    isPrivate: false,
   };
   const and = [];
 
@@ -43,8 +44,8 @@ function buildWhereClause({ categorySlug, categoryId, search }) {
       OR: [
         { title: makeContainsFilter() },
         { description: makeContainsFilter() },
-        { category: { name: makeContainsFilter() } }
-      ]
+        { category: { name: makeContainsFilter() } },
+      ],
     });
   }
 
@@ -57,10 +58,7 @@ function buildWhereClause({ categorySlug, categoryId, search }) {
 
 function buildOrder(sort) {
   if (sort === "responses") {
-    return [
-      { responses: { _count: "desc" } },
-      { createdAt: "desc" }
-    ];
+    return [{ responses: { _count: "desc" } }, { createdAt: "desc" }];
   }
   if (sort === "recent" || sort === "created") {
     return [{ createdAt: "desc" }];
@@ -83,19 +81,19 @@ export async function readHomeCards(options = {}) {
     include: include ?? CARD_DEFAULT_INCLUDE,
     orderBy,
     take: parseLimit(limit),
-    skip: Number.isFinite(skip) && skip > 0 ? Math.floor(skip) : undefined
+    skip: Number.isFinite(skip) && skip > 0 ? Math.floor(skip) : undefined,
   });
 }
 
 export async function readHomeCard(id) {
   console.log("[homeCards] readHomeCard", { id });
-  return prisma.homePrayerCard.findUnique({
-    where: { id: Number(id) },
+  return prisma.homePrayerCard.findFirst({
+    where: { id: Number(id), isBlocked: false, isPrivate: false },
     include: {
       category: true,
       owner: { select: { id: true, name: true, avatarUrl: true, bio: true } },
-      _count: { select: { responses: true } }
-    }
+      _count: { select: { responses: true } },
+    },
   });
 }
 
@@ -116,20 +114,25 @@ export async function createHomeCard(payload = {}) {
       meta: payload.meta || [],
       detailsHref: payload.detailsHref || "",
       voiceHref: payload.voiceHref || "", // 蝣箔??ㄐ銝?雿輻 TEMP_VOICE_URL
+      locationCity: payload.locationCity || null,
+      locationCountry: payload.locationCountry || null,
+      locationLat: payload.locationLat ?? null,
+      locationLng: payload.locationLng ?? null,
+      isPrivate: Boolean(payload.isPrivate),
       categoryId: Number(payload.categoryId),
       ownerId: cardOwnerId,
     },
-    include: CARD_DEFAULT_INCLUDE
+    include: CARD_DEFAULT_INCLUDE,
   });
 }
 
 export async function readRelatedHomeCards(id, limit = 3) {
   console.log("[homeCards] readRelatedHomeCards", { id, limit });
   return prisma.homePrayerCard.findMany({
-    where: { id: { not: Number(id) }, isBlocked: false },
+    where: { id: { not: Number(id) }, isBlocked: false, isPrivate: false },
     orderBy: [{ createdAt: "desc" }],
     take: Math.max(0, Number(limit) || 0),
-    include: CARD_DEFAULT_INCLUDE
+    include: CARD_DEFAULT_INCLUDE,
   });
 }
 
@@ -143,6 +146,7 @@ export async function readAdjacentHomeCards(id) {
     prisma.homePrayerCard.findFirst({
       where: {
         isBlocked: false,
+        isPrivate: false,
         id: { lt: cardId },
       },
       orderBy: [{ id: "desc" }],
@@ -151,6 +155,7 @@ export async function readAdjacentHomeCards(id) {
     prisma.homePrayerCard.findFirst({
       where: {
         isBlocked: false,
+        isPrivate: false,
         id: { gt: cardId },
       },
       orderBy: [{ id: "asc" }],
@@ -160,5 +165,3 @@ export async function readAdjacentHomeCards(id) {
 
   return { prev, next };
 }
-
-

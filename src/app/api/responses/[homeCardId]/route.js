@@ -28,6 +28,15 @@ export async function GET(_req, { params }) {
   }
 
   try {
+    const homeCard = await prisma.homePrayerCard.findUnique({
+      where: { id: homeCardId },
+      select: { id: true, isBlocked: true, isPrivate: true },
+    });
+
+    if (!homeCard || homeCard.isBlocked || homeCard.isPrivate) {
+      return NextResponse.json({ error: "Prayer card not found or unavailable." }, { status: 404 });
+    }
+
     const responses = await prisma.prayerResponse.findMany({
       where: { homeCardId, isBlocked: false, reportCount: 0 },
       orderBy: { createdAt: "desc" },

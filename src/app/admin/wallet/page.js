@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import AdminHintPanel from "@/components/admin/AdminHintPanel";
 import { useAdminFeedback } from "@/components/admin/useAdminFeedback";
+import { HIDE_CRYPTO_UI } from "@/lib/featureFlags";
 
 const PAGE_SIZE = 20;
 
@@ -92,7 +93,21 @@ function formatStatus(status) {
   return STATUS_LABELS[status] ?? status;
 }
 
-export default function AdminWalletPage() {
+function HiddenAdminWalletPage() {
+  return (
+    <div className="admin-section">
+      <header className="admin-dashboard__header">
+        <div>
+          <p className="admin-dashboard__eyebrow">START PRAY ADMIN</p>
+          <h1>功能已隱藏</h1>
+          <p>此管理功能目前未在前端顯示。</p>
+        </div>
+      </header>
+    </div>
+  );
+}
+
+function AdminWalletPageInner() {
   const { feedbackNode, confirmAction, notifyError, notifySuccess } = useAdminFeedback();
   const [transactions, setTransactions] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -929,5 +944,9 @@ export default function AdminWalletPage() {
       {feedbackNode}
     </div>
   );
+}
+
+export default function AdminWalletPage() {
+  return HIDE_CRYPTO_UI ? <HiddenAdminWalletPage /> : <AdminWalletPageInner />;
 }
 

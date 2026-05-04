@@ -6,9 +6,11 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 
 import { useAuthSession } from "@/hooks/useAuthSession";
 import { clearAuthSession } from "@/lib/auth-storage";
+import { HIDE_CRYPTO_UI } from "@/lib/featureFlags";
 
 const PRIMARY_NAV = [
   { href: "/prayfor", label: "禱告牆" },
+  { href: "/global-prayer-room", label: "全球禱告室" },
   { href: "/overcomer", label: "得勝者" },
   { href: "/about", label: "平台介紹" },
   { href: "/howto", label: "使用方式" },
@@ -20,6 +22,7 @@ const FOOTER_COLUMNS = [
     title: "Start Pray",
     links: [
       { href: "/prayfor", label: "禱告牆" },
+      { href: "/global-prayer-room", label: "全球禱告室" },
       { href: "/overcomer", label: "得勝者" },
       { href: "/about", label: "平台介紹" },
       { href: "/howto", label: "使用方式" },
@@ -44,9 +47,17 @@ const FOOTER_COLUMNS = [
 ];
 
 const SOCIAL_LINKS = [
-  { href: "https://github.com/dan40912/prayer-coin", label: "GitHub", icon: "github", external: true },
   { href: "https://line.me/ti/p/6NyeVZ6waP", label: "LINE", icon: "line", external: true },
-];
+].filter(Boolean);
+
+if (!HIDE_CRYPTO_UI) {
+  SOCIAL_LINKS.unshift({
+    href: "https://github.com/dan40912/prayer-coin",
+    label: "GitHub",
+    icon: "github",
+    external: true,
+  });
+}
 
 function SocialIcon({ icon }) {
   if (icon === "github") {
@@ -160,7 +171,12 @@ export function SiteHeader({ activePath, hideAuthActions = false }) {
             <div className="nav-actions">
               {isAuthenticated ? (
                 <>
-                  <Link href="/customer-portal/create" prefetch={false} className="btn btn-primary" onClick={closeMenu}>
+                  <Link
+                    href="/customer-portal/create"
+                    prefetch={false}
+                    className="btn btn-primary"
+                    onClick={closeMenu}
+                  >
                     + 新增代禱
                   </Link>
                   {authUser?.name ? <span className="nav-user">Hi, {authUser.name}</span> : null}
@@ -170,10 +186,20 @@ export function SiteHeader({ activePath, hideAuthActions = false }) {
                 </>
               ) : (
                 <>
-                  <Link href="/login" prefetch={false} className="btn btn-glass" onClick={closeMenu}>
+                  <Link
+                    href="/login"
+                    prefetch={false}
+                    className="btn btn-glass"
+                    onClick={closeMenu}
+                  >
                     登入
                   </Link>
-                  <Link href="/signup" prefetch={false} className="btn btn-primary" onClick={closeMenu}>
+                  <Link
+                    href="/signup"
+                    prefetch={false}
+                    className="btn btn-primary"
+                    onClick={closeMenu}
+                  >
                     註冊
                   </Link>
                 </>

@@ -2,6 +2,7 @@
 
 import { ensureActiveCustomer } from "@/lib/customer-access";
 import prisma from "@/lib/prisma";
+import { sanitizePrayerLocationPayload } from "@/lib/prayerLocations";
 import { requireSessionUser } from "@/lib/server-session";
 
 function normalizeTags(value) {
@@ -46,6 +47,7 @@ function sanitizeUpdatePayload(body) {
   const slug = body.slug?.trim();
   const detailsHref = body.detailsHref?.trim();
   const voiceHref = body.voiceHref?.trim();
+  const isPrivate = Boolean(body.isPrivate);
 
   const rawCategoryId = body.categoryId ?? body.category?.id;
   const categoryId = rawCategoryId != null ? Number(rawCategoryId) : null;
@@ -68,7 +70,9 @@ function sanitizeUpdatePayload(body) {
     voiceHref: voiceHref ?? null,
     tags: normalizeTags(body.tags),
     meta: normalizeMeta(body.meta),
+    isPrivate,
     categoryId,
+    ...sanitizePrayerLocationPayload(body),
   };
 }
 
@@ -89,7 +93,10 @@ async function getOwnedCard(cardId, userId) {
 
   if (card.ownerId !== userId) {
     return {
-      response: NextResponse.json({ message: "You do not have permission to manage this prayer card." }, { status: 403 }),
+      response: NextResponse.json(
+        { message: "You do not have permission to manage this prayer card." },
+        { status: 403 }
+      ),
     };
   }
 
@@ -122,10 +129,7 @@ export async function GET(request, { params }) {
     }
 
     console.error("GET /api/customer/cards/[id] error:", error);
-    return NextResponse.json(
-      { message: "Failed to load prayer card." },
-      { status: 500 },
-    );
+    return NextResponse.json({ message: "Failed to load prayer card." }, { status: 500 });
   }
 }
 
@@ -139,7 +143,10 @@ export async function PATCH(request, { params }) {
     const user = await requireActiveCustomerUser();
     const payload = await request.json().catch(() => null);
     if (!payload || typeof payload !== "object") {
-      return NextResponse.json({ message: "Please provide the fields to update." }, { status: 400 });
+      return NextResponse.json(
+        { message: "Please provide the fields to update." },
+        { status: 400 }
+      );
     }
 
     const { response } = await getOwnedCard(cardId, user.id);
@@ -149,9 +156,15 @@ export async function PATCH(request, { params }) {
     if (Object.prototype.hasOwnProperty.call(payload, "isBlocked")) {
       data.isBlocked = Boolean(payload.isBlocked);
     }
+    if (Object.prototype.hasOwnProperty.call(payload, "isPrivate")) {
+      data.isPrivate = Boolean(payload.isPrivate);
+    }
 
     if (Object.keys(data).length === 0) {
-      return NextResponse.json({ message: "Only visibility can be updated via PATCH." }, { status: 400 });
+      return NextResponse.json(
+        { message: "Only visibility can be updated via PATCH." },
+        { status: 400 }
+      );
     }
 
     const updated = await prisma.homePrayerCard.update({
@@ -173,10 +186,7 @@ export async function PATCH(request, { params }) {
     }
 
     console.error("PATCH /api/customer/cards/[id] error:", error);
-    return NextResponse.json(
-      { message: "Failed to update prayer card." },
-      { status: 500 },
-    );
+    return NextResponse.json({ message: "Failed to update prayer card." }, { status: 500 });
   }
 }
 
@@ -206,6 +216,11 @@ export async function PUT(request, { params }) {
         voiceHref: updates.voiceHref,
         tags: updates.tags,
         meta: updates.meta,
+        isPrivate: updates.isPrivate,
+        locationCity: updates.locationCity,
+        locationCountry: updates.locationCountry,
+        locationLat: updates.locationLat,
+        locationLng: updates.locationLng,
         categoryId: updates.categoryId,
       },
       include: {
@@ -253,9 +268,6 @@ export async function DELETE(request, { params }) {
     }
 
     console.error("DELETE /api/customer/cards/[id] error:", error);
-    return NextResponse.json(
-      { message: "Failed to delete prayer card." },
-      { status: 500 },
-    );
+    return NextResponse.json({ message: "Failed to delete prayer card." }, { status: 500 });
   }
 }
