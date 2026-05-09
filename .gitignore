@@ -22,3 +22,5 @@ public/uploads/
 public/voices/
 tmp/
 .codex_tmp_figma*
+.codex-*/
+.codex-ux-shots/

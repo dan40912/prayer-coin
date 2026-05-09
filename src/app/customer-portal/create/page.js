@@ -73,6 +73,7 @@ export default function CustomerPortalCreatePage() {
   const [uploadedImages, setUploadedImages] = useState([]);
   const [isUploadingImage, setIsUploadingImage] = useState(false);
   const [lastAutoSavedAt, setLastAutoSavedAt] = useState(null);
+  const [prayerMode, setPrayerMode] = useState("text");
 
   const uploadLockRef = useRef(false);
 
@@ -386,7 +387,7 @@ export default function CustomerPortalCreatePage() {
       await response.json();
       setStatus({
         type: "success",
-        message: "禱告卡已建立，大致位置可顯示在全球禱告室。",
+        message: "你的禱告已加入全球地圖，對應地區的光點會亮起。",
       });
       setForm(INITIAL_FORM);
       setUploadedImages([]);
@@ -443,116 +444,198 @@ export default function CustomerPortalCreatePage() {
             </div>
           ) : null}
 
-          <div className="customer-create__row customer-create__row--equal">
-            <label>
-              <span>標題 *</span>
-              <input
-                type="text"
-                value={form.title}
-                onChange={updateFormField("title")}
-                placeholder="例如：為家人健康與平安代禱"
-                required
-              />
-            </label>
-          </div>
-
-          <div className="customer-create__row">
-            <label>
-              <span>分類 *</span>
-              <select
-                value={categoryId ?? ""}
-                onChange={(event) => setCategoryId(Number(event.target.value))}
-                disabled={categoriesLoading || categories.length === 0}
-                required
-              >
-                {categories.map((category) => (
-                  <option key={category.id} value={category.id}>
-                    {category.name}
-                  </option>
-                ))}
-              </select>
-            </label>
-          </div>
-
-          <PrayerLocationField value={form} onChange={updateLocation} disabled={submitting} />
-
-          <div className="customer-create__privacy-card">
-            <label>
-              <input
-                type="checkbox"
-                checked={form.isPrivate}
-                onChange={updateFormField("isPrivate")}
-              />
-              <span>
-                <strong>內容不公開，只顯示匿名大致位置光點</strong>
-                <small>
-                  勾選後，全球禱告室只會顯示大致位置光點與統計，不公開標題、內文、圖片、上傳者與詳情頁。
-                </small>
-              </span>
-            </label>
-          </div>
-
-          <div className="customer-create__row">
-            <label className="customer-create__file-label">
-              <span>上傳圖片（最多 3 張）</span>
-              <input
-                type="file"
-                accept="image/*"
-                multiple
-                onChange={handleFileChange}
-                disabled={isUploadingImage || uploadedImages.length >= MAX_GALLERY_IMAGES}
-              />
-              <small className="cp-helper">
-                支援 JPG、PNG、WEBP，每張上限 10MB，最多 {MAX_GALLERY_IMAGES}{" "}
-                張。圖片上傳後會壓縮儲存；不支援外部圖片網址。
-              </small>
-            </label>
-            {uploadedImages.length ? (
-              <div className="customer-create__gallery">
-                {uploadedImages.map(({ url, name }) => {
-                  const isActive = form.image === url;
-                  return (
-                    <figure
-                      key={url}
-                      className={`customer-create__gallery-item${isActive ? " active" : ""}`}
-                    >
-                      <button type="button" onClick={() => selectUploadedImage(url)}>
-                        <img src={url} alt={name} />
-                      </button>
-                      <figcaption>
-                        <span title={name}>{name}</span>
-                        <button type="button" onClick={() => removeUploadedImage(url)}>
-                          移除
-                        </button>
-                      </figcaption>
-                    </figure>
-                  );
-                })}
+          <section className="customer-create__step">
+            <div className="customer-create__step-head">
+              <span>01</span>
+              <div>
+                <h2>定義這個禱告光點</h2>
+                <p>先用最少資訊讓人理解這個代禱事項。</p>
               </div>
-            ) : null}
-          </div>
+            </div>
 
-          <div className="customer-create__preview">
-            {previewImage ? (
-              <img src={previewImage} alt={form.alt || form.title || "禱告卡預覽"} />
-            ) : (
-              <div className="customer-create__placeholder">尚未設定封面圖片</div>
-            )}
-          </div>
+            <section className="customer-create__mode" aria-label="選擇禱告形式">
+              <div>
+                <span>禱告形式</span>
+                <p>選擇這個光點主要以文字或語音被看見。</p>
+              </div>
+              <div className="customer-create__mode-actions">
+                <button
+                  type="button"
+                  className={prayerMode === "text" ? "is-active" : ""}
+                  onClick={() => setPrayerMode("text")}
+                >
+                  文字禱告
+                </button>
+                <button
+                  type="button"
+                  className={prayerMode === "voice" ? "is-active" : ""}
+                  onClick={() => setPrayerMode("voice")}
+                >
+                  語音禱告
+                </button>
+              </div>
+            </section>
 
-          <div className="customer-create__row customer-create__row--description">
-            <label>
-              <span>代禱內容 *</span>
-              <textarea
-                value={form.description}
-                onChange={updateFormField("description")}
-                placeholder="請直接輸入代禱內容，清楚描述目前情況、需要代禱與盼望。"
-                rows={10}
-                required
-              />
-              <small className="cp-helper">請直接輸入文字即可，不提供模板與即時預覽。</small>
-            </label>
-          </div>
+            <div className="customer-create__row customer-create__row--equal">
+              <label>
+                <span>標題 *</span>
+                <input
+                  type="text"
+                  value={form.title}
+                  onChange={updateFormField("title")}
+                  placeholder="例如：為家人健康與平安代禱"
+                  required
+                />
+              </label>
+            </div>
+
+            <div className="customer-create__row">
+              <label>
+                <span>分類 *</span>
+                <select
+                  value={categoryId ?? ""}
+                  onChange={(event) => setCategoryId(Number(event.target.value))}
+                  disabled={categoriesLoading || categories.length === 0}
+                  required
+                >
+                  {categories.map((category) => (
+                    <option key={category.id} value={category.id}>
+                      {category.name}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            </div>
+          </section>
+
+          <section className="customer-create__step customer-create__step--map">
+            <div className="customer-create__step-head">
+              <span>02</span>
+              <div>
+                <h2>選擇全球位置</h2>
+                <p>這會決定全球禱告室中被點亮的大致光點。</p>
+              </div>
+            </div>
+            <PrayerLocationField value={form} onChange={updateLocation} disabled={submitting} />
+          </section>
+
+          <section className="customer-create__step">
+            <div className="customer-create__step-head">
+              <span>03</span>
+              <div>
+                <h2>補充內容並送出</h2>
+                <p>保留必要內容，圖片、隱私與語音連結放在進階設定。</p>
+              </div>
+            </div>
+
+            <div className="customer-create__row customer-create__row--description">
+              <label>
+                <span>{prayerMode === "voice" ? "語音說明 *" : "代禱內容 *"}</span>
+                <textarea
+                  value={form.description}
+                  onChange={updateFormField("description")}
+                  placeholder={
+                    prayerMode === "voice"
+                      ? "簡短說明這段語音禱告的地點、需要與盼望。"
+                      : "請直接輸入代禱內容，清楚描述目前情況、需要代禱與盼望。"
+                  }
+                  rows={prayerMode === "voice" ? 5 : 7}
+                  required
+                />
+                <small className="cp-helper">
+                  {prayerMode === "voice"
+                    ? "語音連結會和這個地點一起顯示在全球禱告地圖上。"
+                    : "請直接輸入文字即可，不需要填寫多餘欄位。"}
+                </small>
+              </label>
+            </div>
+
+            <details className="customer-create__advanced">
+              <summary>進階設定</summary>
+              <div className="customer-create__advanced-body">
+                {prayerMode === "voice" ? (
+                  <div className="customer-create__row">
+                    <label>
+                      <span>語音連結</span>
+                      <input
+                        type="url"
+                        value={form.voiceHref}
+                        onChange={updateFormField("voiceHref")}
+                        placeholder="https://... 或 /voices/..."
+                      />
+                      <small className="cp-helper">
+                        沿用既有語音欄位與限制；送出後首頁與全球禱告室會顯示語音光點。
+                      </small>
+                    </label>
+                  </div>
+                ) : null}
+
+                <div className="customer-create__privacy-card">
+                  <label>
+                    <input
+                      type="checkbox"
+                      checked={form.isPrivate}
+                      onChange={updateFormField("isPrivate")}
+                    />
+                    <span>
+                      <strong>內容不公開，只顯示匿名大致位置光點</strong>
+                      <small>
+                        勾選後，全球禱告室只會顯示大致位置光點與統計，不公開標題、內文、圖片、上傳者與詳情頁。
+                      </small>
+                    </span>
+                  </label>
+                </div>
+
+                <div className="customer-create__row">
+                  <label className="customer-create__file-label">
+                    <span>上傳圖片（最多 3 張）</span>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      multiple
+                      onChange={handleFileChange}
+                      disabled={isUploadingImage || uploadedImages.length >= MAX_GALLERY_IMAGES}
+                    />
+                    <small className="cp-helper">
+                      支援 JPG、PNG、WEBP，每張上限 10MB，最多 {MAX_GALLERY_IMAGES}{" "}
+                      張。圖片上傳後會壓縮儲存；不支援外部圖片網址。
+                    </small>
+                  </label>
+                  {uploadedImages.length ? (
+                    <div className="customer-create__gallery">
+                      {uploadedImages.map(({ url, name }) => {
+                        const isActive = form.image === url;
+                        return (
+                          <figure
+                            key={url}
+                            className={`customer-create__gallery-item${isActive ? " active" : ""}`}
+                          >
+                            <button type="button" onClick={() => selectUploadedImage(url)}>
+                              <img src={url} alt={name} />
+                            </button>
+                            <figcaption>
+                              <span title={name}>{name}</span>
+                              <button type="button" onClick={() => removeUploadedImage(url)}>
+                                移除
+                              </button>
+                            </figcaption>
+                          </figure>
+                        );
+                      })}
+                    </div>
+                  ) : null}
+                </div>
+
+                <div className="customer-create__preview">
+                  {previewImage ? (
+                    <img src={previewImage} alt={form.alt || form.title || "禱告卡預覽"} />
+                  ) : (
+                    <div className="customer-create__placeholder">尚未設定封面圖片</div>
+                  )}
+                </div>
+              </div>
+            </details>
+          </section>
 
           <div className="customer-create__actions">
             <button
@@ -574,7 +657,7 @@ export default function CustomerPortalCreatePage() {
         <div className="customer-create__modal" role="alert" aria-live="assertive">
           <div className="customer-create__modal-card">
             <h3>建立成功</h3>
-            <p>1 秒後會回到管理頁</p>
+            <p>你的禱告已加入全球地圖，對應光點會亮起。1 秒後會回到管理頁。</p>
           </div>
         </div>
       ) : null}
@@ -601,6 +684,65 @@ export default function CustomerPortalCreatePage() {
           border: 1px solid rgba(148, 163, 184, 0.26);
           background: linear-gradient(160deg, rgba(7, 16, 34, 0.9), rgba(10, 21, 41, 0.84));
           box-shadow: 0 24px 48px -34px rgba(2, 6, 23, 0.86);
+        }
+
+        .customer-create__step {
+          display: grid;
+          gap: 0.85rem;
+          border: 1px solid rgba(148, 163, 184, 0.18);
+          border-radius: 18px;
+          padding: clamp(0.85rem, 2vw, 1.1rem);
+          background:
+            radial-gradient(circle at 12% 0%, rgba(14, 165, 233, 0.1), transparent 34%),
+            rgba(2, 6, 23, 0.2);
+        }
+
+        .customer-create__step + .customer-create__step {
+          margin-top: 0.9rem;
+        }
+
+        .customer-create__step-head {
+          display: flex;
+          align-items: flex-start;
+          gap: 0.72rem;
+        }
+
+        .customer-create__step-head > span {
+          display: grid;
+          flex: 0 0 auto;
+          place-items: center;
+          width: 2rem;
+          height: 2rem;
+          border: 1px solid rgba(125, 211, 252, 0.34);
+          border-radius: 999px;
+          color: #67e8f9;
+          font-size: 0.78rem;
+          font-weight: 900;
+          background: rgba(14, 165, 233, 0.12);
+        }
+
+        .customer-create__step-head h2,
+        .customer-create__step-head p {
+          margin: 0;
+        }
+
+        .customer-create__step-head h2 {
+          color: #f8fafc;
+          font-size: 1.05rem;
+          line-height: 1.25;
+        }
+
+        .customer-create__step-head p {
+          margin-top: 0.22rem;
+          color: rgba(203, 213, 225, 0.74);
+          font-size: 0.84rem;
+          line-height: 1.5;
+        }
+
+        .customer-create__step--map {
+          background:
+            radial-gradient(circle at 50% 20%, rgba(34, 211, 238, 0.12), transparent 42%),
+            rgba(2, 6, 23, 0.24);
         }
 
         .customer-create__row label {
@@ -703,6 +845,57 @@ export default function CustomerPortalCreatePage() {
           padding: 0.65rem 0.78rem;
         }
 
+        .customer-create__mode {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 1rem;
+          margin-bottom: 1rem;
+          border: 1px solid rgba(125, 211, 252, 0.2);
+          border-radius: 16px;
+          padding: 0.9rem;
+          background: rgba(2, 6, 23, 0.32);
+        }
+
+        .customer-create__mode span,
+        .customer-create__mode p {
+          margin: 0;
+        }
+
+        .customer-create__mode span {
+          color: #f8fafc;
+          font-weight: 900;
+        }
+
+        .customer-create__mode p {
+          margin-top: 0.25rem;
+          color: rgba(226, 232, 240, 0.7);
+          font-size: 0.85rem;
+        }
+
+        .customer-create__mode-actions {
+          display: flex;
+          gap: 0.45rem;
+          flex: 0 0 auto;
+        }
+
+        .customer-create__mode-actions button {
+          min-height: 38px;
+          border: 1px solid rgba(148, 163, 184, 0.28);
+          border-radius: 999px;
+          padding: 0 0.8rem;
+          color: #cbd5e1;
+          background: rgba(15, 23, 42, 0.72);
+          cursor: pointer;
+          font-weight: 900;
+        }
+
+        .customer-create__mode-actions button.is-active {
+          border-color: rgba(125, 211, 252, 0.62);
+          color: #f8fafc;
+          background: rgba(14, 165, 233, 0.22);
+        }
+
         .customer-create__actions {
           margin-top: 0.2rem;
           display: flex;
@@ -727,7 +920,7 @@ export default function CustomerPortalCreatePage() {
         }
 
         .customer-create__row--description textarea {
-          min-height: 280px;
+          min-height: 220px;
           line-height: 1.7;
           resize: vertical;
         }
@@ -740,6 +933,29 @@ export default function CustomerPortalCreatePage() {
           .customer-create__form {
             border-radius: 16px;
             padding: 0.88rem;
+            width: 100%;
+          }
+
+          .customer-create__step {
+            padding: 0.78rem;
+            border-radius: 16px;
+          }
+
+          .customer-create__step-head {
+            gap: 0.58rem;
+          }
+
+          .customer-create__step-head h2 {
+            font-size: 0.98rem;
+          }
+
+          .customer-create__mode {
+            align-items: stretch;
+            flex-direction: column;
+          }
+
+          .customer-create__mode-actions button {
+            flex: 1;
           }
 
           .customer-create__actions {
@@ -760,8 +976,32 @@ export default function CustomerPortalCreatePage() {
           }
 
           .customer-create__row--description textarea {
-            min-height: 220px;
+            min-height: 180px;
           }
+        }
+
+        .customer-create__advanced {
+          border: 1px solid rgba(148, 163, 184, 0.18);
+          border-radius: 16px;
+          background: rgba(15, 23, 42, 0.34);
+          overflow: hidden;
+        }
+
+        .customer-create__advanced summary {
+          min-height: 44px;
+          display: flex;
+          align-items: center;
+          padding: 0 0.85rem;
+          color: #dbeafe;
+          cursor: pointer;
+          font-weight: 900;
+        }
+
+        .customer-create__advanced-body {
+          display: grid;
+          gap: 0.85rem;
+          border-top: 1px solid rgba(148, 163, 184, 0.14);
+          padding: 0.85rem;
         }
 
         .customer-create__gallery {

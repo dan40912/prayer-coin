@@ -9,7 +9,7 @@ import { SiteFooter, SiteHeader } from "@/components/site-chrome";
 import GlobalPlayerGate from "@/components/GlobalPlayerGate";
 import { AudioProvider } from "@/context/AudioContext";
 import { readSiteSettings } from "@/lib/siteSettings";
-import { SITE_NAME, SITE_URL, absoluteUrl, buildPageMetadata } from "@/lib/seo";
+import { SITE_NAME, SITE_URL, buildPageMetadata } from "@/lib/seo";
 
 const openSans = Open_Sans({ subsets: ["latin"], variable: "--font-sans" });
 const raleway = Raleway({ subsets: ["latin"], variable: "--font-raleway" });
@@ -27,12 +27,12 @@ export const metadata = {
       template: `%s | ${SITE_NAME}`,
     },
     description:
-      "Start Pray 是一個讓人分享代禱事項、用文字與語音彼此回應，並看見得勝者故事的禱告平台。",
+      "Start Pray 讓人分享代禱事項、用文字與語音彼此回應，並透過全球禱告地圖看見正在被守望的需要。",
     path: "/",
+    keywords: ["Start Pray", "禱告", "代禱", "基督信仰", "見證", "得勝者", "語音禱告", "全球禱告室"],
   }),
   applicationName: SITE_NAME,
   category: "faith community",
-  keywords: ["Start Pray", "禱告", "代禱", "基督信仰", "見證", "得勝者", "語音禱告"],
   authors: [{ name: SITE_NAME, url: SITE_URL }],
   creator: SITE_NAME,
   publisher: SITE_NAME,
@@ -81,18 +81,33 @@ function shouldBypassMaintenance(pathname) {
 }
 
 function StructuredData() {
-  const data = {
-    "@context": "https://schema.org",
-    "@type": "WebSite",
-    name: SITE_NAME,
-    url: SITE_URL,
-    inLanguage: "zh-Hant-TW",
-    potentialAction: {
-      "@type": "SearchAction",
-      target: `${SITE_URL}/prayfor?search={search_term_string}`,
-      "query-input": "required name=search_term_string",
+  const data = [
+    {
+      "@context": "https://schema.org",
+      "@type": "Organization",
+      "@id": `${SITE_URL}/#organization`,
+      name: SITE_NAME,
+      url: SITE_URL,
+      logo: `${SITE_URL}/img/logo.png`,
+      sameAs: [],
     },
-  };
+    {
+      "@context": "https://schema.org",
+      "@type": "WebSite",
+      "@id": `${SITE_URL}/#website`,
+      name: SITE_NAME,
+      url: SITE_URL,
+      inLanguage: "zh-Hant-TW",
+      publisher: {
+        "@id": `${SITE_URL}/#organization`,
+      },
+      potentialAction: {
+        "@type": "SearchAction",
+        target: `${SITE_URL}/prayfor?search={search_term_string}`,
+        "query-input": "required name=search_term_string",
+      },
+    },
+  ];
 
   return (
     <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(data) }} />
@@ -194,9 +209,6 @@ export default async function RootLayout({ children }) {
 
   return (
     <html lang="zh-Hant" className={`${openSans.variable} ${raleway.variable} ${poppins.variable}`}>
-      <head>
-        <link rel="canonical" href={absoluteUrl(requestPath || "/")} />
-      </head>
       <body className="admin-layout">
         <StructuredData />
         <AudioProvider>

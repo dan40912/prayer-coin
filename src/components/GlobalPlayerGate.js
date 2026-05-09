@@ -19,10 +19,11 @@ export default function GlobalPlayerGate() {
   const inPrayerList = isPath(pathname, "/prayfor");
   const inOvercomer = isPath(pathname, "/overcomer");
   const inCustomerPortal = pathname === "/customer-portal";
-  const supportedByRoute = inPrayerList || inOvercomer || inCustomerPortal;
+  const inGlobalPrayerRoom = isPath(pathname, "/global-prayer-room");
+  const supportedByRoute =
+    inPrayerList || inOvercomer || inCustomerPortal || inGlobalPrayerRoom;
 
   const blockedByRoute =
-    pathname === "/" ||
     isPath(pathname, "/about") ||
     isPath(pathname, "/howto") ||
     isPath(pathname, "/whitepaper") ||

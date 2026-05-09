@@ -1,6 +1,8 @@
 export const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://startpray.online";
 export const SITE_NAME = "Start Pray";
 export const DEFAULT_OG_IMAGE = "/img/logo.png";
+export const DEFAULT_DESCRIPTION =
+  "Start Pray 是一個讓人分享代禱事項、用文字與語音彼此回應，並在全球禱告地圖上看見需要被守望的平台。";
 
 export function absoluteUrl(path = "/") {
   try {
@@ -26,19 +28,23 @@ export function buildPageMetadata({
   image = DEFAULT_OG_IMAGE,
   type = "website",
   noIndex = false,
+  keywords = [],
 } = {}) {
   const resolvedTitle = title || SITE_NAME;
   const displayTitle = typeof resolvedTitle === "string" ? resolvedTitle : resolvedTitle?.default || SITE_NAME;
-  const resolvedDescription =
-    description || "Start Pray 是一個讓人分享代禱事項、用文字與語音彼此回應，並看見得勝者故事的禱告平台。";
+  const resolvedDescription = plainText(description || DEFAULT_DESCRIPTION, 160);
   const url = absoluteUrl(path);
   const imageUrl = absoluteUrl(image || DEFAULT_OG_IMAGE);
 
   return {
     title: resolvedTitle,
     description: resolvedDescription,
+    keywords,
     alternates: {
       canonical: url,
+      languages: {
+        "zh-Hant-TW": url,
+      },
     },
     openGraph: {
       title: displayTitle,
@@ -71,6 +77,13 @@ export function buildPageMetadata({
       : {
           index: true,
           follow: true,
+          googleBot: {
+            index: true,
+            follow: true,
+            "max-image-preview": "large",
+            "max-snippet": -1,
+            "max-video-preview": -1,
+          },
         },
   };
 }

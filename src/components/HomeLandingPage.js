@@ -7,21 +7,21 @@ import { readActiveCategories } from "@/lib/homeCategories";
 import { readHomeCards } from "@/lib/homeCards";
 import { readHomeStats } from "@/lib/homeStats";
 import prisma from "@/lib/prisma";
-import { buildPageMetadata } from "@/lib/seo";
+import { SITE_URL, absoluteUrl, buildPageMetadata } from "@/lib/seo";
 
 export const dynamic = "force-dynamic";
 
 const PAGE_TEXT = {
-  trustTitle: "平台資訊",
+  trustTitle: "更多認識 Start Pray",
   aboutTitle: "關於 Start Pray",
-  aboutCopy: "了解我們如何把代禱需要整理成更容易被看見與回應的空間。",
-  howtoTitle: "使用方式",
-  howtoCopy: "快速了解如何發布代禱、回應他人，以及在全球禱告室中看見位置光點。",
-  policyTitle: "資料與說明",
-  policyCopy: "閱讀平台治理、資料隱私與使用邊界，讓分享與代禱更安心。",
+  aboutCopy: "Start Pray 讓禱告需要被看見，也讓每一次回應成為彼此扶持的見證。",
+  howtoTitle: "如何參與",
+  howtoCopy: "建立代禱事項、留下文字或語音禱告，讓你的守望加入全球地圖。",
+  policyTitle: "信任與安全",
+  policyCopy: "我們保留匿名守望與檢舉機制，讓代禱空間保持溫暖、安靜與可信任。",
   learnMore: "了解更多",
-  guide: "查看教學",
-  whitepaper: "查看說明",
+  guide: "查看指南",
+  whitepaper: "閱讀白皮書",
 };
 
 function toGlobalPrayerPayload(card) {
@@ -31,8 +31,9 @@ function toGlobalPrayerPayload(card) {
     id: card.id,
     isPrivate,
     title: isPrivate ? "匿名代禱" : card.title,
-    description: isPrivate ? "這是一個匿名代禱需要，請一起守望。" : card.description,
+    description: isPrivate ? "這個城市有人需要被守望。" : card.description,
     createdAt: card.createdAt?.toISOString?.() ?? null,
+    voiceHref: isPrivate ? null : card.voiceHref,
     locationCity: card.locationCity,
     locationCountry: card.locationCountry,
     locationLat: Number(card.locationLat),
@@ -40,6 +41,9 @@ function toGlobalPrayerPayload(card) {
     category: isPrivate ? null : card.category,
     owner: isPrivate ? null : card.owner,
     responseCount: isPrivate ? 0 : card._count?.responses ?? 0,
+    audioCount: isPrivate
+      ? 0
+      : (card.responses || []).filter((response) => Boolean(response.voiceUrl)).length,
   };
 }
 
@@ -56,11 +60,15 @@ function buildHeroStats(stats, globalPrayers) {
     const time = prayer.createdAt ? new Date(prayer.createdAt).getTime() : 0;
     return Number.isFinite(time) && time >= oneDayAgo;
   }).length;
+  const audioPrayers = globalPrayers.filter(
+    (prayer) => prayer.voiceHref || Number(prayer.audioCount || 0) > 0
+  ).length;
 
   return {
     totalPrayers: stats.totalPrayerCards.toLocaleString("zh-TW"),
     locationLights: locationLights.toLocaleString("zh-TW"),
     todayNew: todayNew.toLocaleString("zh-TW"),
+    audioPrayers: audioPrayers.toLocaleString("zh-TW"),
   };
 }
 
@@ -75,11 +83,77 @@ function toClientValue(value) {
 }
 
 export const metadata = buildPageMetadata({
-  title: "Start Pray",
-  description: "在全球禱告室中看見代禱需要，一起為世界各地守望。",
+  title: "Start Pray 一起禱告吧",
+  description:
+    "Start Pray 讓你看見全球正在被守望的禱告需要，建立代禱事項，並透過文字與語音禱告彼此陪伴。",
   path: "/",
   image: "/img/categories/popular.jpg",
+  keywords: ["Start Pray", "一起禱告", "代禱平台", "語音禱告", "全球禱告地圖", "基督徒禱告"],
 });
+
+function HomeStructuredData({ stats, globalPrayerCount }) {
+  const data = {
+    "@context": "https://schema.org",
+    "@type": "WebPage",
+    "@id": `${SITE_URL}/#home`,
+    url: SITE_URL,
+    name: "Start Pray 一起禱告吧",
+    description:
+      "看見全球正在被守望的禱告需要，建立代禱事項，並透過文字與語音禱告彼此陪伴。",
+    inLanguage: "zh-Hant-TW",
+    isPartOf: {
+      "@id": `${SITE_URL}/#website`,
+    },
+    about: [
+      "禱告",
+      "代禱",
+      "語音禱告",
+      "全球禱告地圖",
+      "基督信仰社群",
+    ],
+    primaryImageOfPage: {
+      "@type": "ImageObject",
+      url: absoluteUrl("/img/categories/popular.jpg"),
+    },
+    mainEntity: {
+      "@type": "ItemList",
+      name: "全球代禱摘要",
+      numberOfItems: Number(globalPrayerCount || 0),
+      itemListElement: [
+        {
+          "@type": "ListItem",
+          position: 1,
+          name: "全球代禱數",
+          description: String(stats?.totalPrayers || "0"),
+        },
+        {
+          "@type": "ListItem",
+          position: 2,
+          name: "地圖光點",
+          description: String(stats?.locationLights || "0"),
+        },
+        {
+          "@type": "ListItem",
+          position: 3,
+          name: "24 小時新增",
+          description: String(stats?.todayNew || "0"),
+        },
+      ],
+    },
+    potentialAction: {
+      "@type": "ViewAction",
+      target: `${SITE_URL}/global-prayer-room`,
+      name: "進入全球禱告室",
+    },
+  };
+
+  return (
+    <script
+      type="application/ld+json"
+      dangerouslySetInnerHTML={{ __html: JSON.stringify(data) }}
+    />
+  );
+}
 
 export default async function HomeLandingPage() {
   const [categories, topCards, stats, globalPrayerCards] = await Promise.all([
@@ -94,12 +168,13 @@ export default async function HomeLandingPage() {
         locationLng: { not: null },
       },
       orderBy: [{ createdAt: "desc" }],
-      take: 80,
+      take: 100,
       select: {
         id: true,
         isPrivate: true,
         title: true,
         description: true,
+        voiceHref: true,
         createdAt: true,
         locationCity: true,
         locationCountry: true,
@@ -107,6 +182,14 @@ export default async function HomeLandingPage() {
         locationLng: true,
         category: { select: { name: true, slug: true } },
         owner: { select: { name: true, username: true } },
+        responses: {
+          where: {
+            isBlocked: false,
+            reportCount: 0,
+            voiceUrl: { not: null },
+          },
+          select: { voiceUrl: true },
+        },
         _count: { select: { responses: true } },
       },
     }),
@@ -122,6 +205,7 @@ export default async function HomeLandingPage() {
       <SiteHeader activePath="/" />
 
       <main className="home-page">
+        <HomeStructuredData stats={heroStats} globalPrayerCount={globalPrayers.length} />
         <HomeGlobeHero
           prayers={globalPrayers}
           primaryHref="/global-prayer-room"

@@ -122,6 +122,7 @@ export default function Comments({ requestId, ownerId = null }) {
 
   const [isAnonymous, setIsAnonymous] = useState(false);
   const [text, setText] = useState("");
+  const [responseMode, setResponseMode] = useState("prayer");
   const [responses, setResponses] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -245,11 +246,11 @@ export default function Comments({ requestId, ownerId = null }) {
       setResponses((prev) =>
         prev.map((item) =>
           item.id === reportTarget.id
-            ? { ...item, reportCount: (item.reportCount || 0) + 1, isBlocked: ownerReporting ? true : item.isBlocked }
+            ? { ...item, reportCount: (item.reportCount || 0) + 1, isBlocked: true, reviewStatus: "pending" }
             : item
         )
       );
-      setReportFeedback("已送出檢舉，感謝你幫助我們維護社群內容。");
+      setReportFeedback("已送出檢舉，這則語音或回應已先隱藏並進入審核。");
       window.setTimeout(() => {
         closeReportModal();
       }, 1500);
@@ -610,6 +611,7 @@ export default function Comments({ requestId, ownerId = null }) {
         window.dispatchEvent(new CustomEvent(PRAYER_RESPONSE_CREATED, { detail: saved }));
       }
       setText("");
+      setResponseMode("prayer");
       setIsAnonymous(false);
       resetRecording();
       setIsRecorderModalOpen(false);
@@ -701,6 +703,16 @@ export default function Comments({ requestId, ownerId = null }) {
   const visibleResponses = responses.filter(
     (response) => !response.isBlocked && Number(response.reportCount ?? 0) === 0
   );
+  const pendingReviewCount = responses.filter(
+    (response) => response.isBlocked || Number(response.reportCount ?? 0) > 0
+  ).length;
+  const responseModes = [
+    { key: "prayer", label: "禱告", placeholder: "寫下一段安靜的禱告，托住這個需要。" },
+    { key: "encouragement", label: "鼓勵", placeholder: "留下溫柔、具體的鼓勵。" },
+    { key: "testimony", label: "見證", placeholder: "分享你經歷過的幫助、盼望或見證。" },
+    { key: "voice", label: "語音", placeholder: "可先錄製語音，再補上一句簡短說明。" },
+  ];
+  const activeMode = responseModes.find((mode) => mode.key === responseMode) || responseModes[0];
 
   return (
     <section className="comments card">
@@ -717,6 +729,9 @@ export default function Comments({ requestId, ownerId = null }) {
       )}
 
       <div className="comments__header">
+        {pendingReviewCount ? (
+          <span className="comments__review-status">{pendingReviewCount} 則回應審核中</span>
+        ) : null}
         <h3>禱告回應</h3>
         <p className="comments__subtitle">留下文字或語音，成為彼此的支持。</p>
       </div>
@@ -843,6 +858,30 @@ export default function Comments({ requestId, ownerId = null }) {
         <>
           <h3 className="comments__composer-title">立即回應</h3>
           <form className="comment-form" onSubmit={handleSubmit}>
+            <div className="prayer-response-modes" aria-label="選擇禱告回應模式">
+              {responseModes.map((mode) => (
+                <button
+                  key={mode.key}
+                  type="button"
+                  className={responseMode === mode.key ? "is-active" : ""}
+                  onClick={async () => {
+                    setResponseMode(mode.key);
+                    if (mode.key === "encouragement" && !text.trim()) {
+                      setText("願主賜下安慰、力量與清楚的帶領。");
+                    }
+                    if (mode.key === "testimony" && !text.trim()) {
+                      setText("見證分享：");
+                    }
+                    if (mode.key === "voice") {
+                      resetRecording();
+                      await openRecorder();
+                    }
+                  }}
+                >
+                  {mode.label}
+                </button>
+              ))}
+            </div>
             <label className="checkbox">
               <input
                 type="checkbox"

@@ -5,7 +5,16 @@ export default function robots() {
     rules: [
       {
         userAgent: "*",
-        allow: ["/", "/prayfor", "/overcomer", "/about", "/howto", "/whitepaper", "/disclaimer"],
+        allow: [
+          "/",
+          "/prayfor",
+          "/global-prayer-room",
+          "/overcomer",
+          "/about",
+          "/howto",
+          "/whitepaper",
+          "/disclaimer",
+        ],
         disallow: [
           "/admin",
           "/api",
