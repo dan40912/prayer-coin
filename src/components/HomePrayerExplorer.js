@@ -9,7 +9,7 @@ const DEFAULT_LIMIT = 12;
 const SUGGESTION_LIMIT = 6;
 const FALLBACK_CATEGORY_LIMIT = 3;
 const SEARCH_DEBOUNCE = 450;
-const QUICK_SEARCH_TAGS = ["福音", "醫治", "家庭", "工作", "個人", "世界"];
+const QUICK_SEARCH_TAGS = ["福音", "健康", "家庭", "工作", "個人", "世界"];
 
 function buildQuery(params = {}) {
   const query = new URLSearchParams();
@@ -345,7 +345,7 @@ export default function HomePrayerExplorer({
             <input
               id="home-explorer-search"
               type="search"
-              placeholder="輸入關鍵字，例如：福音、醫治、家庭、工作..."
+              placeholder="輸入關鍵字，例如：福音、健康、家庭、工作..."
               value={searchQuery}
               onChange={handleSearchChange}
               className="home-explorer__search-input"

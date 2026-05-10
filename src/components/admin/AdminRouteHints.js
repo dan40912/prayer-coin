@@ -1,7 +1,7 @@
 "use client";
 
 import AdminHintPanel from "@/components/admin/AdminHintPanel";
-import { HIDE_CRYPTO_UI } from "@/lib/featureFlags";
+import { HIDE_LEGACY_FINANCE_UI } from "@/lib/featureFlags";
 
 const DEFAULT_HINT = {
   title: "後台操作提示",
@@ -43,13 +43,6 @@ const PAGE_HINTS = [
     items: ["先用搜尋定位作者，再逐筆確認內容。"],
   },
   {
-    match: "/admin/wallet",
-    title: "代幣管理提示",
-    tone: "warning",
-    description: "交易狀態更新會影響帳務，請先確認交易類型與目標狀態。",
-    items: ["提領狀態改為失敗前，請先確認是否需要回補餘額。"],
-  },
-  {
     match: "/admin/settings",
     title: "權限設定提示",
     tone: "warning",
@@ -81,7 +74,7 @@ function resolveHint(pathname) {
 }
 
 export default function AdminRouteHints({ pathname }) {
-  if (HIDE_CRYPTO_UI && pathname?.startsWith("/admin/wallet")) return null;
+  if (HIDE_LEGACY_FINANCE_UI && pathname?.startsWith("/admin/wallet")) return null;
 
   const hint = resolveHint(pathname);
   if (!hint) return null;

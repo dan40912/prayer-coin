@@ -1,7 +1,7 @@
 import crypto from "node:crypto";
 import { getAdminSessionSecret } from "@/lib/session-secrets";
 
-export const ADMIN_SESSION_COOKIE = "prayer-coin-admin-session";
+export const ADMIN_SESSION_COOKIE = "start-pray-admin-session";
 
 const SESSION_TTL_SECONDS = 8 * 60 * 60;
 

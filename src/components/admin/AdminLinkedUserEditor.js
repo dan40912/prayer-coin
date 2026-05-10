@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { HIDE_CRYPTO_UI } from "@/lib/featureFlags";
+import { HIDE_LEGACY_FINANCE_UI } from "@/lib/featureFlags";
 
 function createEmptyForm() {
   return {
@@ -188,7 +188,7 @@ export default function AdminLinkedUserEditor({
 
   return (
     <div
-      className={`admin-editor admin-editor--child${HIDE_CRYPTO_UI ? " admin-editor--hide-crypto" : ""}`}
+      className={`admin-editor admin-editor--child${HIDE_LEGACY_FINANCE_UI ? " admin-editor--hide-legacy-finance" : ""}`}
       role="dialog"
       aria-modal="true"
       aria-label={`${roleLabel}編輯`}
@@ -313,7 +313,7 @@ export default function AdminLinkedUserEditor({
                   />
                 </label>
 
-                {!HIDE_CRYPTO_UI ? (
+                {!HIDE_LEGACY_FINANCE_UI ? (
                   <>
                     <label className="admin-editor__field">
                       <span>Solana 地址</span>
@@ -321,7 +321,7 @@ export default function AdminLinkedUserEditor({
                         type="text"
                         value={form.solanaAddress}
                         onChange={(event) => handleEditField("solanaAddress", event.target.value)}
-                        placeholder="Solana wallet"
+                        placeholder="Primary address"
                       />
                     </label>
 
@@ -331,21 +331,21 @@ export default function AdminLinkedUserEditor({
                         type="text"
                         value={form.bscAddress}
                         onChange={(event) => handleEditField("bscAddress", event.target.value)}
-                        placeholder="BSC wallet"
+                        placeholder="Secondary address"
                       />
                     </label>
                   </>
                 ) : null}
               </div>
 
-              {!HIDE_CRYPTO_UI ? (
+              {!HIDE_LEGACY_FINANCE_UI ? (
                 <label className="admin-editor__checkbox">
                   <input
                     type="checkbox"
                     checked={form.isAddressVerified}
                     onChange={(event) => handleEditField("isAddressVerified", event.target.checked)}
                   />
-                  <span>錢包地址已驗證</span>
+                  <span>地址已驗證</span>
                 </label>
               ) : null}
             </section>

@@ -180,13 +180,13 @@ export async function GET(request) {
     });
   } catch (error) {
     await logSystemError({
-      message: "無法取得錢包交易資料",
+      message: "無法取得交易資料",
       error,
       requestPath: request.url,
       metadata: { query: Object.fromEntries(searchParams.entries()) },
     });
 
     console.error("❌ GET /api/admin/transactions error:", error);
-    return NextResponse.json({ message: "無法取得錢包交易資料" }, { status: 500 });
+    return NextResponse.json({ message: "無法取得交易資料" }, { status: 500 });
   }
 }

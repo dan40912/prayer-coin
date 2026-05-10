@@ -55,7 +55,7 @@ const PRAYER_LAYERS = [
   { key: "disaster", label: "災害守望", color: "#f97316", terms: ["disaster", "earthquake", "flood", "fire"] },
   { key: "church", label: "教會與福音", color: "#f8fafc", terms: ["church", "gospel", "mission"] },
   { key: "personal", label: "個人代禱", color: "#60a5fa", terms: ["personal", "life"] },
-  { key: "healing", label: "醫治與健康", color: "#60a5fa", terms: ["healing", "health", "medical"] },
+  { key: "healing", label: "健康", color: "#60a5fa", terms: ["healing", "health", "medical", "健康"] },
   { key: "family", label: "家庭與關係", color: "#60a5fa", terms: ["family", "relationship"] },
   { key: "testimony", label: "見證", color: "#facc15", terms: ["testimony", "overcomer"] },
   { key: "audio", label: "語音禱告", color: "#22d3ee", terms: ["audio", "voice"] },

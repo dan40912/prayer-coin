@@ -113,11 +113,11 @@ export async function POST(request) {
 
     const targetAddress = user.bscAddress?.trim();
     if (!targetAddress) {
-      return NextResponse.json({ message: "請先設定 BSC 錢包地址。" }, { status: 422 });
+      return NextResponse.json({ message: "此功能目前未開放。" }, { status: 422 });
     }
 
     if (!user.isAddressVerified) {
-      return NextResponse.json({ message: "目前錢包地址尚未完成驗證，暫時無法提領。" }, { status: 422 });
+      return NextResponse.json({ message: "此功能目前未開放。" }, { status: 422 });
     }
 
     if (pendingOrder) {
@@ -128,7 +128,7 @@ export async function POST(request) {
     }
 
     if (toNumber(user.walletBalance) < amount) {
-      return NextResponse.json({ message: "錢包餘額不足。" }, { status: 422 });
+      return NextResponse.json({ message: "此功能目前未開放。" }, { status: 422 });
     }
 
     const created = await prisma.tokenTransaction.create({

@@ -36,9 +36,9 @@ body {
   padding-top: var(--header-height);
 }
 
-.admin-editor--hide-crypto .admin-editor__field:has(input[placeholder="Solana wallet"]),
-.admin-editor--hide-crypto .admin-editor__field:has(input[placeholder="BSC wallet"]),
-.admin-editor--hide-crypto .admin-editor__checkbox:has(input[type="checkbox"]) {
+.admin-editor--hide-legacy-finance .admin-editor__field:has(input[placeholder="Primary address"]),
+.admin-editor--hide-legacy-finance .admin-editor__field:has(input[placeholder="Secondary address"]),
+.admin-editor--hide-legacy-finance .admin-editor__checkbox:has(input[type="checkbox"]) {
   display: none !important;
 }
 html.fullpage-scroll,
@@ -698,13 +698,22 @@ footer {
 }
 .footer-brand {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 1rem;
   max-width: 320px;
 }
-.footer-logo {
+.footer-brand > a {
+  display: inline-flex;
+  flex: 0 0 52px;
   width: 52px;
   height: 52px;
+}
+.footer-logo {
+  display: block;
+  flex: 0 0 auto;
+  width: 52px;
+  height: 52px;
+  min-width: 52px;
   border-radius: 16px;
   box-shadow: 0 12px 30px rgba(37, 99, 235, 0.25);
   object-fit: cover;
@@ -790,6 +799,16 @@ footer {
   }
   .footer-grid {
     width: 100%;
+  }
+  .footer-brand {
+    align-items: flex-start;
+    max-width: 100%;
+  }
+  .footer-brand > a,
+  .footer-logo {
+    width: 52px;
+    height: 52px;
+    min-width: 52px;
   }
   .footer-bottom {
     flex-direction: column;
@@ -2914,10 +2933,31 @@ textarea.form-control:focus {
   gap: 2rem;
   grid-template-columns: minmax(0, 1fr) minmax(260px, 320px);
   align-items: start;
-  background: #fff;
+  background:
+    radial-gradient(circle at 12% 10%, rgba(59, 130, 246, 0.1), transparent 34%),
+    linear-gradient(135deg, #ffffff 0%, #f8fbff 58%, #eef4ff 100%);
+  border: 1px solid rgba(148, 163, 184, 0.22);
   border-radius: 28px;
   padding: clamp(2rem, 4vw, 3rem);
   box-shadow: 0 24px 68px rgba(18, 24, 78, 0.12);
+}
+
+.whitepaper-hero h1 {
+  margin: 0;
+  max-width: 720px;
+  color: #0f172a;
+  font-size: clamp(2.25rem, 5vw, 4.4rem);
+  font-weight: 850;
+  line-height: 1.05;
+}
+
+.whitepaper-hero > div:first-child > p:not(.whitepaper-hero__eyebrow) {
+  max-width: 680px;
+  margin: 1rem 0 0;
+  color: #334155;
+  font-size: clamp(1rem, 1.6vw, 1.16rem);
+  font-weight: 500;
+  line-height: 1.8;
 }
 
 .legal-hero__eyebrow,
@@ -2925,7 +2965,8 @@ textarea.form-control:focus {
   font-size: 0.85rem;
   text-transform: uppercase;
   letter-spacing: 0.14em;
-  color: #5d64c0;
+  color: #2563eb;
+  font-weight: 750;
   margin-bottom: 0.75rem;
 }
 
@@ -2984,13 +3025,13 @@ textarea.form-control:focus {
 .whitepaper-card h3 {
   margin: 0;
   font-size: 1.2rem;
-  color: #1f2555;
+  color: #0f172a;
 }
 
 .legal-card p,
 .whitepaper-card p {
   margin: 0;
-  color: #4b5089;
+  color: #334155;
   line-height: 1.65;
 }
 
@@ -2998,7 +3039,7 @@ textarea.form-control:focus {
 .whitepaper-card ul {
   margin: 0;
   padding-left: 1.1rem;
-  color: #4b5089;
+  color: #334155;
   display: grid;
   gap: 0.5rem;
 }
@@ -3091,7 +3132,8 @@ textarea.form-control:focus {
 }
 
 .whitepaper-hero__stats div {
-  background: rgba(255, 255, 255, 0.65);
+  background: rgba(255, 255, 255, 0.92);
+  border: 1px solid rgba(148, 163, 184, 0.22);
   border-radius: 18px;
   padding: 1rem 1.4rem;
   display: grid;
@@ -3101,12 +3143,13 @@ textarea.form-control:focus {
 
 .whitepaper-hero__stats span {
   font-size: 0.9rem;
-  color: #5b63ce;
+  color: #2563eb;
+  font-weight: 700;
 }
 
 .whitepaper-hero__stats strong {
   font-size: 1.75rem;
-  color: #1c2152;
+  color: #0f172a;
 }
 
 .whitepaper-hero__actions {
@@ -3120,6 +3163,23 @@ textarea.form-control:focus {
   display: grid;
   gap: 0.6rem;
   max-width: 720px;
+}
+
+.whitepaper-section__header h2,
+.whitepaper-download h2 {
+  margin: 0;
+  color: #0f172a;
+  font-size: clamp(1.55rem, 2.6vw, 2.25rem);
+  font-weight: 820;
+  line-height: 1.2;
+}
+
+.whitepaper-section__header p,
+.whitepaper-download p {
+  margin: 0;
+  color: #475569;
+  font-size: 1rem;
+  line-height: 1.75;
 }
 
 .whitepaper-steps {
@@ -7034,7 +7094,7 @@ header .nav-actions .btn-glass {
     color: white !important;
   }
 }
-/* Start Pray base tokens */
+/* Start Pray base values */
 
 :root {
   --color-primary: #1e3a8a; /* primary blue */

@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 
 import AdminHintPanel from "@/components/admin/AdminHintPanel";
 import { useAdminFeedback } from "@/components/admin/useAdminFeedback";
-import { HIDE_CRYPTO_UI } from "@/lib/featureFlags";
+import { HIDE_LEGACY_FINANCE_UI } from "@/lib/featureFlags";
 
 const numberFormatter = new Intl.NumberFormat("zh-TW", { maximumFractionDigits: 0 });
 const percentFormatter = new Intl.NumberFormat("zh-TW", {
@@ -218,8 +218,8 @@ export default function AdminDashboardPage() {
       rows.push(["封鎖使用者", metrics.blockedUsers]);
       rows.push(["禱告事項數", metrics.totalPrayers]);
       rows.push(["留言數", metrics.totalResponses]);
-      if (!HIDE_CRYPTO_UI) {
-        rows.push(["平均錢包餘額", metrics.averageWallet.toFixed(2)]);
+      if (!HIDE_LEGACY_FINANCE_UI) {
+        rows.push(["平均系統數值", metrics.averageWallet.toFixed(2)]);
       }
 
       rows.push([]);
@@ -312,7 +312,7 @@ export default function AdminDashboardPage() {
 
       <section className="admin-dashboard__kpis">
         {metricsLoading ? (
-          Array.from({ length: HIDE_CRYPTO_UI ? 4 : 5 }).map((_, index) => (
+          Array.from({ length: HIDE_LEGACY_FINANCE_UI ? 4 : 5 }).map((_, index) => (
             <article key={index} className="dashboard-kpi admin-dashboard--loading">
               <p className="dashboard-kpi__label">載入中...</p>
               <div className="dashboard-kpi__value-row">
@@ -329,7 +329,7 @@ export default function AdminDashboardPage() {
             </button>
           </article>
         ) : (
-          metricCards.filter((card) => !HIDE_CRYPTO_UI || card.id !== "average-wallet").map((card) => (
+          metricCards.filter((card) => !HIDE_LEGACY_FINANCE_UI || card.id !== "average-wallet").map((card) => (
             <article key={card.id} className="dashboard-kpi">
               <p className="dashboard-kpi__label">{card.label}</p>
               <div className="dashboard-kpi__value-row">

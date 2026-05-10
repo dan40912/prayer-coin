@@ -27,7 +27,6 @@ export default function GlobalPlayerGate() {
     isPath(pathname, "/about") ||
     isPath(pathname, "/howto") ||
     isPath(pathname, "/whitepaper") ||
-    isPath(pathname, "/disclaimer") ||
     isPath(pathname, "/login") ||
     isPath(pathname, "/signup") ||
     isPath(pathname, "/forgot-password") ||

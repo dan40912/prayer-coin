@@ -121,7 +121,7 @@ function sanitizeProfilePayload(body) {
       } else if (BSC_ADDRESS_REGEX.test(normalized)) {
         result.bscAddress = normalized;
       } else {
-        throw new Error("BSC 地址格式不正確，請輸入有效的 0x 錢包地址。");
+        throw new Error("地址格式不正確，請重新確認。");
       }
     } else {
       throw new Error("BSC 地址必須是文字。");

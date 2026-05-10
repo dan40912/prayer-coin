@@ -6,7 +6,6 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 
 import { useAuthSession } from "@/hooks/useAuthSession";
 import { clearAuthSession } from "@/lib/auth-storage";
-import { HIDE_CRYPTO_UI } from "@/lib/featureFlags";
 
 const PRIMARY_NAV = [
   { href: "/prayfor", label: "禱告牆" },
@@ -32,8 +31,7 @@ const FOOTER_COLUMNS = [
   {
     title: "信任與條款",
     links: [
-      { href: "/whitepaper", label: "白皮書與使用條款" },
-      { href: "/disclaimer", label: "免責與風險聲明" },
+      { href: "/whitepaper", label: "使用條款" },
     ],
   },
   {
@@ -47,17 +45,14 @@ const FOOTER_COLUMNS = [
 ];
 
 const SOCIAL_LINKS = [
-  { href: "https://line.me/ti/p/6NyeVZ6waP", label: "LINE", icon: "line", external: true },
-].filter(Boolean);
-
-if (!HIDE_CRYPTO_UI) {
-  SOCIAL_LINKS.unshift({
-    href: "https://github.com/dan40912/prayer-coin",
+  {
+    href: "https://github.com/dan40912/Start-Pray",
     label: "GitHub",
     icon: "github",
     external: true,
-  });
-}
+  },
+  { href: "https://line.me/ti/p/6NyeVZ6waP", label: "LINE", icon: "line", external: true },
+].filter(Boolean);
 
 function SocialIcon({ icon }) {
   if (icon === "github") {
@@ -277,7 +272,7 @@ export function SiteFooter() {
           <span>&copy; 2026 Start Pray. All rights reserved.</span>
           <div className="footer-legal">
             <Link href="/whitepaper" prefetch={false}>
-              白皮書與使用條款
+              使用條款
             </Link>
           </div>
         </div>

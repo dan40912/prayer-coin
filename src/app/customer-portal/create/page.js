@@ -10,6 +10,7 @@ import PrayerLocationField from "@/components/PrayerLocationField";
 import { SiteFooter, SiteHeader } from "@/components/site-chrome";
 import { useAuthSession } from "@/hooks/useAuthSession";
 import { buildCardMetaArray } from "@/lib/card-meta";
+import { buildDefaultThumbnailUrl } from "@/lib/default-thumbnail";
 
 const HERO_POINTS = [
   "清楚分享當前需要，讓代禱者快速抓住重點",
@@ -24,6 +25,7 @@ const TAIPEI_LOCATION = {
   locationLat: "25.033000",
   locationLng: "121.565400",
 };
+const DEFAULT_PRAYER_TAG = "健康";
 
 const INITIAL_FORM = {
   title: "",
@@ -31,7 +33,7 @@ const INITIAL_FORM = {
   image: "",
   alt: "",
   description: "",
-  tags: "",
+  tags: DEFAULT_PRAYER_TAG,
   meta: "",
   detailsHref: "",
   voiceHref: "",
@@ -326,12 +328,8 @@ export default function CustomerPortalCreatePage() {
       return;
     }
 
-    const coverImage = form.image.trim();
-    if (!coverImage) {
-      setStatus({ type: "error", message: "請至少上傳一張圖片" });
-      return;
-    }
-    if (!isInternalUploadUrl(coverImage)) {
+    const uploadedCoverImage = form.image.trim();
+    if (uploadedCoverImage && !isInternalUploadUrl(uploadedCoverImage)) {
       setStatus({ type: "error", message: "封面圖片需使用站內上傳檔案，不能使用外部網址" });
       return;
     }
@@ -349,6 +347,7 @@ export default function CustomerPortalCreatePage() {
       .map((line) => line.trim())
       .filter(Boolean);
     const galleryUrls = uploadedImages.map((item) => item.url).filter(isInternalUploadUrl);
+    const coverImage = uploadedCoverImage || buildDefaultThumbnailUrl(form.title);
 
     const payload = {
       title: form.title.trim(),
@@ -356,7 +355,7 @@ export default function CustomerPortalCreatePage() {
       image: coverImage,
       alt: form.alt.trim(),
       description: form.description,
-      tags: form.tags
+      tags: (form.tags.trim() ? form.tags : DEFAULT_PRAYER_TAG)
         .split(",")
         .map((tag) => tag.trim())
         .filter(Boolean),
@@ -408,7 +407,7 @@ export default function CustomerPortalCreatePage() {
     }
   };
 
-  const previewImage = form.image.trim();
+  const previewImage = form.image.trim() || buildDefaultThumbnailUrl(form.title || "禱告卡預覽");
 
   return (
     <>
@@ -627,11 +626,7 @@ export default function CustomerPortalCreatePage() {
                 </div>
 
                 <div className="customer-create__preview">
-                  {previewImage ? (
-                    <img src={previewImage} alt={form.alt || form.title || "禱告卡預覽"} />
-                  ) : (
-                    <div className="customer-create__placeholder">尚未設定封面圖片</div>
-                  )}
+                  <img src={previewImage} alt={form.alt || form.title || "禱告卡預覽"} />
                 </div>
               </div>
             </details>

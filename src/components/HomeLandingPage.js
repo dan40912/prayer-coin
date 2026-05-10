@@ -21,7 +21,7 @@ const PAGE_TEXT = {
   policyCopy: "我們保留匿名守望與檢舉機制，讓代禱空間保持溫暖、安靜與可信任。",
   learnMore: "了解更多",
   guide: "查看指南",
-  whitepaper: "閱讀白皮書",
+  whitepaper: "閱讀使用條款",
 };
 
 function toGlobalPrayerPayload(card) {

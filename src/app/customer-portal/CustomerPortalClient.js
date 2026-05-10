@@ -9,12 +9,10 @@ import Link from "next/link";
 
 
 import { SiteHeader, SiteFooter } from "@/components/site-chrome";
-import CustomerWithdrawPanel from "@/components/customer/CustomerWithdrawPanel";
 
 import { useAuthSession } from "@/hooks/useAuthSession";
 
 import { saveAuthSession } from "@/lib/auth-storage";
-import { HIDE_CRYPTO_UI } from "@/lib/featureFlags";
 import { buildOvercomerSlug } from "@/lib/overcomer";
 
 
@@ -490,9 +488,6 @@ export default function CustomerPortalPage() {
         setResponses(data);
       } else {
         setResponses(Array.isArray(data?.responses) ? data.responses : []);
-        if (typeof data?.walletBalance === "number" && Number.isFinite(data.walletBalance)) {
-          setProfile((prev) => (prev ? { ...prev, walletBalance: data.walletBalance } : prev));
-        }
       }
     } catch (error) {
       console.error("載入個人回應發生錯誤:", error);
@@ -541,9 +536,6 @@ export default function CustomerPortalPage() {
 
   const resolvedName = profile?.name ?? authUser?.name ?? "未命名使用者";
   const resolvedEmail = profile?.email ?? authUser?.email ?? "尚未提供電子郵件";
-  const walletBalance = Number(profile?.walletBalance ?? 0);
-  const formattedWalletBalance = walletBalance.toLocaleString("zh-TW", { minimumFractionDigits: 0, maximumFractionDigits: 2 });
-  const walletDisplayValue = profileLoading ? "載入中..." : profileError ? "—" : formattedWalletBalance;
   const isPublicProfileEnabled = profile?.publicProfileEnabled ?? authUser?.publicProfileEnabled ?? true;
   const overcomerSlug = buildOvercomerSlug({ username: profile?.username ?? authUser?.username ?? "" });
   const publicProfilePath = overcomerSlug ? `/overcomer/${encodeURIComponent(overcomerSlug)}` : "";
@@ -1255,9 +1247,6 @@ export default function CustomerPortalPage() {
                   {reply.rewardStatus === "PENDING" && reply.rewardEligibleAt ? (
                     <span>預計結算：{formatTime(reply.rewardEligibleAt)}</span>
                   ) : null}
-                  {reply.rewardStatus === "REWARDED" ? (
-                    <span>累計獎勵：{formatTokenValue(reply.tokensAwarded)} 代幣</span>
-                  ) : null}
                 </div>
                 <div className="cp-reply__actions">
                   <button
@@ -1304,8 +1293,6 @@ export default function CustomerPortalPage() {
     return { totalCards, totalResponses, totalReports };
   }, [cards]);
 
-  const formatTokenValue = (value) => Number(value ?? 0).toLocaleString("zh-TW", { minimumFractionDigits: 0, maximumFractionDigits: 2 });
-
   const renderUserStatValue = (value) => {
     if (cardsError) {
       return "載入失敗";
@@ -1323,7 +1310,7 @@ export default function CustomerPortalPage() {
 
       <SiteHeader activePath="/customer-portal" />
 
-      <main className={`cp-main${HIDE_CRYPTO_UI ? " cp-main--hide-crypto" : ""}`}>
+      <main className="cp-main">
 
         {toast ? (
 
@@ -1379,7 +1366,6 @@ export default function CustomerPortalPage() {
                 <div className="cp-profile__meta">
                   <h1>{resolvedName}</h1>
                   <span>{resolvedEmail}</span>
-                  <span>可用代幣：{walletDisplayValue}</span>
                 </div>
 
                 <div className="cp-profile__bio">
@@ -1440,13 +1426,6 @@ export default function CustomerPortalPage() {
                   <p className="home-stats__hint">{resolvedEmail}</p>
                 </article> */}
                 <article className="home-stats__item">
-                  <span className="home-stats__icon" aria-hidden="true">💰</span>
-                  <span className="home-stats__label">可用代幣</span>
-                  <strong className="home-stats__value">{walletDisplayValue}</strong>
-                  <p className="home-stats__hint">Start Pray 代幣可用餘額</p>
-                </article>
-
-                <article className="home-stats__item">
                   <span className="home-stats__icon" aria-hidden="true">🙏</span>
                   <span className="home-stats__label">代禱事項</span>
                   <strong className="home-stats__value">{renderUserStatValue(userStats.totalCards)}</strong>
@@ -1466,14 +1445,6 @@ export default function CustomerPortalPage() {
                 </article> */}
               </div>
             </section>
-
-            
-
-
-
-            {!HIDE_CRYPTO_UI ? (
-              <CustomerWithdrawPanel profile={profile} onProfileUpdate={setProfile} />
-            ) : null}
 
             <section className="cp-section cp-section--cards">
 

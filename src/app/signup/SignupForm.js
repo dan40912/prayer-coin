@@ -388,7 +388,7 @@ export default function SignupForm() {
           className="form-label"
           style={{ fontWeight: 500, fontSize: "0.9rem", color: "var(--text-primary)" }}
         >
-          我已詳閱並同意 <a href="/whitepaper" target="_blank" rel="noreferrer">白皮書與使用條款</a>
+          我已詳閱並同意 <a href="/whitepaper" target="_blank" rel="noreferrer">使用條款</a>
         </label>
       </div>
 

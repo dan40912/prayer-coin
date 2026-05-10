@@ -6,9 +6,8 @@ import { useEffect, useMemo, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 
 import AdminRouteHints from "@/components/admin/AdminRouteHints";
-import { HIDE_CRYPTO_UI } from "@/lib/featureFlags";
 
-const ADMIN_RESTRICTED_PATHS = ["/admin/users", "/admin/wallet", "/admin/log", "/admin/settings"];
+const ADMIN_RESTRICTED_PATHS = ["/admin/users", "/admin/log", "/admin/settings"];
 
 const NAV_ITEMS = [
   { href: "/admin/dashboard", label: "儀表板", roles: ["SUPER", "ADMIN"] },
@@ -16,7 +15,6 @@ const NAV_ITEMS = [
   { href: "/admin/prayerresponse", label: "留言與錄音", roles: ["SUPER", "ADMIN"] },
   { href: "/admin/content", label: "Banner 內容", roles: ["SUPER", "ADMIN"] },
   { href: "/admin/home-categories", label: "首頁分類", roles: ["SUPER", "ADMIN"] },
-  { href: "/admin/wallet", label: "代幣管理", roles: ["SUPER"] },
   { href: "/admin/log", label: "系統紀錄", roles: ["SUPER"] },
   { href: "/admin/settings", label: "權限設定", roles: ["SUPER"] },
 ];
@@ -77,9 +75,8 @@ export default function AdminLayout({ children }) {
   }, [pathname]);
 
   const visibleNavItems = useMemo(() => {
-    const items = HIDE_CRYPTO_UI ? NAV_ITEMS.filter((item) => item.href !== "/admin/wallet") : NAV_ITEMS;
-    if (!session?.role) return items;
-    return items.filter((item) => item.roles.includes(session.role));
+    if (!session?.role) return NAV_ITEMS;
+    return NAV_ITEMS.filter((item) => item.roles.includes(session.role));
   }, [session]);
 
   const currentNavLabel = useMemo(() => {

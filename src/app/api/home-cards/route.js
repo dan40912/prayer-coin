@@ -2,6 +2,7 @@
 
 import fallbackCards from "@/data/homeCards.json";
 import { ensureActiveCustomer } from "@/lib/customer-access";
+import { buildDefaultThumbnailUrl, isDefaultThumbnailUrl } from "@/lib/default-thumbnail";
 import { createHomeCard, readHomeCards } from "@/lib/homeCards";
 import { sanitizePrayerLocationPayload } from "@/lib/prayerLocations";
 import prisma from "@/lib/prisma";
@@ -28,8 +29,9 @@ function sanitizeCreatePayload(body) {
   }
 
   const image = typeof body.image === "string" ? body.image.trim() : "";
-  if (!image || !isInternalUploadUrl(image)) {
-    throw new Error("Image must be uploaded from this site");
+  const coverImage = image || buildDefaultThumbnailUrl(body.title);
+  if (!isInternalUploadUrl(coverImage) && !isDefaultThumbnailUrl(coverImage)) {
+    throw new Error("Image must be uploaded from this site or use the default thumbnail");
   }
 
   const normalizedMeta = Array.isArray(body.meta)
@@ -49,7 +51,7 @@ function sanitizeCreatePayload(body) {
   return {
     title: body.title.trim(),
     slug: body.slug?.trim(),
-    image,
+    image: coverImage,
     alt: body.alt?.trim(),
     description: body.description?.trim(),
     tags: Array.isArray(body.tags) ? body.tags : [],

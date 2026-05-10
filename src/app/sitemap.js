@@ -24,7 +24,6 @@ export default async function sitemap() {
     route("/about", now, 0.65, "monthly"),
     route("/howto", now, 0.65, "monthly"),
     route("/whitepaper", now, 0.45, "monthly"),
-    route("/disclaimer", now, 0.35, "yearly"),
   ];
 
   const [cards, users] = await Promise.all([

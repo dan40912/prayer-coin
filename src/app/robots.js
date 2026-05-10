@@ -13,7 +13,6 @@ export default function robots() {
           "/about",
           "/howto",
           "/whitepaper",
-          "/disclaimer",
         ],
         disallow: [
           "/admin",
