@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 
 import Comments from "@/components/Comments";
 import DetailAudioQueueBootstrap from "@/components/prayer-detail/DetailAudioQueueBootstrap";
+import PrayerRequestActions from "@/components/PrayerRequestActions";
 import { SiteFooter, SiteHeader } from "@/components/site-chrome";
 import {
   readAdjacentHomeCards,
@@ -108,6 +109,7 @@ export default async function PrayerDetailPage({ params }) {
     : updatedDisplay;
 
   const detailImage = card.image || "/img/categories/popular.jpg";
+  const plainDescription = sanitizeHtmlToPlainText(card.description || "");
   const descriptionHtml = sanitizeHtmlForDisplay(card.description || "<p>目前尚無詳細內容</p>");
   const responseCount = Number(card?._count?.responses || 0);
   const normalizedVoiceHref = resolveServerAudioUrl(card.voiceHref);
@@ -165,9 +167,18 @@ export default async function PrayerDetailPage({ params }) {
             <div className="pdv2-hero-body">
               <div className="pdv2-title-row">
                 <h1>{card.title}</h1>
-                <Link href="#responses-panel" prefetch={false} className="pdv2-follow-btn">
-                  留下回應
-                </Link>
+                <div className="pdv2-hero-actions">
+                  <Link href="#responses-panel" prefetch={false} className="pdv2-follow-btn">
+                    留下回應
+                  </Link>
+                  <PrayerRequestActions
+                    cardId={card.id}
+                    canonicalUrl={`/prayfor/${card.id}`}
+                    title={card.title}
+                    description={plainDescription}
+                    reportCount={card.reportCount}
+                  />
+                </div>
               </div>
 
               <div className="pdv2-meta-row">

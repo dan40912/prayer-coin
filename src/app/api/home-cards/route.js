@@ -6,10 +6,15 @@ import { buildDefaultThumbnailUrl, isDefaultThumbnailUrl } from "@/lib/default-t
 import { createHomeCard, readHomeCards } from "@/lib/homeCards";
 import { sanitizePrayerLocationPayload } from "@/lib/prayerLocations";
 import prisma from "@/lib/prisma";
-import { requireSessionUser } from "@/lib/server-session";
+import { readSessionUser } from "@/lib/server-session";
 
 const GALLERY_PREFIX = "gallery::";
 const UPLOADS_PREFIX = "/uploads/";
+const MAX_TITLE_LENGTH = 120;
+const MAX_DESCRIPTION_LENGTH = 3000;
+const GUEST_CREATE_WINDOW_MS = 60 * 60 * 1000;
+const GUEST_CREATE_LIMIT = 3;
+const guestCreateAttempts = new Map();
 
 function isInternalUploadUrl(value) {
   return typeof value === "string" && value.startsWith(UPLOADS_PREFIX);
@@ -28,8 +33,20 @@ function sanitizeCreatePayload(body) {
     throw new Error("categoryId is required");
   }
 
+  const title = body.title.trim().slice(0, MAX_TITLE_LENGTH);
+  const description =
+    typeof body.description === "string" ? body.description.trim().slice(0, MAX_DESCRIPTION_LENGTH) : "";
+
+  if (!title) {
+    throw new Error("Title is required");
+  }
+
+  if (!description) {
+    throw new Error("Description is required");
+  }
+
   const image = typeof body.image === "string" ? body.image.trim() : "";
-  const coverImage = image || buildDefaultThumbnailUrl(body.title);
+  const coverImage = image || buildDefaultThumbnailUrl(title);
   if (!isInternalUploadUrl(coverImage) && !isDefaultThumbnailUrl(coverImage)) {
     throw new Error("Image must be uploaded from this site or use the default thumbnail");
   }
@@ -49,11 +66,11 @@ function sanitizeCreatePayload(body) {
     : [];
 
   return {
-    title: body.title.trim(),
+    title,
     slug: body.slug?.trim(),
     image: coverImage,
     alt: body.alt?.trim(),
-    description: body.description?.trim(),
+    description,
     tags: Array.isArray(body.tags) ? body.tags : [],
     meta: normalizedMeta,
     detailsHref: body.detailsHref?.trim(),
@@ -62,6 +79,62 @@ function sanitizeCreatePayload(body) {
     isPrivate: Boolean(body.isPrivate),
     ...sanitizePrayerLocationPayload(body),
   };
+}
+
+function getClientKey(request) {
+  const forwarded = request.headers.get("x-forwarded-for") || "";
+  const firstForwarded = forwarded.split(",")[0]?.trim();
+  return (
+    firstForwarded ||
+    request.headers.get("x-real-ip") ||
+    request.headers.get("cf-connecting-ip") ||
+    "unknown"
+  );
+}
+
+function assertGuestCanCreate(request, body, payload) {
+  if (typeof body?.website === "string" && body.website.trim()) {
+    const error = new Error("目前無法建立這則代禱，請稍後再試。");
+    error.status = 400;
+    throw error;
+  }
+
+  if (body?.acceptedGuestTerms !== true) {
+    const error = new Error("請先確認訪客送出提醒。");
+    error.status = 422;
+    throw error;
+  }
+
+  if (payload.voiceHref) {
+    const error = new Error("請登入後再加入語音連結。");
+    error.status = 401;
+    throw error;
+  }
+
+  if (!isDefaultThumbnailUrl(payload.image)) {
+    const error = new Error("請登入後再上傳圖片。");
+    error.status = 401;
+    throw error;
+  }
+
+  if (Array.isArray(payload.meta) && payload.meta.some((entry) => String(entry).startsWith(GALLERY_PREFIX))) {
+    const error = new Error("請登入後再加入多張圖片。");
+    error.status = 401;
+    throw error;
+  }
+
+  const key = getClientKey(request);
+  const now = Date.now();
+  const recentAttempts = (guestCreateAttempts.get(key) || []).filter(
+    (timestamp) => now - timestamp < GUEST_CREATE_WINDOW_MS
+  );
+  if (recentAttempts.length >= GUEST_CREATE_LIMIT) {
+    const error = new Error("短時間內送出的訪客代禱較多，請稍後再試。");
+    error.status = 429;
+    throw error;
+  }
+  recentAttempts.push(now);
+  guestCreateAttempts.set(key, recentAttempts);
 }
 
 function toLowerSafe(value) {
@@ -182,13 +255,23 @@ export async function GET(request) {
 
 export async function POST(request) {
   try {
-    const session = requireSessionUser();
-    const user = await ensureActiveCustomer(session);
+    const session = readSessionUser();
+    const user = session?.userId ? await ensureActiveCustomer(session) : null;
     const body = await request.json();
     const payload = sanitizeCreatePayload(body);
+    const category = await prisma.homePrayerCategory.findFirst({
+      where: { id: payload.categoryId, isActive: true },
+      select: { id: true },
+    });
+    if (!category) {
+      return NextResponse.json({ message: "Please choose an active category." }, { status: 422 });
+    }
+    if (!user) {
+      assertGuestCanCreate(request, body, payload);
+    }
     let created = await createHomeCard({
       ...payload,
-      ownerId: user.id,
+      ownerId: user?.id ?? null,
     });
     const expectedDetailsHref = `/prayfor/${created.id}`;
     if (created.detailsHref !== expectedDetailsHref) {
@@ -219,6 +302,9 @@ export async function POST(request) {
     }
     if (error?.code === "ACCOUNT_BLOCKED") {
       return NextResponse.json({ message: "Your account is blocked." }, { status: 403 });
+    }
+    if (Number.isInteger(error?.status)) {
+      return NextResponse.json({ message: error.message }, { status: error.status });
     }
 
     console.error("--- CREATE CARD ERROR ---");

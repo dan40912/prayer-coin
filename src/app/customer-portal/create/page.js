@@ -39,6 +39,8 @@ const INITIAL_FORM = {
   voiceHref: "",
   ...TAIPEI_LOCATION,
   isPrivate: false,
+  acceptedGuestTerms: false,
+  website: "",
 };
 
 const MAX_UPLOAD_BYTES = 10 * 1024 * 1024;
@@ -216,6 +218,10 @@ export default function CustomerPortalCreatePage() {
     event.target.value = "";
 
     if (!files.length) return;
+    if (!authUser?.id) {
+      setStatus({ type: "error", message: "訪客可以先送出文字代禱；圖片上傳需登入會員。" });
+      return;
+    }
     if (uploadLockRef.current) return;
 
     const currentImages = uploadedImages.slice(0, MAX_GALLERY_IMAGES);
@@ -318,19 +324,30 @@ export default function CustomerPortalCreatePage() {
   const handleSubmit = async (event) => {
     event.preventDefault();
 
-    if (!authUser?.id) {
-      setStatus({ type: "error", message: "請先登入後再建立禱告卡" });
-      return;
-    }
-
     if (!categoryId) {
       setStatus({ type: "error", message: "請選擇分類" });
       return;
     }
 
+    const isGuest = !authUser?.id;
     const uploadedCoverImage = form.image.trim();
     if (uploadedCoverImage && !isInternalUploadUrl(uploadedCoverImage)) {
       setStatus({ type: "error", message: "封面圖片需使用站內上傳檔案，不能使用外部網址" });
+      return;
+    }
+
+    if (isGuest && uploadedCoverImage) {
+      setStatus({ type: "error", message: "訪客代禱會使用系統預設圖片；登入後可上傳圖片。" });
+      return;
+    }
+
+    if (isGuest && prayerMode === "voice" && form.voiceHref.trim()) {
+      setStatus({ type: "error", message: "訪客可以送出文字代禱；語音連結需登入會員。" });
+      return;
+    }
+
+    if (isGuest && !form.acceptedGuestTerms) {
+      setStatus({ type: "error", message: "請先確認訪客送出提醒。" });
       return;
     }
 
@@ -369,6 +386,8 @@ export default function CustomerPortalCreatePage() {
       locationLat: form.locationLat.trim(),
       locationLng: form.locationLng.trim(),
       isPrivate: Boolean(form.isPrivate),
+      acceptedGuestTerms: Boolean(form.acceptedGuestTerms),
+      website: form.website,
     };
 
     try {
@@ -386,7 +405,9 @@ export default function CustomerPortalCreatePage() {
       await response.json();
       setStatus({
         type: "success",
-        message: "你的禱告已加入全球地圖，對應地區的光點會亮起。",
+        message: isGuest
+          ? "你的代禱已送出，會以匿名使用者顯示。"
+          : "你的禱告已加入全球地圖，對應地區的光點會亮起。",
       });
       setForm(INITIAL_FORM);
       setUploadedImages([]);
@@ -397,7 +418,7 @@ export default function CustomerPortalCreatePage() {
       setShowModal(true);
 
       const timer = setTimeout(() => {
-        router.push("/customer-portal");
+        router.push(isGuest ? "/prayfor" : "/customer-portal");
       }, 1000);
       setRedirectTimer(timer);
     } catch (error) {
@@ -452,6 +473,12 @@ export default function CustomerPortalCreatePage() {
               </div>
             </div>
 
+            {!authUser?.id ? (
+              <div className="customer-create__notice" role="note">
+                訪客可以送出文字代禱，系統會以匿名使用者顯示，並使用預設圖片。登入後可管理內容、上傳圖片與加入語音連結。
+              </div>
+            ) : null}
+
             <section className="customer-create__mode" aria-label="選擇禱告形式">
               <div>
                 <span>禱告形式</span>
@@ -468,7 +495,13 @@ export default function CustomerPortalCreatePage() {
                 <button
                   type="button"
                   className={prayerMode === "voice" ? "is-active" : ""}
-                  onClick={() => setPrayerMode("voice")}
+                  onClick={() => {
+                    if (!authUser?.id) {
+                      setStatus({ type: "info", message: "語音代禱目前開放給登入會員使用。" });
+                      return;
+                    }
+                    setPrayerMode("voice");
+                  }}
                 >
                   語音禱告
                 </button>
@@ -549,6 +582,35 @@ export default function CustomerPortalCreatePage() {
               </label>
             </div>
 
+            {!authUser?.id ? (
+              <>
+                <input
+                  type="text"
+                  value={form.website}
+                  onChange={updateFormField("website")}
+                  tabIndex={-1}
+                  autoComplete="off"
+                  className="customer-create__honeypot"
+                  aria-hidden="true"
+                />
+                <div className="customer-create__privacy-card">
+                  <label>
+                    <input
+                      type="checkbox"
+                      checked={form.acceptedGuestTerms}
+                      onChange={updateFormField("acceptedGuestTerms")}
+                    />
+                    <span>
+                      <strong>我了解訪客送出後無法自行編輯或刪除</strong>
+                      <small>
+                        請不要填寫真實姓名、電話、住址或其他敏感個資。若內容需要修改，之後需聯絡管理員協助。
+                      </small>
+                    </span>
+                  </label>
+                </div>
+              </>
+            ) : null}
+
             <details className="customer-create__advanced">
               <summary>進階設定</summary>
               <div className="customer-create__advanced-body">
@@ -593,11 +655,14 @@ export default function CustomerPortalCreatePage() {
                       accept="image/*"
                       multiple
                       onChange={handleFileChange}
-                      disabled={isUploadingImage || uploadedImages.length >= MAX_GALLERY_IMAGES}
+                      disabled={
+                        !authUser?.id || isUploadingImage || uploadedImages.length >= MAX_GALLERY_IMAGES
+                      }
                     />
                     <small className="cp-helper">
-                      支援 JPG、PNG、WEBP，每張上限 10MB，最多 {MAX_GALLERY_IMAGES}{" "}
-                      張。圖片上傳後會壓縮儲存；不支援外部圖片網址。
+                      {authUser?.id
+                        ? `支援 JPG、PNG、WEBP，每張上限 10MB，最多 ${MAX_GALLERY_IMAGES} 張。圖片上傳後會壓縮儲存；不支援外部圖片網址。`
+                        : "訪客送出會使用系統預設圖片；登入後可上傳圖片。"}
                     </small>
                   </label>
                   {uploadedImages.length ? (
@@ -640,8 +705,12 @@ export default function CustomerPortalCreatePage() {
             >
               {submitting ? "建立中..." : "建立禱告卡"}
             </button>
-            <Link href="/customer-portal" className="button button--ghost" prefetch={false}>
-              返回管理頁
+            <Link
+              href={authUser?.id ? "/customer-portal" : "/login?next=/customer-portal/create"}
+              className="button button--ghost"
+              prefetch={false}
+            >
+              {authUser?.id ? "返回管理頁" : "前往登入"}
             </Link>
           </div>
         </form>
@@ -652,7 +721,7 @@ export default function CustomerPortalCreatePage() {
         <div className="customer-create__modal" role="alert" aria-live="assertive">
           <div className="customer-create__modal-card">
             <h3>建立成功</h3>
-            <p>你的禱告已加入全球地圖，對應光點會亮起。1 秒後會回到管理頁。</p>
+            <p>{authUser?.id ? "你的禱告已加入全球地圖，對應光點會亮起。1 秒後會回到管理頁。" : "你的代禱已送出。1 秒後會前往禱告牆。"}</p>
           </div>
         </div>
       ) : null}
@@ -1085,6 +1154,15 @@ export default function CustomerPortalCreatePage() {
 
         .customer-create__file-label input[type="file"] {
           width: 100%;
+        }
+
+        .customer-create__honeypot {
+          position: absolute;
+          left: -10000px;
+          width: 1px;
+          height: 1px;
+          opacity: 0;
+          pointer-events: none;
         }
       `}</style>
     </>

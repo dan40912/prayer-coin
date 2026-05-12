@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { getAdminSessionSecret } from "@/lib/session-secrets";
 
 const DIRECTORY_SEGMENTS = new Set(["legacy", "css", "img", "js", "prayfor", "dontmove"]);
-const ADMIN_SESSION_COOKIE = "prayer-coin-admin-session";
+const ADMIN_SESSION_COOKIE = "start-pray-admin-session";
 const ADMIN_ALLOWED_API_PATHS = new Set([
   "/api/admin/auth/login",
   "/api/admin/session",

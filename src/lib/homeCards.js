@@ -99,8 +99,8 @@ export async function readHomeCard(id) {
 
 export async function createHomeCard(payload = {}) {
   const cardOwnerId = payload.ownerId;
-  if (!cardOwnerId || typeof cardOwnerId !== "string") {
-    throw new Error("Owner ID is required");
+  if (cardOwnerId != null && typeof cardOwnerId !== "string") {
+    throw new Error("Owner ID must be a string when provided");
   }
 
   return prisma.homePrayerCard.create({
@@ -120,7 +120,7 @@ export async function createHomeCard(payload = {}) {
       locationLng: payload.locationLng ?? null,
       isPrivate: Boolean(payload.isPrivate),
       categoryId: Number(payload.categoryId),
-      ownerId: cardOwnerId,
+      ownerId: cardOwnerId ?? null,
     },
     include: CARD_DEFAULT_INCLUDE,
   });

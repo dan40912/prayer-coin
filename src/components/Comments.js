@@ -153,7 +153,7 @@ export default function Comments({ requestId, ownerId = null }) {
 
   const openReportModal = useCallback((response) => {
     if (!authUser) {
-      setActionNotice("請先登入後再進行檢舉。");
+      setActionNotice("請先登入後再檢舉。");
       setActionNoticeType("error");
       return;
     }
@@ -180,11 +180,11 @@ export default function Comments({ requestId, ownerId = null }) {
           text: shareText,
           url: shareUrl,
         });
-        setActionNotice("已開啟分享功能。");
+        setActionNotice("分享連結已準備好。");
         setActionNoticeType("success");
       } else if (navigator.clipboard) {
         await navigator.clipboard.writeText(shareUrl);
-        setActionNotice("已複製分享連結。");
+        setActionNotice("連結已複製。");
         setActionNoticeType("success");
       } else {
         const textarea = document.createElement("textarea");
@@ -196,17 +196,17 @@ export default function Comments({ requestId, ownerId = null }) {
         textarea.select();
         try {
           document.execCommand("copy");
-          setActionNotice("已複製分享連結。");
+          setActionNotice("連結已複製。");
           setActionNoticeType("success");
         } catch (_copyErr) {
-          throw new Error("無法複製分享連結。");
+          throw new Error("目前無法分享，請稍後再試。");
         } finally {
           textarea.remove();
         }
       }
     } catch (err) {
       if (err?.name === "AbortError") return;
-      setActionNotice(err?.message || "分享失敗，請稍後再試。");
+      setActionNotice(err?.message || "目前無法分享，請稍後再試。");
       setActionNoticeType("error");
     }
   }, []);
@@ -737,8 +737,19 @@ export default function Comments({ requestId, ownerId = null }) {
       </div>
 
       {actionNotice ? (
-        <p className={`cp-alert ${actionNoticeType === "error" ? "cp-alert--error" : "cp-alert--success"} comments__notice`}>
-          {actionNotice}
+        <p
+          className={`cp-alert ${
+            actionNoticeType === "error" ? "cp-alert--error" : "cp-alert--success"
+          } comments__notice`}
+          role="status"
+        >
+          {actionNoticeType === "error" && actionNotice.includes("登入") ? (
+            <>
+              {actionNotice} <Link href="/login">前往登入</Link>
+            </>
+          ) : (
+            actionNotice
+          )}
         </p>
       ) : null}
 
@@ -812,7 +823,7 @@ export default function Comments({ requestId, ownerId = null }) {
                               <button
                                 type="button"
                                 className="comment-item__menu-trigger"
-                                aria-label="更多操作"
+                                aria-label="更多留言操作"
                                 aria-haspopup="menu"
                                 aria-expanded={isActionMenuOpen}
                                 aria-controls={`comment-action-menu-${response.id}`}
@@ -835,7 +846,7 @@ export default function Comments({ requestId, ownerId = null }) {
                                       openReportModal(response);
                                     }}
                                   >
-                                    檢舉
+                                    檢舉這則回應
                                   </button>
                                 </div>
                               ) : null}
@@ -954,7 +965,7 @@ export default function Comments({ requestId, ownerId = null }) {
             </button>
             <h4>檢舉這則回應</h4>
             <p className="comment-report-modal__hint">
-              請選擇檢舉理由，若有需要可補充說明，管理員會儘快審核。
+              請選擇檢舉理由。若願意，可補充讓管理員判斷的原因。
             </p>
             <div className="comment-report-modal__preview">
               <p className="comment-report-modal__preview-label">檢舉對象</p>
@@ -989,7 +1000,7 @@ export default function Comments({ requestId, ownerId = null }) {
                   value={reportRemarks}
                   onChange={(event) => setReportRemarks(event.target.value)}
                   rows={4}
-                  placeholder="若需補充說明，請在此留言。"
+                  placeholder="若願意，可補充讓管理員判斷的原因。"
                   disabled={reportSubmitting}
                 />
               </label>

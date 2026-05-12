@@ -693,6 +693,158 @@
   border-radius: 999px;
 }
 
+.comment-report-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 1200;
+  display: grid;
+  place-items: center;
+  padding: clamp(1rem, 3vw, 2rem);
+}
+
+.comment-report-modal__backdrop {
+  position: absolute;
+  inset: 0;
+  border: 0;
+  background: rgba(2, 6, 23, 0.72);
+  backdrop-filter: blur(10px);
+}
+
+.comment-report-modal__card {
+  position: relative;
+  z-index: 1;
+  width: min(620px, 100%);
+  max-height: min(86vh, 760px);
+  overflow-y: auto;
+  border-radius: 22px;
+  border: 1px solid rgba(148, 163, 184, 0.28);
+  background: linear-gradient(160deg, rgba(15, 23, 42, 0.98), rgba(8, 15, 30, 0.98));
+  color: #f8fafc;
+  box-shadow: 0 28px 70px -34px rgba(0, 0, 0, 0.95);
+  padding: clamp(1rem, 2.5vw, 1.4rem);
+}
+
+.comment-report-modal__close {
+  position: absolute;
+  top: 0.85rem;
+  right: 0.85rem;
+  width: 38px;
+  height: 38px;
+  border-radius: 999px;
+  border: 1px solid rgba(148, 163, 184, 0.28);
+  background: rgba(255, 255, 255, 0.08);
+  color: #f8fafc;
+  cursor: pointer;
+  font-size: 1.25rem;
+  line-height: 1;
+}
+
+.comment-report-modal__card h4 {
+  margin: 0;
+  padding-right: 2.75rem;
+  color: #ffffff;
+  font-size: 1.15rem;
+}
+
+.comment-report-modal__hint {
+  margin: 0.45rem 2.75rem 0 0;
+  color: rgba(226, 232, 240, 0.78);
+  line-height: 1.55;
+}
+
+.comment-report-modal__preview {
+  display: grid;
+  gap: 0.3rem;
+  margin-top: 1rem;
+  border: 1px solid rgba(148, 163, 184, 0.24);
+  border-radius: 16px;
+  background: rgba(15, 23, 42, 0.55);
+  padding: 0.85rem;
+}
+
+.comment-report-modal__preview-label {
+  margin: 0;
+  color: rgba(125, 211, 252, 0.92);
+  font-size: 0.76rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+}
+
+.comment-report-modal__preview strong {
+  color: #f8fafc;
+}
+
+.comment-report-modal__preview-message {
+  margin: 0;
+  color: rgba(226, 232, 240, 0.78);
+  line-height: 1.55;
+}
+
+.comment-report-modal__preview-message.muted {
+  color: rgba(148, 163, 184, 0.82);
+}
+
+.comment-report-modal__form {
+  display: grid;
+  gap: 0.9rem;
+  margin-top: 1rem;
+}
+
+.comment-report-modal__fieldset {
+  display: grid;
+  gap: 0.55rem;
+  margin: 0;
+  border: 0;
+  padding: 0;
+}
+
+.comment-report-modal__fieldset legend,
+.comment-report-modal__remarks span {
+  margin-bottom: 0.4rem;
+  color: rgba(226, 232, 240, 0.92);
+  font-size: 0.84rem;
+  font-weight: 800;
+}
+
+.comment-report-modal__reason {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  min-height: 40px;
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.05);
+  padding: 0.52rem 0.65rem;
+  color: rgba(241, 245, 249, 0.9);
+}
+
+.comment-report-modal__reason input {
+  flex: 0 0 auto;
+  accent-color: #38bdf8;
+}
+
+.comment-report-modal__remarks {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.comment-report-modal__remarks textarea {
+  min-height: 112px;
+  resize: vertical;
+  border-radius: 14px;
+  border: 1px solid rgba(148, 163, 184, 0.34);
+  background: rgba(15, 23, 42, 0.64);
+  color: #f8fafc;
+  padding: 0.72rem 0.8rem;
+  line-height: 1.6;
+}
+
+.comment-report-modal__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.65rem;
+}
+
 @media (max-width: 768px) {
   #responses-panel .comment-item__audio {
     padding: 0.56rem 0.58rem;
@@ -1127,6 +1279,9 @@
 }
 
 .pdv2-follow-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   flex-shrink: 0;
   padding: 0.5rem 1rem;
   border-radius: 999px;
@@ -1140,6 +1295,135 @@
 
 .pdv2-follow-btn:hover {
   filter: brightness(1.08);
+}
+
+.pdv2-hero-actions {
+  display: flex;
+  align-items: flex-start;
+  justify-content: flex-end;
+  gap: 0.55rem;
+  flex: 0 0 auto;
+}
+
+.pdv2-hero-actions .pray-actions {
+  position: relative;
+  display: grid;
+  gap: 0.45rem;
+}
+
+.pray-actions__row {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.pray-actions__menu {
+  position: relative;
+}
+
+.pray-actions__notice {
+  position: absolute;
+  top: calc(100% + 0.5rem);
+  right: 0;
+  z-index: 20;
+  width: min(320px, 82vw);
+  margin: 0;
+  box-shadow: 0 18px 36px -24px rgba(2, 6, 23, 0.9);
+}
+
+.pray-actions__notice a {
+  color: inherit;
+  font-weight: 800;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.pdv2-share-btn,
+.pdv2-more-btn {
+  min-height: 36px;
+  border-radius: 999px;
+  border: 1px solid rgba(148, 163, 184, 0.38);
+  background: rgba(255, 255, 255, 0.08);
+  color: #e2e8f0;
+  font-size: 0.84rem;
+  font-weight: 700;
+  line-height: 1;
+  cursor: pointer;
+  transition: background 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
+}
+
+.pdv2-share-btn {
+  padding: 0.5rem 0.9rem;
+  color: #dbeafe;
+}
+
+.pdv2-more-btn {
+  display: grid;
+  place-items: center;
+  min-width: 36px;
+  padding: 0 0.55rem;
+  font-size: 1rem;
+}
+
+.pdv2-share-btn:hover,
+.pdv2-more-btn:hover,
+.pray-actions__menu.is-open .pdv2-more-btn {
+  background: rgba(255, 255, 255, 0.16);
+  border-color: rgba(191, 219, 254, 0.45);
+}
+
+.pdv2-share-btn:focus-visible,
+.pdv2-more-btn:focus-visible {
+  outline: 2px solid rgba(125, 211, 252, 0.9);
+  outline-offset: 2px;
+}
+
+.pdv2-action-menu {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  z-index: 25;
+  min-width: 180px;
+  padding: 0.4rem;
+  border-radius: 12px;
+  border: 1px solid rgba(248, 113, 113, 0.28);
+  background: rgba(15, 23, 42, 0.96);
+  box-shadow: 0 18px 30px -18px rgba(0, 0, 0, 0.9);
+}
+
+.pdv2-action-menu__meta,
+.pdv2-action-menu__item {
+  display: block;
+  width: 100%;
+}
+
+.pdv2-action-menu__meta {
+  padding: 0.42rem 0.55rem;
+  color: #fecaca;
+  font-size: 0.76rem;
+}
+
+.pdv2-action-menu__item {
+  min-height: 38px;
+  border-radius: 9px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: #e2e8f0;
+  font-size: 0.84rem;
+  font-weight: 700;
+  text-align: left;
+  cursor: pointer;
+}
+
+.pdv2-action-menu__item--danger {
+  color: #fecaca;
+  border-color: rgba(248, 113, 113, 0.28);
+  background: rgba(248, 113, 113, 0.08);
+}
+
+.pdv2-action-menu__item--danger:hover {
+  background: rgba(248, 113, 113, 0.18);
+  border-color: rgba(252, 165, 165, 0.55);
 }
 
 .pdv2-meta-row {
@@ -1611,6 +1895,44 @@
     align-items: flex-start;
   }
 
+  .pdv2-hero-actions {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    width: 100%;
+  }
+
+  .pdv2-follow-btn {
+    width: 100%;
+    justify-content: center;
+    text-align: center;
+  }
+
+  .pdv2-hero-actions .pray-actions,
+  .pray-actions__row {
+    width: 100%;
+  }
+
+  .pray-actions__row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+
+  .pdv2-share-btn {
+    width: 100%;
+  }
+
+  .pdv2-more-btn {
+    min-width: 44px;
+    height: 40px;
+  }
+
+  .pray-actions__notice,
+  .pdv2-action-menu {
+    left: 0;
+    right: auto;
+    width: 100%;
+  }
+
   .pdv2-meta-row {
     grid-template-columns: 1fr;
   }
@@ -1669,6 +1991,31 @@
   .pdv2-title-row h1 {
     font-size: 1.15rem;
     line-height: 1.35;
+  }
+
+  .comment-report-modal {
+    align-items: end;
+    padding: 0.75rem;
+  }
+
+  .comment-report-modal__card {
+    max-height: min(88vh, 720px);
+    border-radius: 18px;
+    padding: 1rem;
+  }
+
+  .comment-report-modal__hint {
+    margin-right: 0;
+  }
+
+  .comment-report-modal__actions {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+
+  .comment-report-modal__actions .cp-button {
+    width: 100%;
+    justify-content: center;
   }
 
   .pdv2-meta-row {
